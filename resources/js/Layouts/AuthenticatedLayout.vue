@@ -6,13 +6,10 @@ import { MenuIcon } from "lucide-vue-next";
 
 import { onMounted } from 'vue';
 import {HSCopyMarkup as HSStaticMethods} from "preline";
-import FlashMessage from "@/Components/FlashMessage.vue";
-import ConfirmDialog from "@/Components/ConfirmDialog.vue";
 
 onMounted(() => {
     window.HSStaticMethods.autoInit()
 });
-
 
 </script>
 
@@ -60,7 +57,12 @@ onMounted(() => {
         </div>
     </div>
     <!-- End Content -->
-    <!-- ========== END MAIN CONTENT ========== -->
 
-    <FlashMessage />
+    <FlashMessage
+        v-if="$page.props.flash.success"
+        :isVisible="true"
+        :message="$page.props.flash.success"
+    />
+
+    <!-- ========== END MAIN CONTENT ========== -->
 </template>

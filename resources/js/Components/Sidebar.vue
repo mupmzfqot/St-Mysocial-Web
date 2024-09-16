@@ -44,13 +44,13 @@ import { LucideHome, Users, CircleUser, IdCard, MessageSquareMore, Settings, Cir
                         </li>
 
                         <li>
-                            <Link :href="route('admin-list')" class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-none focus:bg-gray-100">
+                            <Link :href="route('admin.index')" class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-none focus:bg-gray-100">
                                 <Users class="shrink-0 size-4" /> Admin List
                             </Link>
                         </li>
 
                         <li>
-                            <Link :href="route('user-list')" class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-none focus:bg-gray-100">
+                            <Link :href="route('user.index')" class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-none focus:bg-gray-100">
                                 <Users class="shrink-0 size-4" /> User List
                             </Link>
                         </li>
@@ -88,7 +88,7 @@ import { LucideHome, Users, CircleUser, IdCard, MessageSquareMore, Settings, Cir
                         </li>
 
                         <li>
-                            <Link :href="route('public-account-list')" class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-none focus:bg-gray-100">
+                            <Link :href="route('user.public')" class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-none focus:bg-gray-100">
                                 <IdCard class="shrink-0 size-4" /> Public Account
                             </Link>
                         </li>

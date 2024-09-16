@@ -2,36 +2,64 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\UserCollection;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-    public function indexAdmin()
+    public function adminIndex(Request $request)
     {
+        $searchTerm = $request->query('search');
         $users = User::query()->whereHas('roles', function ($query) {
-            $query->where('name', 'admin');
-        })->get();
+                $query->where('name', 'admin');
+            })
+            ->when($searchTerm, function ($query, $search) {
+                $query->where('name', 'like', '%' . $search . '%')
+                    ->orWhere('email', 'like', '%' . $search . '%');
+            })
+            ->paginate(10)
+            ->withQueryString();
 
-        return Inertia::render('Users/AdminList', compact('users'));
+        return Inertia::render('Users/AdminList', compact('users', 'searchTerm'));
     }
 
-    public function createAdmin()
+    public function get(Request $request)
+    {
+        $role = $request->type;
+        $users = User::query()->whereHas('roles', function ($query) use ($role) {
+            $query->where('name', $role);
+        })
+            ->when($request->search, function ($query, $search) {
+                $query->where('name', 'like', '%' . $search . '%');
+            })
+            ->paginate($request->perPage);
+
+        return UserCollection::collection($users);
+    }
+
+    public function adminForm()
     {
         return Inertia::render('Users/AdminForm');
     }
 
-    public function indexUser()
+    public function userIndex(Request $request)
     {
+        $searchTerm = $request->search;
         $users = User::query()->whereHas('roles', function ($query) {
                 $query->whereIn('name', ['user']);
+            })
+            ->when($request->search, function ($query, $search) {
+                $query->where('name', 'like', '%' . $search . '%');
             })
             ->with(['roles' => function ($query) {
                 $query->select('name', 'display_name');
             }])
-            ->get();
+            ->paginate(10)
+            ->withQueryString();
 
         $userCount = User::query()->whereHas('roles', function ($query) {
                 $query->where('name', 'user');
@@ -41,38 +69,43 @@ class UserController extends Controller
             $query->where('name', 'public_user');
         })->count();
 
-        return Inertia::render('Users/UserList', compact('users', 'userCount', 'publicUserCount'));
+        return Inertia::render('Users/UserList', compact('users', 'userCount', 'publicUserCount', 'searchTerm'));
     }
 
-    public function indexPublicUser()
+    public function publicAccountIndex(Request $request)
     {
+        $searchTerm = $request->search;
         $users = User::query()->whereHas('roles', function ($query) {
-            $query->whereIn('name', ['public_user']);
-        })
+                $query->whereIn('name', ['public_user']);
+            })
+            ->when($request->search, function ($query, $search) {
+                $query->where('name', 'like', '%' . $search . '%');
+            })
             ->with(['roles' => function ($query) {
                 $query->select('name', 'display_name');
             }])
-            ->get();
+            ->paginate(10);
         return Inertia::render('Users/PublicUserList', compact('users'));
     }
 
     public function updateActiveStatus(Request $request, $id)
     {
-
         $user = User::query()->find($id);
         $user->is_active = $request->is_active;
+
+        $status = $request->is_active ? 'activated' : 'deactivated';
+        $message = "User successfully $status.";
         if($user->hasRole('public_user')){
             $user->email_verified_at = now();
+            $message = $request->is_active ? 'The User Public successfully approved' : 'The User Public successfully rejected';
         }
         $updated = $user->update();
-        $message = $request->is_active ? 'activated' : 'deactivated';
+
         if($updated) {
-            return redirect()->back()->with('success', "User has been $message.");
+            return redirect()->back()->with('success', $message );
         } else {
-            return redirect()->back()->with('error', "Failed to $message user.");
+            return redirect()->back()->with('error', "Failed to change user status.");
         }
-
-
     }
 
     public function store(Request $request)
@@ -95,7 +128,7 @@ class UserController extends Controller
 
         if($user) {
             $user->assignRole('admin');
-            return redirect()->to('user/admin-list')->with('success', 'User created successfully.');
+            return redirect()->to('user/admin-list')->with('success', 'User successfully created.');
         }
 
         return redirect()->back()->with('error', 'Failed to create user.');
@@ -119,4 +152,51 @@ class UserController extends Controller
 
         return redirect('home');
     }
+
+    public function setAsAdmin(Request $request, $id)
+    {
+        $user = User::query()->find($id);
+        $user->syncRoles('admin');
+        return redirect()->back()->with('success', 'User successfully been admin.');
+    }
+
+    public function resetPassword(Request $request, $id)
+    {
+        $user = User::query()->find($id);
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        return redirect()->back()->with('success', 'Password successfully changed.');
+    }
+
+    public function update(Request $request, $id)
+    {
+        $user = User::query()->find($id);
+        $user->name = $request->name;
+        $user->username = $request->username;
+        $user->email = $request->email;
+        $user->address = $request->address;
+        $user->facebook = $request->facebook;
+        $user->instagram = $request->instagram;
+
+        if($user->update()) {
+            return redirect()->back()->with('success', 'User profile successfully updated.');
+        } else {
+            return redirect()->back()->with('error', 'Failed to update user profile.');
+        }
+    }
+
+    public function verifyAccount(Request $request, $id)
+    {
+        $user = User::query()->find($id);
+        $user->verified_account = $request->verified_account;
+
+        if($user->update()) {
+            return redirect()->back()->with('success', 'User account successfully verified.');
+        } else {
+            return redirect()->back()->with('error', 'Failed to verify user account.');
+        }
+
+    }
+
 }

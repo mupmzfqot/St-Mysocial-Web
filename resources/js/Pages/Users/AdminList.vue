@@ -1,18 +1,30 @@
 <script setup>
-import {Head, Link, useForm } from "@inertiajs/vue3";
+
+import {ref, watch} from "vue";
+import {Head, Link, router, usePage} from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { ChevronRight, Search, Plus, CheckCircle, MinusCircle, UserCircle } from "lucide-vue-next";
 import Breadcrumbs from "@/Components/Breadcrumbs.vue";
 import moment from "moment/moment.js";
+import Pagination from "@/Components/Pagination.vue";
+import {debounce} from "lodash";
 
-defineProps({
-    users: {
-        type: Array,
-    }
+const props = defineProps({
+    users: Object,
+    searchTerm: String,
 });
 
+const search = ref(props.searchTerm);
+
+watch(
+    search, debounce(
+        (q) => router.get(route('admin.index'), { search: q }, { preserveState: true }), 500
+    )
+);
 const updateStatus = (id, status) => {
-    useForm({'is_active': status !== 1}).post(`update-status/${id}`);
+    router.post(route('admin.update-status', id), {
+        'is_active': status !== 1,
+    });
 }
 </script>
 
@@ -42,7 +54,12 @@ const updateStatus = (id, status) => {
                             <div class="sm:col-span-1">
                                 <label for="hs-as-table-product-review-search" class="sr-only">Search</label>
                                 <div class="relative">
-                                    <input type="text" id="hs-as-table-product-review-search" name="hs-as-table-product-review-search" class="py-2 px-3 ps-11 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" placeholder="Search">
+                                    <input type="text" id="hs-as-table-product-review-search" name="search"
+                                           class="py-2 px-3 ps-11 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
+                                           placeholder="Search"
+                                           @input="searchUser"
+                                           v-model="search"
+                                    >
                                     <div class="absolute inset-y-0 start-0 flex items-center pointer-events-none ps-4">
                                         <Search class="shrink-0 size-4 text-gray-400" />
                                     </div>
@@ -52,7 +69,7 @@ const updateStatus = (id, status) => {
 
                             <div class="sm:col-span-2 md:grow">
                                 <div class="flex justify-end gap-x-2">
-                                    <Link :href="route('admin-form')" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none" aria-haspopup="menu" aria-expanded="false" aria-label="Dropdown">
+                                    <Link :href="route('admin.form')" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none" aria-haspopup="menu" aria-expanded="false" aria-label="Dropdown">
                                         <Plus class="shrink-0 size-4" />Create Admin
                                     </Link>
                                 </div>
@@ -99,7 +116,7 @@ const updateStatus = (id, status) => {
                             </thead>
 
                             <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
-                            <tr v-for="user in users" key="user.id" class="bg-white hover:bg-gray-50 dark:bg-neutral-900 dark:hover:bg-neutral-800">
+                            <tr v-for="user in users.data" key="user.id" class="bg-white hover:bg-gray-50 dark:bg-neutral-900 dark:hover:bg-neutral-800">
                                 <td class="size-px whitespace-nowrap align-top">
                                     <a class="block p-6" href="#">
                                         <div class="flex items-center gap-x-3">
@@ -152,30 +169,10 @@ const updateStatus = (id, status) => {
 
                         <!-- Footer -->
                         <div class="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-t border-gray-200 dark:border-neutral-700">
-                            <div class="max-w-sm space-y-3">
-                                <select class="py-2 px-3 pe-9 block border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400">
-                                    <option>1</option>
-                                    <option>2</option>
-                                    <option>3</option>
-                                    <option>4</option>
-                                    <option selected>5</option>
-                                    <option>6</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <div class="inline-flex gap-x-2">
-                                    <button type="button" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-700 dark:focus:bg-neutral-700">
-                                        <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-                                        Prev
-                                    </button>
-
-                                    <button type="button" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-700 dark:focus:bg-neutral-700">
-                                        Next
-                                        <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-                                    </button>
-                                </div>
-                            </div>
+                            <Pagination :links="users.links" />
+                            <p class="text-sm text-gray-500 dark:text-neutral-500 dark:hover:text-blue-500 dark:focus:text-blue-500">
+                                Showing {{ users.from }} to {{ users.to }} of {{ users.total }} results
+                            </p>
                         </div>
                         <!-- End Footer -->
                     </div>
@@ -183,7 +180,6 @@ const updateStatus = (id, status) => {
             </div>
         </div>
         <!-- End Card -->
-
     </AuthenticatedLayout>
 </template>
 

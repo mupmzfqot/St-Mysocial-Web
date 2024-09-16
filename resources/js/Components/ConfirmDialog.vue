@@ -1,15 +1,13 @@
 <script setup>
 import { AlertCircle } from "lucide-vue-next";
-import {useForm} from "@inertiajs/vue3";
+import { router } from "@inertiajs/vue3";
 
 const { data } = defineProps({
-    data: {
-        type: Object
-    },
+    data: Object,
 })
 
 const isConfirmed = () => {
-    useForm({}).post(route('delete-user', data.id))
+    router.post(data.url, data.data || {})
     HSOverlay.close('#confirm-dialog');
 }
 
@@ -29,8 +27,7 @@ const isConfirmed = () => {
                             <h2 id="hs-discovery-label" class="text-gray-800 font-semibold dark:text-white">
                                 Warning!
                             </h2>
-                            <p class="mt-2 text-sm text-gray-700 dark:text-neutral-400">
-                                Do you want to remove <b>{{ data.name }}</b>?
+                            <p class="mt-2 text-sm text-gray-700 dark:text-neutral-400" v-html="data.message">
                             </p>
                         </div>
                     </div>
@@ -40,7 +37,7 @@ const isConfirmed = () => {
                         Cancel
                     </button>
                     <button @click="isConfirmed()" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
-                        Yes, Remove
+                        Yes, Continue
                     </button>
                 </div>
             </div>

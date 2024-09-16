@@ -20,16 +20,25 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-
-    Route::group(['prefix' => 'user', 'name' => 'user'], function () {
-        Route::get('admin-list', [UserController::class, 'indexAdmin'])->name('admin-list');
-        Route::get('admin-form', [UserController::class, 'createAdmin'])->name('admin-form');
-        Route::get('user-list', [UserController::class, 'indexUser'])->name('user-list');
-        Route::get('public-account-list', [UserController::class, 'indexPublicUser'])->name('public-account-list');
-        Route::post('update-status/{id}', [UserController::class, 'updateActiveStatus'])->name('update-active-status');
-        Route::post('create-admin', [UserController::class, 'store'])->name('create-admin');
-        Route::post('delete/{id}', [UserController::class, 'destroy'])->name('delete-user');
+    Route::name('admin.')->prefix('admin')->group(function () {
+        Route::get('/', [UserController::class, 'adminIndex'])->name('index');
+        Route::get('form/{id?}', [UserController::class, 'adminForm'])->name('form');
+        Route::post('store', [UserController::class, 'store'])->name('store');
+        Route::post('update-status/{id}', [UserController::class, 'updateActiveStatus'])->name('update-status');
     });
+
+    Route::name('user.')->prefix('user')->group(function () {
+        Route::get('/get', [UserController::class, 'get'])->name('get');
+        Route::get('/', [UserController::class, 'userIndex'])->name('index');
+        Route::get('public-account', [UserController::class, 'publicAccountIndex'])->name('public');
+        Route::post('delete/{id}', [UserController::class, 'destroy'])->name('delete');
+        Route::get('profile/{id?}', [ProfileController::class, 'index'])->name('profile');
+        Route::post('set-admin/{id}', [UserController::class, 'setAsAdmin'])->name('set-admin');
+        Route::post('reset-password/{id}', [UserController::class, 'resetPassword'])->name('reset-password');
+        Route::post('update/{id}', [UserController::class, 'update'])->name('update');
+        Route::post('verify/{id}', [UserController::class, 'verifyAccount'])->name('verify');
+    });
+
 
     Route::get('app-setting', [SettingController::class, 'index'])->name('app-setting');
 });

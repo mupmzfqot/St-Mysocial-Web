@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->string('username');
-            $table->string('letter_address')->nullable();
+            $table->string('address')->nullable();
             $table->string('gender')->nullable();
             $table->integer('created_by')->nullable();
             $table->integer('updated_by')->nullable();
@@ -22,6 +22,9 @@ return new class extends Migration
             $table->string('language', 20)->nullable();
             $table->dateTime('last_login')->nullable();
             $table->boolean('is_active')->default(false);
+            $table->string('facebook')->nullable();
+            $table->string('instagram')->nullable();
+            $table->boolean('verified_account')->default(false);
             $table->softDeletes();
         });
     }

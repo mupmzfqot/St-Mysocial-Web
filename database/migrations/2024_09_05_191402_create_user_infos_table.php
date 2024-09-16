@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('user_infos', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(\App\Models\User::class)->constrained();
+            $table->string('sign_up_ip')->nullable();
             $table->text('android_fcm_regid')->nullable();
             $table->text('ios_fcm_token')->nullable();
             $table->text('android_msg_fcm_regid')->nullable();
