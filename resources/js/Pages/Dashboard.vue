@@ -4,6 +4,12 @@ import { Head } from '@inertiajs/vue3';
 import Breadcrumbs from "@/Components/Breadcrumbs.vue";
 import { ChevronRight, UsersRound } from "lucide-vue-next";
 import FlashMessage from "@/Components/FlashMessage.vue";
+
+const props = defineProps({
+    users: Object,
+    totalPost: Number
+
+});
 </script>
 
 <template>
@@ -36,7 +42,7 @@ import FlashMessage from "@/Components/FlashMessage.vue";
                             </p>
                             <div class="mt-1 flex items-center gap-x-2">
                                 <h3 class="text-xl sm:text-2xl font-medium text-gray-800 dark:text-neutral-200">
-                                    7254
+                                    {{ users.user_count + users.public_user_count }}
                                 </h3>
                             </div>
                         </div>
@@ -56,7 +62,7 @@ import FlashMessage from "@/Components/FlashMessage.vue";
                             </p>
                             <div class="mt-1 flex items-center gap-x-2">
                                 <h3 class="mt-1 text-xl font-medium text-gray-800 dark:text-neutral-200">
-                                    2940
+                                    0
                                 </h3>
                             </div>
                         </div>
@@ -76,7 +82,7 @@ import FlashMessage from "@/Components/FlashMessage.vue";
                             </p>
                             <div class="mt-1 flex items-center gap-x-2">
                                 <h3 class="text-xl sm:text-2xl font-medium text-gray-800 dark:text-neutral-200">
-                                    568
+                                    0
                                 </h3>
                             </div>
                         </div>
@@ -96,7 +102,7 @@ import FlashMessage from "@/Components/FlashMessage.vue";
                             </p>
                             <div class="mt-1 flex items-center gap-x-2">
                                 <h3 class="mt-1 text-xl font-medium text-gray-800 dark:text-neutral-200">
-                                    921
+                                    {{ totalPost }}
                                 </h3>
                             </div>
                         </div>

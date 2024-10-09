@@ -19,8 +19,8 @@ class RoleSeeder extends Seeder
                 'name' => 'admin'
             ],
             [
-                'display_name' => 'User',
-                'name' => 'ST user'
+                'display_name' => 'ST User',
+                'name' => 'user'
             ],
             [
                 'display_name' => 'Public User',

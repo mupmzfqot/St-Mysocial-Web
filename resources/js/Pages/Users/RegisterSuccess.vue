@@ -8,7 +8,7 @@ const { user } = defineProps({
     }
 })
 
-if(_.isEmpty(user)) {
+if(user.length === 0) {
     window.location.href = route('home');
 }
 

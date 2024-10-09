@@ -76,15 +76,15 @@ import { LucideHome, Users, CircleUser, IdCard, MessageSquareMore, Settings, Cir
                         </li>
 
                         <li>
-                            <button type="button" class="hs-accordion-toggle w-full text-start flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-none focus:bg-gray-100" aria-expanded="true" aria-controls="users-accordion-child">
+                            <Link :href="route('post.index')" type="button" class="hs-accordion-toggle w-full text-start flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-none focus:bg-gray-100" aria-expanded="true" aria-controls="users-accordion-child">
                                 <MessageSquareMore class="shrink-0 size-4" /> Post Creation
-                            </button>
+                            </Link>
                         </li>
 
                         <li>
-                            <button type="button" class="hs-accordion-toggle w-full text-start flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-none focus:bg-gray-100" aria-expanded="true" aria-controls="users-accordion-child">
+                            <Link :href="route('post-moderation.index')" type="button" class="hs-accordion-toggle w-full text-start flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-none focus:bg-gray-100" aria-expanded="true" aria-controls="users-accordion-child">
                                 <MessageSquareMore class="shrink-0 size-4" /> Post Moderation
-                            </button>
+                            </Link>
                         </li>
 
                         <li>
