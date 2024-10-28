@@ -4,6 +4,7 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import StrongPassword from "@/Components/StrongPassword.vue";
+import TogglePassword from "@/Components/TogglePassword.vue";
 
 const form = useForm({
     name: '',
@@ -110,16 +111,7 @@ const submit = () => {
                             <!-- Form Group -->
                             <div>
                                 <label for="confirm-password" class="block text-sm mb-2 dark:text-white">Confirm Password</label>
-                                <div class="relative">
-                                    <TextInput
-                                        id="password_confirmation"
-                                        type="password"
-                                        class="mt-1 block w-full"
-                                        v-model="form.password_confirmation"
-                                        required
-                                        placeholder="Re-enter password"
-                                    />
-                                </div>
+                                <TogglePassword v-model="form.password_confirmation" />
                             </div>
                             <!-- End Form Group -->
 
