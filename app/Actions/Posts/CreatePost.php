@@ -8,18 +8,22 @@ use Illuminate\Support\Facades\DB;
 
 class CreatePost
 {
-    public function handle($request)
+    public function handle($request, $id = null)
     {
         $data = [
             'post' => $request->post('content'),
-            'user_id'  => auth()->id(),
-            'published' => (bool)Auth::user()->hasRole('admin'),
+            'user_id'  => $request->user()->id,
+            'published' => (bool) Auth::user()->hasAnyRole(['admin', 'user']),
         ];
 
         DB::beginTransaction();
 
         try {
-            $post = Post::query()->create($data);
+            if($id) {
+                $post = Post::find($id)->update($data);
+            } else {
+                $post = Post::query()->create($data);
+            }
 
             if (!empty($request->file('files'))) {
                 foreach ($request->file('files') as $file) {
@@ -28,19 +32,11 @@ class CreatePost
                 }
             }
 
-            # TODO: create post group
-//        if (!is_null($request->post('group'))) {
-//            $role = Role::query()->whereNot('name', 'public_user')->get()->pluck('id');
-//            if($request->post('group') == 'all') {
-//                $role = Role::all()->pluck('id');
-//            }
-//            $post->group()->sync($role);
-//        }
-
             DB::commit();
             return $post;
         } catch (\Exception $e) {
             DB::rollBack();
+            return $e->getMessage();
         }
     }
 }
