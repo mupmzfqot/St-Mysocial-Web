@@ -22,6 +22,8 @@ class User extends Authenticatable implements MustVerifyEmail
 
     protected $guarded = [];
 
+    protected $appends = ['created_date'];
+
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -43,5 +45,10 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function getCreatedDateAttribute()
+    {
+        return $this->created_at->format('d M Y');
     }
 }

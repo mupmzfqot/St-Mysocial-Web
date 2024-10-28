@@ -7,6 +7,7 @@ import TextInput from "@/Components/TextInput.vue";
 import StrongPassword from "@/Components/StrongPassword.vue";
 import Dropzone from "dropzone";
 import _ from "lodash";
+import TogglePassword from "@/Components/TogglePassword.vue";
 
 const form = useForm({
     name: '',
@@ -187,15 +188,16 @@ window._ = _;
                         <div class="sm:col-span-9">
                             <div class="space-y-2">
                                 <StrongPassword v-model="form.password" required />
+                                <TogglePassword v-model="form.password_confirmation" required />
 
-                                <TextInput
-                                    id="password_confirmation"
-                                    type="password"
-                                    class="mt-1 block w-96"
-                                    v-model="form.password_confirmation"
-                                    required
-                                    placeholder="re-enter password"
-                                />
+<!--                                <TextInput-->
+<!--                                    id="password_confirmation"-->
+<!--                                    type="password"-->
+<!--                                    class="mt-1 block w-96"-->
+<!--                                    v-model="form.password_confirmation"-->
+<!--                                    required-->
+<!--                                    placeholder="re-enter password"-->
+<!--                                />-->
                             </div>
                             <p class="text-sm text-red-600 mt-2" v-if="form.errors.password">{{ form.errors.password }}</p>
                         </div>
@@ -206,7 +208,7 @@ window._ = _;
 
                     <div class="mt-5 flex gap-x-2">
                         <button type="submit" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
-                            Save changes
+                            Create Admin
                         </button>
                         <button type="reset" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-50 dark:bg-transparent dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800">
                             Cancel
