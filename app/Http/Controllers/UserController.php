@@ -146,8 +146,12 @@ class UserController extends Controller
 
     public function registrationSuccess()
     {
-        if ($user = auth()->user()->with('roles')) {
-            return Inertia::render('Users/RegisterSuccess', compact('user'));
+        if ($user = auth()->user()) {
+            $message = 'Please wait for the administrator to activate your account.';
+            if(auth()->user()->hasRole('user')){
+                $message = 'We’ve sent you an email—please check your inbox to verify and activate your account. We’re excited to have you on board!';
+            }
+            return Inertia::render('Users/RegisterSuccess', compact('user', 'message'));
         }
 
         return redirect('home');
