@@ -1,6 +1,14 @@
 <script setup>
-import { Link } from "@inertiajs/vue3";
+import {Link, usePage} from "@inertiajs/vue3";
 import { LucideHome, Users, CircleUser, IdCard, MessageSquareMore, Settings, CircleHelp, SlidersHorizontal, LogOut } from "lucide-vue-next";
+import {ref} from "vue";
+
+const currentPath = ref(usePage().url)
+
+function isActiveNav(path) {
+    return currentPath.value === path
+}
+
 </script>
 
 <template>
@@ -38,19 +46,19 @@ import { LucideHome, Users, CircleUser, IdCard, MessageSquareMore, Settings, Cir
                             </span>
                         </li>
                         <li>
-                            <Link :href="route('dashboard')" class="flex items-center gap-x-3.5 py-2 px-2.5 bg-gray-100 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-none focus:bg-gray-100">
+                            <Link :href="route('dashboard')" :class="['flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-none focus:bg-gray-100', isActiveNav('/dashboard') ? 'bg-blue-100': '']">
                                 <LucideHome class="shrink-0 size-4" /> Dashboard
                             </Link>
                         </li>
 
                         <li>
-                            <Link :href="route('admin.index')" class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-none focus:bg-gray-100">
+                            <Link :href="route('admin.index')" :class="['flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-none focus:bg-gray-100', isActiveNav('/admin') ? 'bg-blue-100': '']">
                                 <Users class="shrink-0 size-4" /> Admin List
                             </Link>
                         </li>
 
                         <li>
-                            <Link :href="route('user.index')" class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-none focus:bg-gray-100">
+                            <Link :href="route('user.index')" :class="['flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-none focus:bg-gray-100', isActiveNav('/user') ? 'bg-blue-100': '']">
                                 <Users class="shrink-0 size-4" /> User List
                             </Link>
                         </li>
@@ -76,19 +84,19 @@ import { LucideHome, Users, CircleUser, IdCard, MessageSquareMore, Settings, Cir
                         </li>
 
                         <li>
-                            <Link :href="route('post.index')" type="button" class="hs-accordion-toggle w-full text-start flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-none focus:bg-gray-100" aria-expanded="true" aria-controls="users-accordion-child">
+                            <Link :href="route('post.index')" type="button" :class="['flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-none focus:bg-gray-100', isActiveNav('/post') ? 'bg-blue-100': '']">
                                 <MessageSquareMore class="shrink-0 size-4" /> Post Creation
                             </Link>
                         </li>
 
                         <li>
-                            <Link :href="route('post-moderation.index')" type="button" class="hs-accordion-toggle w-full text-start flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-none focus:bg-gray-100" aria-expanded="true" aria-controls="users-accordion-child">
+                            <Link :href="route('post-moderation.index')" type="button" :class="['flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-none focus:bg-gray-100', isActiveNav('/post-moderation') ? 'bg-blue-100': '']" aria-expanded="true" aria-controls="users-accordion-child">
                                 <MessageSquareMore class="shrink-0 size-4" /> Post Moderation
                             </Link>
                         </li>
 
                         <li>
-                            <Link :href="route('user.public')" class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-none focus:bg-gray-100">
+                            <Link :href="route('user.public')" :class="['flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-none focus:bg-gray-100', isActiveNav('/user/public-account') ? 'bg-blue-100': '']">
                                 <IdCard class="shrink-0 size-4" /> Public Account
                             </Link>
                         </li>
