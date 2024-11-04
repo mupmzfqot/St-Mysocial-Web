@@ -39,7 +39,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', [PhotoAlbumController::class, 'index'])->name('index');
     });
 
-
+    Route::post('upload-profile-image', [ProfileController::class, 'uploadImage'])->name('profile.upload-image');
 });
 
 Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {

@@ -14,7 +14,7 @@ const form = useForm({
 
 const sendLike = (id) => {
     form.post_id = id;
-    form.post(route('user-post.send-like'));
+    form.post(route('user-post.send-like'), { preserveScroll: true });
 }
 </script>
 
@@ -31,7 +31,7 @@ const sendLike = (id) => {
         <div v-for="post in posts" class="flex flex-col bg-white border shadow-sm rounded-xl p-4 md:p-5 mb-3 dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-700/70">
             <div class="flex items-center">
                 <div class="shrink-0">
-                    <img class="size-10 rounded-full" src="https://images.unsplash.com/photo-1568602471122-7832951cc4c5?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=2&w=300&h=300&q=80" alt="Avatar">
+                    <img class="size-10 rounded-full" :src="post.author.avatar" alt="Avatar">
                 </div>
                 <div class="ms-4">
                     <div class="text-base font-semibold text-gray-800 dark:text-neutral-400">{{ post.author.name }}</div>

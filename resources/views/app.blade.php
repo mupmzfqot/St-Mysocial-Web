@@ -15,6 +15,5 @@
     </head>
     <body class="font-sans antialiased bg-gray-50">
         @inertia
-        <script src="{{ asset('js/dropzone-min.js') }}"></script>
     </body>
 </html>
