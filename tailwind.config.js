@@ -17,7 +17,7 @@ export default {
 
     plugins: [
         forms,
-        require('preline/plugin')
+        require('preline/plugin'),
     ],
 
     darkMode: true,

@@ -5,10 +5,13 @@ import GuestLayout from "@/Layouts/GuestLayout.vue";
 const { user } = defineProps({
     user: {
         type: Object
+    },
+    message: {
+        type: String,
     }
 })
 
-if(_.isEmpty(user)) {
+if(user.length === 0) {
     window.location.href = route('home');
 }
 
@@ -27,7 +30,7 @@ if(_.isEmpty(user)) {
                     <p class="text-sm text-gray-800 dark:text-neutral-400">
                         Welcome, {{ user.name }}!<br>
                         Your account has been successfully created.<br>
-                        We’ve sent you an email—please check your inbox to verify and activate your account. We’re excited to have you on board!
+                        {{ message }}
                     </p>
                 </div>
 

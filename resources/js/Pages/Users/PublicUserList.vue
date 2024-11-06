@@ -154,7 +154,7 @@ const reject = (user) => {
                                 </td>
                                 <td class="size-px whitespace-nowrap align-top">
                                     <a class="block p-6" href="#">
-                                        <span class="text-sm text-gray-600 dark:text-neutral-400">{{ moment(String(user.created_at)).format('d MMM Y') }}</span>
+                                        <span class="text-sm text-gray-600 dark:text-neutral-400">{{ user.created_date }}</span>
                                     </a>
                                 </td>
                                 <td class="size-px whitespace-nowrap align-top">
