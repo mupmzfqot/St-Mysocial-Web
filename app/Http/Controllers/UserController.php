@@ -146,9 +146,9 @@ class UserController extends Controller
     {
         if ($user = auth()->user()) {
             $message = 'Before you can login, your account must be manually by an administrator.';
-            if(auth()->user()->hasRole('user')){
-                $message = 'We have successfully received your registration. To complete your registration, please go to your email and confirm it by clicking the link in the message.';
-            }
+//            if(auth()->user()->hasRole('user')){
+//                $message = 'We have successfully received your registration. To complete your registration, please go to your email and confirm it by clicking the link in the message.';
+//            }
             return Inertia::render('Users/RegisterSuccess', compact('user', 'message'));
         }
 

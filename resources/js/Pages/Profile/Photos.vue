@@ -22,7 +22,7 @@ watch(
 </script>
 
 <template>
-    <Head title="Posts" />
+    <Head title="Profile Photos" />
     <AuthenticatedLayout>
         <Breadcrumbs>
             <li class="inline-flex items-center">
