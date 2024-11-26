@@ -16,8 +16,8 @@ class PostModerationController extends Controller
                 $query->where('post', 'like', '%' . $search . '%');
             })
             ->with(['author'])
-            ->whereDoesntHave('userRole', function ($query) {
-                $query->where('roles.name', 'admin');
+            ->whereHas('userRole', function ($query) {
+                $query->where('roles.name', 'public_user');
             })
             ->paginate(10)
             ->withQueryString();

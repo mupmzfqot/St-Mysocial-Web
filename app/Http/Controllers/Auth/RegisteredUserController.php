@@ -41,8 +41,8 @@ class RegisteredUserController extends Controller
 
         $domain = substr(strrchr($request->email, "@"), 1);
         if($domain === config('mail.st_user_email_domain')) {
-            $user->sendEmailVerificationNotification();
-            $user->update(['is_active' => true]);
+//            $user->sendEmailVerificationNotification();
+//            $user->update(['is_active' => true]);
             $user->assignRole('user');
         } else {
             $user->assignRole('public_user');

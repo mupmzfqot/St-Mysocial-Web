@@ -3,11 +3,18 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import Breadcrumbs from "@/Components/Breadcrumbs.vue";
 import { ChevronRight, UsersRound } from "lucide-vue-next";
-import FlashMessage from "@/Components/FlashMessage.vue";
 
 const props = defineProps({
     users: Object,
-    totalPost: Number
+    totalAccounts: Number,
+    totalActiveAccounts: Number,
+    totalBlockedAccounts: Number,
+    totalPosts: Number,
+    totalActivePosts: Number,
+    totalComments: Number,
+    totalLikes: Number,
+    totalMessages: Number,
+    totalPhotos: Number,
 
 });
 </script>
@@ -62,7 +69,7 @@ const props = defineProps({
                             </p>
                             <div class="mt-1 flex items-center gap-x-2">
                                 <h3 class="mt-1 text-xl font-medium text-gray-800 dark:text-neutral-200">
-                                    0
+                                    {{ totalComments }}
                                 </h3>
                             </div>
                         </div>
@@ -82,7 +89,7 @@ const props = defineProps({
                             </p>
                             <div class="mt-1 flex items-center gap-x-2">
                                 <h3 class="text-xl sm:text-2xl font-medium text-gray-800 dark:text-neutral-200">
-                                    0
+                                    {{ totalMessages }}
                                 </h3>
                             </div>
                         </div>
@@ -102,7 +109,7 @@ const props = defineProps({
                             </p>
                             <div class="mt-1 flex items-center gap-x-2">
                                 <h3 class="mt-1 text-xl font-medium text-gray-800 dark:text-neutral-200">
-                                    {{ totalPost }}
+                                    {{ totalPosts }}
                                 </h3>
                             </div>
                         </div>
@@ -135,19 +142,43 @@ const props = defineProps({
                     <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">Accounts</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">45</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">{{ totalAccounts }}</td>
                     </tr>
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">Active Accounts</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">45</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">{{ totalActiveAccounts }}</td>
                     </tr>
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">Blocked Accounts</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">45</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">{{ totalBlockedAccounts }}</td>
                     </tr>
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">Groups</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">45</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">0</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">Deactivated Groups</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">0</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">Total Comments</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">{{ totalComments }}</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">Total Likes</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">{{ totalLikes }}</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">Total Photos</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">{{ totalPhotos }}</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">Total Posts</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">{{ totalPosts }}</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">Total Messages</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">{{ totalMessages }}</td>
                     </tr>
 
                     </tbody>
