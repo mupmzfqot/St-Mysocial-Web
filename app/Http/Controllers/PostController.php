@@ -19,9 +19,6 @@ class PostController extends Controller
             ->when($searchTerm, function ($query, $search) {
                 $query->where('post', 'like', '%' . $search . '%');
             })
-            ->whereDoesntHave('userRole', function ($query) {
-                $query->whereIn('roles.name', ['admin', 'user']);
-            })
             ->with(['author'])
             ->paginate(10)
             ->withQueryString();
