@@ -26,4 +26,8 @@ class Comment extends Model
         return Carbon::parse($value)->diffForHumans();
     }
 
+    public function post(): BelongsTo
+    {
+        return $this->belongsTo(Post::class);
+    }
 }

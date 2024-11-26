@@ -49,9 +49,8 @@ class UserController extends Controller
     public function userIndex(Request $request)
     {
         $searchTerm = $request->search;
-        $users = User::query()->whereHas('roles', function ($query) {
-                $query->whereIn('name', ['user']);
-            })
+        $users = User::query()
+            ->isActive()
             ->when($request->search, function ($query, $search) {
                 $query->where('name', 'like', '%' . $search . '%');
             })
@@ -75,9 +74,8 @@ class UserController extends Controller
     public function publicAccountIndex(Request $request)
     {
         $searchTerm = $request->search;
-        $users = User::query()->whereHas('roles', function ($query) {
-                $query->whereIn('name', ['public_user']);
-            })
+        $users = User::query()
+            ->where('is_active', false)
             ->when($request->search, function ($query, $search) {
                 $query->where('name', 'like', '%' . $search . '%');
             })

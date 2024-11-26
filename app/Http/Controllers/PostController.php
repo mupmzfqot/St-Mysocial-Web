@@ -20,7 +20,7 @@ class PostController extends Controller
                 $query->where('post', 'like', '%' . $search . '%');
             })
             ->whereDoesntHave('userRole', function ($query) {
-                $query->whereIn('roles.name', ['user', 'public_user']);
+                $query->whereIn('roles.name', ['admin', 'user']);
             })
             ->with(['author'])
             ->paginate(10)

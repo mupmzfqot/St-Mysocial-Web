@@ -78,6 +78,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         Route::post('update-status/{id}', [PostModerationController::class, 'updateStatus'])->name('update-status');
     });
 
+    Route::get('profile-photos', [ProfileController::class, 'indexPhotos'])->name('profile-photos');
+
 
     Route::get('app-setting', [SettingController::class, 'index'])->name('app-setting');
 });

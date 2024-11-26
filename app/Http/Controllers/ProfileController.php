@@ -105,4 +105,10 @@ class ProfileController extends Controller
 
         return redirect()->back();
     }
+
+    public function indexPhotos()
+    {
+        $photos = User::all();
+        return Inertia::render('Profile/Photos', compact('photos'));
+    }
 }
