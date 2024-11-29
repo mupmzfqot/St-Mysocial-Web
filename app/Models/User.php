@@ -14,7 +14,7 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements MustVerifyEmail, HasMedia
 {
-    use HasFactory, Notifiable, HasRoles, HasApiTokens, InteractsWithMedia;
+    use HasFactory, Notifiable, HasRoles, HasApiTokens, InteractsWithMedia, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -63,5 +63,10 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
     public function getAvatarAttribute(): ?string
     {
         return $this->getMedia('avatar')->first()?->original_url;
+    }
+
+    public function unreadNotifications()
+    {
+        return $this->notifications()->where('read_at', null);
     }
 }

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\MessageController;
 use App\Http\Controllers\PhotoAlbumController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\PostModerationController;
@@ -40,6 +41,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::post('upload-profile-image', [ProfileController::class, 'uploadImage'])->name('profile.upload-image');
+
+    Route::prefix('message')->name('message.')->group(function () {
+        Route::get('/', [MessageController::class, 'index'])->name('index');
+        Route::get('/get/{id}', [MessageController::class, 'get'])->name('show');
+    });
 });
 
 Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {

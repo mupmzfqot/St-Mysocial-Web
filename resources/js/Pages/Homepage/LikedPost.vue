@@ -22,6 +22,10 @@ const sendLike = (id) => {
     <Head title="Liked Posts" />
     <HomeLayout>
 
+        <div class="pb-3">
+            <h1 class="font-semibold text-xl dark:text-white">My Likes</h1>
+        </div>
+
         <div v-for="post in posts.data" class="flex flex-col bg-white border shadow-sm rounded-xl p-4 md:p-5 mb-3 dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-700/70">
             <div class="flex items-center">
                 <div class="shrink-0">
@@ -35,10 +39,10 @@ const sendLike = (id) => {
             <div class="mt-2 text-gray-500 dark:text-neutral-400" v-html="post.post"></div>
 
             <!-- Image Grid -->
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 w-3/4 py-2" v-if="post.media.length > 0">
+            <div class="grid grid-cols-2 sm:grid-cols-1 gap-2 py-2" v-if="post.media.length > 0">
                 <a class="group block relative overflow-hidden rounded-lg" href="#" v-for="media in post.media">
                     <div v-if="media.mime_type !== 'video/mp4'">
-                        <img class="w-full size-40 object-cover bg-gray-100 rounded-lg dark:bg-neutral-800" :src="media.preview_url" alt="Project">
+                        <img class="w-full object-cover bg-gray-100 rounded-lg dark:bg-neutral-800" :src="media.preview_url" alt="Project">
                         <div class="absolute bottom-1 end-1 opacity-0 group-hover:opacity-100 transition">
                             <div class="flex items-center gap-x-1 py-1 px-2 bg-white border border-gray-200 text-gray-800 rounded-lg dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-200">
                                 <svg class="shrink-0 size-3" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>

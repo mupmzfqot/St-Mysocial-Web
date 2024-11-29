@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\UserCollection;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Spatie\Permission\Models\Role;
@@ -145,11 +146,8 @@ class UserController extends Controller
     public function registrationSuccess()
     {
         if ($user = auth()->user()) {
-            $message = 'Before you can login, your account must be manually by an administrator.';
-//            if(auth()->user()->hasRole('user')){
-//                $message = 'We have successfully received your registration. To complete your registration, please go to your email and confirm it by clicking the link in the message.';
-//            }
-            return Inertia::render('Users/RegisterSuccess', compact('user', 'message'));
+            Auth::logout();
+            return Inertia::render('Users/RegisterSuccess');
         }
 
         return redirect('home');
