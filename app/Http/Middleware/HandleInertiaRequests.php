@@ -35,7 +35,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
-            'unreadNotifications' => $request->user()->unreadNotifications,
+            'unreadNotifications' => $request->user()?->unreadNotifications,
             'ziggy' => fn () => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
