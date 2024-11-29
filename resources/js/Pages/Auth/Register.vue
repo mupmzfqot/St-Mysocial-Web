@@ -111,7 +111,7 @@ const submit = () => {
                             <!-- Form Group -->
                             <div>
                                 <label for="confirm-password" class="block text-sm mb-2 dark:text-white">Confirm Password</label>
-                                <TogglePassword v-model="form.password_confirmation" />
+                                <TogglePassword v-model="form.password_confirmation" placeholder="Confirm Password" />
                             </div>
                             <!-- End Form Group -->
 

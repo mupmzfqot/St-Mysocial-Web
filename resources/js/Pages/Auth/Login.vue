@@ -6,6 +6,7 @@ import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import TogglePassword from "@/Components/TogglePassword.vue";
 
 defineProps({
     canResetPassword: {
@@ -67,14 +68,7 @@ const submit = () => {
                             <div class="mt-4">
                                 <InputLabel for="password" value="Password" />
 
-                                <TextInput
-                                    id="password"
-                                    type="password"
-                                    class="mt-1 block w-full"
-                                    v-model="form.password"
-                                    required
-                                    autocomplete="current-password"
-                                />
+                                <TogglePassword v-model="form.password" />
 
                                 <InputError class="mt-2" :message="form.errors.password" />
                             </div>
@@ -86,7 +80,10 @@ const submit = () => {
                                 </label>
                             </div>
 
-                            <div class="flex items-center justify-end mt-4">
+                            <div class="flex items-center justify-between mt-4">
+                                <PrimaryButton class="" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
+                                    Log in
+                                </PrimaryButton>
                                 <Link
                                     v-if="canResetPassword"
                                     :href="route('password.request')"
@@ -94,10 +91,6 @@ const submit = () => {
                                 >
                                     Forgot your password?
                                 </Link>
-
-                                <PrimaryButton class="ms-4" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
-                                    Log in
-                                </PrimaryButton>
                             </div>
                         </form>
                     </div>
@@ -112,3 +105,4 @@ const submit = () => {
 
     </GuestLayout>
 </template>
+

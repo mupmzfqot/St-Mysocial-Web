@@ -20,6 +20,7 @@ class PostController extends Controller
                 $query->where('post', 'like', '%' . $search . '%');
             })
             ->with(['author'])
+            ->orderBy('created_at','desc')
             ->paginate(10)
             ->withQueryString();
 

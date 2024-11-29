@@ -35,6 +35,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'unreadNotifications' => $request->user()->unreadNotifications,
             'ziggy' => fn () => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
@@ -44,5 +45,20 @@ class HandleInertiaRequests extends Middleware
                 'error' => fn () => $request->session()->get('error')
             ],
         ];
+
+        return array_merge(parent::share($request), [
+            'auth' => [
+                'user' => $request->user(),
+            ],
+            'unreadNotifications' => $request->user()->unreadNotification,
+            'ziggy' => fn () => [
+                ...(new Ziggy)->toArray(),
+                'location' => $request->url(),
+            ],
+            'flash' => [
+                'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error')
+            ],
+        ]);
     }
 }

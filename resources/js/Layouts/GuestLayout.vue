@@ -11,7 +11,7 @@ onMounted(() => {
 
 <template>
     <!-- ========== HEADER ========== -->
-    <header class="bg-blue-700 border-b border-gray-200 dark:bg-neutral-800 dark:border-neutral-700 flex flex-wrap md:justify-start md:flex-nowrap z-50 w-full">
+    <header class="bg-gradient-blue flex flex-wrap md:justify-start md:flex-nowrap z-50 w-full">
         <nav class="relative max-w-[85rem] w-full md:flex md:items-center md:justify-between md:gap-3 mx-auto px-4 sm:px-6 lg:px-8 py-2">
             <!-- Logo w/ Collapse Button -->
             <div class="flex items-center justify-between">
@@ -57,9 +57,22 @@ onMounted(() => {
         </nav>
     </header>
     <!-- ========== END HEADER ========== -->
-    <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 px-3 bg-gray-100 dark:bg-gray-900">
+    <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 px-3 bg-gradient-blue-reverse">
 
         <slot />
 
     </div>
 </template>
+
+<style scoped>
+.bg-gradient-blue {
+    background: rgb(181,95,200);
+    background: linear-gradient(90deg, rgba(181,95,200,1) 0%, rgba(0,31,241,1) 100%);
+}
+
+.bg-gradient-blue-reverse {
+    background: rgb(0,31,241);
+    background: linear-gradient(90deg, rgba(0,31,241,1) 0%, rgba(181,95,200,1) 100%);
+}
+
+</style>

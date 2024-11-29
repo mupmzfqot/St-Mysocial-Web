@@ -108,7 +108,11 @@ class ProfileController extends Controller
 
     public function indexPhotos()
     {
-        $photos = User::all();
+        $photos = User::whereHas('media', function ($query) {
+            $query->where('collection_name', 'avatar');
+        })->paginate(10);
+
+
         return Inertia::render('Profile/Photos', compact('photos'));
     }
 }

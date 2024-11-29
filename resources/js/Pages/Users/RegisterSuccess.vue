@@ -2,19 +2,6 @@
 import { Head, Link } from "@inertiajs/vue3";
 import GuestLayout from "@/Layouts/GuestLayout.vue";
 
-const { user } = defineProps({
-    user: {
-        type: Object
-    },
-    message: {
-        type: String,
-    }
-})
-
-if(user.length === 0) {
-    window.location.href = route('home');
-}
-
 </script>
 
 <template>
@@ -25,18 +12,17 @@ if(user.length === 0) {
             <div class="bg-white rounded-xl shadow p-4 sm:p-7 dark:bg-neutral-800">
                 <div class="mb-8">
                     <h2 class="text-xl mb-4 font-bold text-gray-800 dark:text-neutral-200">
-                        Registration success
+                        Registration succeeded
                     </h2>
                     <p class="text-sm text-gray-800 dark:text-neutral-400">
-                        Welcome, {{ user.name }}!<br>
-                        Your account has been successfully created.<br>
-                        {{ message }}
+                        Before you can login, your account must be manually by an administrator.
                     </p>
+                    <p>Please wait, this can take some time.</p>
                 </div>
 
                 <div class="mt-5 flex gap-x-2">
-                    <Link :href="route('home')" ype="button" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
-                        Back to home
+                    <Link :href="route('login')" ype="button" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
+                        Back to login
                     </Link>
                 </div>
             </div>
