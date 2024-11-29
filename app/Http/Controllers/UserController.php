@@ -22,6 +22,7 @@ class UserController extends Controller
                 $query->where('name', 'like', '%' . $search . '%')
                     ->orWhere('email', 'like', '%' . $search . '%');
             })
+            ->orderBy('created_at', 'desc')
             ->paginate(10)
             ->withQueryString();
 
@@ -37,6 +38,7 @@ class UserController extends Controller
             ->when($request->search, function ($query, $search) {
                 $query->where('name', 'like', '%' . $search . '%');
             })
+            ->orderBy('created_at', 'desc')
             ->paginate($request->perPage);
 
         return UserCollection::collection($users);
@@ -58,6 +60,7 @@ class UserController extends Controller
             ->with(['roles' => function ($query) {
                 $query->select('name', 'display_name');
             }])
+            ->orderBy('created_at', 'desc')
             ->paginate(10)
             ->withQueryString();
 
@@ -83,6 +86,7 @@ class UserController extends Controller
             ->with(['roles' => function ($query) {
                 $query->select('name', 'display_name');
             }])
+            ->orderBy('created_at', 'desc')
             ->paginate(10);
         return Inertia::render('Users/PublicUserList', compact('users'));
     }

@@ -57,7 +57,8 @@ class NewRegisteredUserNotification extends Notification
         return [
             'id'        => $this->user->id,
             'name'      => $this->user->name,
-            'message'   => "{$this->user->name} has registered."
+            'message'   => "{$this->user->name} has registered.",
+            'url'       => route('users.profile', $this->user->id),
         ];
     }
 }

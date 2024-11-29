@@ -65,8 +65,4 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
         return $this->getMedia('avatar')->first()?->original_url;
     }
 
-    public function unreadNotifications()
-    {
-        return $this->notifications()->where('read_at', null);
-    }
 }

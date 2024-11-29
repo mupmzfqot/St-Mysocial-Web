@@ -19,6 +19,7 @@ class PostModerationController extends Controller
             ->whereHas('userRole', function ($query) {
                 $query->where('roles.name', 'public_user');
             })
+            ->orderBy('created_at', 'desc')
             ->paginate(10)
             ->withQueryString();
 
