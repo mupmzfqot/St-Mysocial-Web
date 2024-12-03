@@ -34,6 +34,7 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user(),
+                'roles' => $request->user()?->roles->pluck('name')->toArray(),
             ],
             'unreadNotifications' => $request->user()?->unreadNotifications,
             'ziggy' => fn () => [
@@ -46,19 +47,5 @@ class HandleInertiaRequests extends Middleware
             ],
         ];
 
-        return array_merge(parent::share($request), [
-            'auth' => [
-                'user' => $request->user(),
-            ],
-            'unreadNotifications' => $request->user()->unreadNotification,
-            'ziggy' => fn () => [
-                ...(new Ziggy)->toArray(),
-                'location' => $request->url(),
-            ],
-            'flash' => [
-                'success' => fn () => $request->session()->get('success'),
-                'error' => fn () => $request->session()->get('error')
-            ],
-        ]);
     }
 }

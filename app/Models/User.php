@@ -62,7 +62,7 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
 
     public function getAvatarAttribute(): ?string
     {
-        return $this->getMedia('avatar')->first()?->original_url;
+        return $this->getMedia('avatar')->first()?->original_url ?? asset('default-avatar.png');
     }
 
 }

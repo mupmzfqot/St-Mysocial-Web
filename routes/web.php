@@ -9,6 +9,7 @@ use App\Http\Controllers\PostController;
 use App\Http\Controllers\PostModerationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\TeamController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,6 +17,7 @@ Route::get('/', [App\Http\Controllers\Auth\AuthenticatedSessionController::class
 
 Route::middleware(['auth', 'verified', 'role:user|public_user'])->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('homepage');
+    Route::get('/public', [HomeController::class, 'publicPost'])->name('public');
     Route::get('/posts', [HomeController::class, 'createPost'])->name('create-post');
     Route::get('/liked-posts', [HomeController::class, 'showLikedPosts'])->name('liked-posts');
     Route::get('/top-posts', [HomeController::class, 'showTopPosts'])->name('top-posts');
@@ -36,6 +38,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::post('/profile/update-status-image/{id}', [ProfileController::class, 'updateProfileImageStatus'])->name('profile.update-status-image');
 
     Route::prefix('photo-album')->name('photoAlbum.')->group(function () {
         Route::get('/', [PhotoAlbumController::class, 'index'])->name('index');
@@ -47,6 +50,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', [MessageController::class, 'index'])->name('index');
         Route::get('/get/{id}', [MessageController::class, 'get'])->name('show');
     });
+
+    Route::get('team-st', [TeamController::class, 'get'])->name('team.get');
+    Route::get('search', [UserController::class, 'search'])->name('user.search');
 
     Route::post('read-notification/{id?}', [NotificationController::class, 'readNotification'])->name('read-notification');
 });

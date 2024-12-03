@@ -203,4 +203,21 @@ class UserController extends Controller
 
     }
 
+    public function search(Request $request)
+    {
+        $searchTerm = $request->search;
+        $users = User::query()
+            ->when($searchTerm, function ($query, $searchTerm) {
+                $query->where('name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('email', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('username', 'like', '%' . $searchTerm . '%');
+            })
+            ->orderBy('name', 'asc')
+            ->paginate(20)
+            ->withQueryString();
+
+
+        return Inertia::render('Homepage/Search', compact('users'));
+    }
+
 }

@@ -3,9 +3,10 @@ import {Head, Link, router} from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import {CheckCircle, ChevronRight, MinusCircle, Search, UserCircle} from "lucide-vue-next";
 import Breadcrumbs from "@/Components/Breadcrumbs.vue";
-import {ref, watch} from "vue";
+import {reactive, ref, watch} from "vue";
 import {debounce} from "lodash";
 import Pagination from "@/Components/Pagination.vue";
+import ConfirmDialog from "@/Components/ConfirmDialog.vue";
 
 const props = defineProps({
     photos: Object,
@@ -20,12 +21,12 @@ watch(
     )
 );
 
-const setActive = (user) => {
-
-}
-
-const reject = (user) => {
-
+const confirmData = reactive({ confirmId: '' });
+const changeStatus = (media, status) => {
+    confirmData.id = media.id;
+    confirmData.message = `Do you want to update user profile status?`;
+    confirmData.url = route('profile.update-status-image', media.id);
+    confirmData.data = { status: status };
 }
 
 
@@ -137,12 +138,14 @@ const reject = (user) => {
                                             </button>
                                             <div class="hs-dropdown-menu transition-[opacity,margin] duration hs-dropdown-open:opacity-100 opacity-0 hidden divide-y divide-gray-200 min-w-40 z-20 bg-white shadow-2xl rounded-lg p-2 mt-2 dark:divide-neutral-700 dark:bg-neutral-800 dark:border dark:border-neutral-700" role="menu" aria-orientation="vertical" aria-labelledby="hs-table-dropdown-1">
                                                 <div class="py-2 first:pt-0 last:pb-0">
-                                                    <a @click="setActive(photo)" class="flex items-center gap-x-3 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700 dark:focus:text-neutral-300" href="#" aria-haspopup="dialog" aria-expanded="false" aria-controls="hs-scale-animation-modal" data-hs-overlay="#confirm-dialog">
-                                                        Approve
-                                                    </a>
-                                                    <a @click="reject(photo)" class="flex items-center gap-x-3 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700 dark:focus:text-neutral-300" href="#" aria-haspopup="dialog" aria-expanded="false" aria-controls="hs-scale-animation-modal" data-hs-overlay="#confirm-dialog">
-                                                        Reject
-                                                    </a>
+                                                    <div class="py-2 first:pt-0 last:pb-0">
+                                                        <a @click="changeStatus(photo.media[0], 1)" class="flex items-center gap-x-3 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700 dark:focus:text-neutral-300" href="#" aria-haspopup="dialog" aria-expanded="false" aria-controls="hs-scale-animation-modal" data-hs-overlay="#confirm-dialog">
+                                                            Approve
+                                                        </a>
+                                                        <a @click="changeStatus(photo.media[0], 0)" class="flex items-center gap-x-3 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700 dark:focus:text-neutral-300" href="#" aria-haspopup="dialog" aria-expanded="false" aria-controls="hs-scale-animation-modal" data-hs-overlay="#confirm-dialog">
+                                                            Reject
+                                                        </a>
+                                                    </div>
                                                     <Link :href="route('user.profile', photo.id)" class="flex items-center gap-x-3 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700 dark:focus:text-neutral-300" href="#">
                                                         Go to Account
                                                     </Link>
@@ -159,10 +162,10 @@ const reject = (user) => {
 
                         <!-- Footer -->
                         <div class="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-t border-gray-200 dark:border-neutral-700">
-<!--                            <Pagination :links="posts.links" />-->
-<!--                            <p class="text-sm text-gray-500 dark:text-neutral-500 dark:hover:text-blue-500 dark:focus:text-blue-500">-->
-<!--                                Showing {{ posts.from }} to {{ posts.to }} of {{ posts.total }} results-->
-<!--                            </p>-->
+                            <Pagination :links="photos.links" />
+                            <p class="text-sm text-gray-500 dark:text-neutral-500 dark:hover:text-blue-500 dark:focus:text-blue-500">
+                                Showing {{ photos.from }} to {{ photos.to }} of {{ photos.total }} results
+                            </p>
                         </div>
                         <!-- End Footer -->
                     </div>
@@ -170,6 +173,8 @@ const reject = (user) => {
             </div>
         </div>
         <!-- End Card -->
+
+        <ConfirmDialog :data="confirmData"/>
     </AuthenticatedLayout>
 </template>
 

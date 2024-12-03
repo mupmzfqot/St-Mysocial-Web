@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class ProfileController extends Controller
 {
@@ -109,10 +110,16 @@ class ProfileController extends Controller
     public function indexPhotos()
     {
         $photos = User::whereHas('media', function ($query) {
-            $query->where('collection_name', 'avatar');
+            $query->where('collection_name', 'avatar')
+                ->where('is_verified', false);
         })->paginate(10);
 
-
         return Inertia::render('Profile/Photos', compact('photos'));
+    }
+
+    public function updateProfileImageStatus(Request $request, $id)
+    {
+        Media::where('id', $id)->update(['is_verified' => $request->status]);
+        return redirect()->back();
     }
 }

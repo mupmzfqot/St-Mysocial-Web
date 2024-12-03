@@ -18,9 +18,27 @@ class HomeController extends Controller
             ->with('author', 'media', 'comments.user')
             ->orderBy('created_at', 'desc')
             ->published()
+            ->where('type', 'st')
             ->paginate(30);
 
-        return Inertia::render('Home', compact('posts'));
+        $title = 'ST Post';
+        $description = 'Post from ST Team';
+
+        return Inertia::render('Home', compact('posts', 'title', 'description'));
+    }
+
+    public function publicPost()
+    {$posts = Post::query()
+        ->with('author', 'media', 'comments.user')
+        ->orderBy('created_at', 'desc')
+        ->published()
+        ->where('type', 'public')
+        ->paginate(30);
+
+        $title = 'Public Post';
+        $description = 'Post for Public';
+
+        return Inertia::render('Home', compact('posts', 'title', 'description'));
     }
 
     public function showLikedPosts()

@@ -10,10 +10,16 @@ class CreatePost
 {
     public function handle($request, $id = null)
     {
+        $published = (bool) Auth::user()->hasAnyRole(['admin', 'user']);
+        if($request->post('type') == 'public') {
+            $published = false;
+        }
+
         $data = [
             'post' => $request->post('content'),
             'user_id'  => $request->user()->id,
-            'published' => (bool) Auth::user()->hasAnyRole(['admin', 'user']),
+            'published' => $published,
+            'type'  => $request->post('type'),
         ];
 
         DB::beginTransaction();
