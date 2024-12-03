@@ -1,12 +1,65 @@
 <script setup>
-import { onMounted } from 'vue';
+import {onMounted, ref, watch} from 'vue';
 import {HSCopyMarkup as HSStaticMethods} from "preline";
-import {Link} from "@inertiajs/vue3";
-import {LogOut, UserIcon, Rss, StickyNote, Heart, Star, Users, Images, MessageSquareMore,
-CircleCheckBig} from "lucide-vue-next";
+import {Link, router, usePage} from "@inertiajs/vue3";
+import {
+    CircleCheckBig,
+    Heart,
+    Images,
+    LogOut,
+    MessageSquareMore,
+    Rss,
+    Star,
+    StickyNote,
+    UserIcon,
+    Users
+} from "lucide-vue-next";
+import {debounce} from "lodash";
+
 onMounted(() => {
     window.HSStaticMethods.autoInit()
 });
+
+const { auth: { roles: userRoles } } = usePage().props;
+const { unreadNotifications: notifications } = usePage().props;
+
+const isPublic = userRoles.includes("public_user");
+const isST = userRoles.includes("user");
+
+const readNotification = (item) => {
+    router.post(route('read-notification', item.id), {}, {preserveScroll: true})
+    router.visit(route('read-notification', item.id), {
+        preserveScroll: true,
+        method: 'post',
+        onFinish: visit => {
+            router.get(item.data.url)
+        }
+    })
+}
+
+const teams = ref([]);
+const fetchTeams = async () => {
+    let response = await axios.get(route('team.get'));
+    teams.value = response.data;
+}
+
+onMounted(() => {
+    fetchTeams()
+
+})
+
+const props = defineProps({
+    searchTerm: String
+});
+
+const search = ref(props.searchTerm);
+
+watch(
+    search, debounce(
+        (q) => router.get(route('user.search'), { search: q }, { preserveState: true }), 500
+    )
+);
+
 </script>
 
 <template>
@@ -46,7 +99,7 @@ onMounted(() => {
                             <div class="absolute inset-y-0 start-0 flex items-center pointer-events-none z-20 ps-3.5">
                                 <svg class="shrink-0 size-4 text-gray-400 dark:text-white/60" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                             </div>
-                            <input type="text" class="py-2 ps-10 pe-16 block w-full bg-white border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder:text-neutral-400 dark:focus:ring-neutral-600" placeholder="Search">
+                            <input type="text" v-model="search" class="py-2 ps-10 pe-16 block w-full bg-white border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder:text-neutral-400 dark:focus:ring-neutral-600" placeholder="Search">
                             <div class="hidden absolute inset-y-0 end-0 flex items-center pointer-events-none z-20 pe-1">
                                 <button type="button" class="inline-flex shrink-0 justify-center items-center size-6 rounded-full text-gray-500 hover:text-blue-600 focus:outline-none focus:text-blue-600 dark:text-neutral-500 dark:hover:text-blue-500 dark:focus:text-blue-500" aria-label="Close">
                                     <span class="sr-only">Close</span>
@@ -65,7 +118,7 @@ onMounted(() => {
                                 <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path>
                             </svg>
                             <span class="sr-only">Notifications</span>
-                            <span class="absolute top-0 end-0 inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium transform -translate-y-1/2 translate-x-1/2 bg-red-500 text-white">2</span>
+                            <span class="absolute top-0 end-0 inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium transform -translate-y-1/2 translate-x-1/2 bg-red-500 text-white">{{ notifications.length }}</span>
                         </button>
 
                         <div class="hs-dropdown-menu transition-[opacity,margin] w-[350px] duration hs-dropdown-open:opacity-100 opacity-0 hidden min-w-60 bg-white shadow-md border border-gray-200 rounded-lg mt-2 divide-y divide-gray-200 dark:bg-neutral-800 dark:border dark:border-neutral-700 dark:divide-neutral-700" role="menu" aria-orientation="vertical" aria-labelledby="hs-dropdown-with-dividers">
@@ -75,14 +128,14 @@ onMounted(() => {
                                 </p>
                             </div>
                             <div class="p-1 space-y-0.5">
-                                <Link :href="route('message.show', 1)" class="flex items-center gap-x-1 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700">
-                                    <b>Mark Wanner</b> sent you a message.
-                                </Link>
-                                <a href="" class="flex flex-wrap items-center gap-x-1 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700">
-                                    <b>Administrator</b> comment your post.
+                                <a href="#" @click="readNotification(notif)" v-for="notif in notifications" class="flex items-center gap-x-1 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700">
+                                    {{ notif.data.message }}
+                                </a>
+                                <a href="#" v-if="notifications.length === 0" class="flex items-center gap-x-3.5 py-2 px-3 font-light italic text-gray-800">
+                                    No notifications yet.
                                 </a>
                             </div>
-                            <div class="p-1 space-y-0.5">
+                            <div class="p-1 space-y-0.5" v-if="notifications.length > 0">
                                 <a href="#" class="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700">
                                     <CircleCheckBig class="shrink-0 size-4 text-green-700" /> Mark all as read
                                 </a>
@@ -140,11 +193,11 @@ onMounted(() => {
                                 </div>
                             </div>
                         </div>
-                        <Link :href="route('homepage')" type="button" class="inline-flex items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 text-blue-600 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700">
+                        <Link v-if="isST" :href="route('homepage')" type="button" class="inline-flex items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 text-blue-600 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700">
                             <Rss class="shrink-0 size-4" />
                             ST Posts
                         </Link>
-                        <Link :href="route('homepage')" type="button" class="inline-flex items-center gap-x-2 py-3 px-4 text-sm text-start font-semibold border border-gray-200 text-gray-800 hover:text-blue-600 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700 dark:text-white dark:hover:text-blue-500">
+                        <Link :href="route('public')" type="button" class="inline-flex items-center gap-x-2 py-3 px-4 text-sm text-start font-semibold border border-gray-200 text-gray-800 hover:text-blue-600 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700 dark:text-white dark:hover:text-blue-500">
                             <StickyNote class="shrink-0 size-4" />
                             Public Posts
                         </Link>
@@ -160,10 +213,10 @@ onMounted(() => {
                             <Star class="shrink-0 size-4" />
                             Top Posts
                         </Link>
-                        <button type="button" class="inline-flex items-center gap-x-2 py-3 px-4 text-sm text-start font-semibold border border-gray-200 text-gray-800 hover:text-blue-600 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700 dark:text-white dark:hover:text-blue-500">
-                            <Users class="shrink-0 size-4" />
-                            Team ST
-                        </button>
+<!--                        <button v-if="isST" type="button" class="inline-flex items-center gap-x-2 py-3 px-4 text-sm text-start font-semibold border border-gray-200 text-gray-800 hover:text-blue-600 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700 dark:text-white dark:hover:text-blue-500">-->
+<!--                            <Users class="shrink-0 size-4" />-->
+<!--                            Team ST-->
+<!--                        </button>-->
                         <Link :href="route('photoAlbum.index')" type="button" class="inline-flex items-center gap-x-2 py-3 px-4 text-sm text-start font-semibold border border-gray-200 text-gray-800 hover:text-blue-600 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700 dark:text-white dark:hover:text-blue-500">
                             <Images class="shrink-0 size-4" />
                             My Photo Albums
@@ -171,7 +224,7 @@ onMounted(() => {
                     </div>
                 </div>
                 <div class="px-1
-                col-span-6 max-h-[900px] overflow-y-auto
+                col-span-6 h-[90vh] overflow-y-auto
                       [&::-webkit-scrollbar]:w-1
                       [&::-webkit-scrollbar-track]:rounded-full
                       [&::-webkit-scrollbar-track]:bg-gray-100
@@ -182,45 +235,28 @@ onMounted(() => {
                     <slot />
                 </div>
                 <div class="col-span-3">
-                    <div class="max-w-xs flex flex-col bg-white shadow-sm rounded-lg">
+                    <div class="max-w-xs flex flex-col bg-white shadow-sm rounded-lg" v-if="isST">
                         <div class="bg-gray-100 border-b rounded-t-xl py-3 px-4 md:py-4 md:px-5 dark:bg-neutral-900 dark:border-neutral-700">
                             <p class="mt-1 font-semibold">
                                 ST Team
                             </p>
                         </div>
                         <div class="p-1 gap-y-3">
-                            <Link :href="route('message.show', 1)" class="shrink-0 group block p-2 hover:bg-gray-100 rounded-lg">
+                            <Link :href="route('message.show', 1)" v-for="team in teams" class="shrink-0 group block p-2 hover:bg-gray-100 rounded-lg">
                                 <div class="flex items-center">
                                     <div class="hs-tooltip inline-block">
                                         <a class="hs-tooltip-toggle relative inline-block" href="#">
-                                            <img class="inline-block size-[40px] rounded-full" src="https://images.unsplash.com/photo-1568602471122-7832951cc4c5?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=2&w=300&h=300&q=80" alt="Avatar">
-                                            <span class="absolute bottom-0 end-0 block size-3 rounded-full ring-2 ring-white bg-green-700"></span>
+                                            <img class="inline-block size-[40px] rounded-full" :src="team.avatar" alt="Avatar">
+<!--                                            <span class="absolute bottom-0 end-0 block size-3 rounded-full ring-2 ring-white bg-green-700"></span>-->
                                         </a>
                                     </div>
                                     <div class="ms-3">
-                                        <h3 class="font-semibold text-gray-800 dark:text-white">Mark Wanner</h3>
-                                        <p class="text-sm font-medium text-gray-400 dark:text-neutral-500">Online</p>
+                                        <h3 class="font-semibold text-gray-800 dark:text-white">{{ team.name }}</h3>
+                                        <p class="text-sm font-medium text-gray-400 dark:text-neutral-500">{{ team.email }}</p>
                                     </div>
                                 </div>
                             </Link>
-                            <Link :href="route('message.show', 1)" class="shrink-0 group block p-2 hover:bg-gray-100 rounded-lg">
-                                <div class="flex items-center">
-                                    <div class="hs-tooltip inline-block">
-                                        <a class="hs-tooltip-toggle relative inline-block" href="#">
-                                            <img class="inline-block size-[40px] rounded-full" src="https://images.unsplash.com/photo-1568602471122-7832951cc4c5?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=2&w=300&h=300&q=80" alt="Avatar">
-                                            <span class="absolute bottom-0 end-0 block size-3 rounded-full ring-2 ring-white bg-gray-400"></span>
-                                        </a>
-                                    </div>
-                                    <div class="ms-3">
-                                        <h3 class="font-semibold text-gray-800 dark:text-white">Mark Wanner</h3>
-                                        <p class="text-sm font-medium text-gray-400 dark:text-neutral-500">Offline</p>
-                                    </div>
-                                </div>
-                            </Link>
-
                         </div>
-
-
                     </div>
 
                 </div>

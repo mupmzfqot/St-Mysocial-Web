@@ -17,10 +17,10 @@ class PostResource extends JsonResource
         return [
             'id'            => $this->id,
             'content'       => $this->post,
-            'rating'        => $this->rating,
             'view_count'    => $this->view_count,
             'like_count'    => $this->like_count,
-            'published'     => (bool) $this->published,
+            'comment_count' => $this->comment_count,
+            'post_type'     => $this->type,
             'created_at'    => $this->created_at->diffForHumans(),
             'updated_at'    => $this->updated_at->diffForHumans(),
             'author'        => [

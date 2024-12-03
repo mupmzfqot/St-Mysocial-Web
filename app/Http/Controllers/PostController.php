@@ -19,6 +19,7 @@ class PostController extends Controller
             ->when($searchTerm, function ($query, $search) {
                 $query->where('post', 'like', '%' . $search . '%');
             })
+            ->published()
             ->with(['author'])
             ->orderBy('created_at','desc')
             ->paginate(10)

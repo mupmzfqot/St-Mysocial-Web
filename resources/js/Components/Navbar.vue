@@ -2,8 +2,7 @@
 import {UserIcon, LogOut, UserCircle, CircleCheckBig} from "lucide-vue-next";
 import {Link, router, usePage} from "@inertiajs/vue3";
 
-const page = usePage()
-const notifications = page.props.unreadNotifications;
+const { unreadNotifications: notifications } = usePage().props;
 
 const readNotification = (item) => {
     router.post(route('read-notification', item.id), {}, {preserveScroll: true})

@@ -2,6 +2,10 @@
 import { Head, Link } from "@inertiajs/vue3";
 import GuestLayout from "@/Layouts/GuestLayout.vue";
 
+defineProps({
+    message: ''
+})
+
 </script>
 
 <template>
@@ -14,10 +18,13 @@ import GuestLayout from "@/Layouts/GuestLayout.vue";
                     <h2 class="text-xl mb-4 font-bold text-gray-800 dark:text-neutral-200">
                         Registration succeeded
                     </h2>
-                    <p class="text-sm text-gray-800 dark:text-neutral-400">
-                        Before you can login, your account must be manually by an administrator.
-                    </p>
-                    <p>Please wait, this can take some time.</p>
+                    <div v-if="!message">
+                        <p class="text-sm text-gray-800 dark:text-neutral-400">
+                            Before you can login, your account must be manually by an administrator.
+                        </p>
+                        <p>Please wait, this can take some time.</p>
+                    </div>
+                    <p class="text-sm text-gray-800 dark:text-neutral-400">{{ message }}</p>
                 </div>
 
                 <div class="mt-5 flex gap-x-2">

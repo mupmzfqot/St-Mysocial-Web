@@ -146,7 +146,7 @@ const changeStatus = (post, status) => {
                                           <CheckCircle class="size-3" /> Approved
                                         </span>
                                         <span v-else-if="post.published === 0" class="py-1 px-3 inline-flex items-center gap-x-1 text-xs font-medium bg-red-100 text-red-800 rounded-full dark:bg-red-500/10 dark:text-red-500">
-                                          <MinusCircle class="size-3" /> Rejected
+                                          <MinusCircle class="size-3" /> Not Published
                                         </span>
                                     </a>
                                 </td>
