@@ -80,7 +80,7 @@ class UserController extends Controller
         $searchTerm = $request->search;
         $users = User::query()
             ->where('is_active', false)
-            ->when($request->search, function ($query, $search) {
+            ->when($searchTerm, function ($query, $search) {
                 $query->where('name', 'like', '%' . $search . '%');
             })
             ->with(['roles' => function ($query) {
@@ -149,9 +149,12 @@ class UserController extends Controller
 
     public function registrationSuccess()
     {
-        if ($user = auth()->user()) {
+        if (auth()->user()) {
+            $message = (auth()->user()->hasRole('user'))
+                ? 'We have successfully received your registration. To complete your registration, please go to your email and confirm it by clicking the link in the message.'
+                : null;
             Auth::logout();
-            return Inertia::render('Users/RegisterSuccess');
+            return Inertia::render('Users/RegisterSuccess', compact('message'));
         }
 
         return redirect('home');

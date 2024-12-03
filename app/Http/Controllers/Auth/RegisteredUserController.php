@@ -44,9 +44,13 @@ class RegisteredUserController extends Controller
 
         $domain = substr(strrchr($request->email, "@"), 1);
         if($domain === config('mail.st_user_email_domain')) {
+            $user->sendEmailVerificationNotification();
+            $user->update(['is_active' => true]);
             $user->assignRole('user');
         } else {
             $user->assignRole('public_user');
+
+            Mail::to($user->email)->send(new RegistrationSuccess($user));
         }
 
         $admins = User::query()->whereHas('roles', function ($query) {
@@ -54,7 +58,6 @@ class RegisteredUserController extends Controller
         })->get();
 
         Notification::send($admins, new NewRegisteredUserNotification($user));
-        Mail::to($user->email)->send(new RegistrationSuccess($user));
 
         Auth::login($user);
         return redirect()->route('registration-success');
