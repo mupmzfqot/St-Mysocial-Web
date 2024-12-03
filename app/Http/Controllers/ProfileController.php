@@ -22,6 +22,12 @@ class ProfileController extends Controller
         return Inertia::render('Profile/Index', compact('user'));
     }
 
+    public function show($id = null)
+    {
+        $user = User::query()->find($id);
+        return Inertia::render('Homepage/UserProfile', compact('user'));
+    }
+
     /**
      * Display the user's profile form.
      */

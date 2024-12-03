@@ -24,7 +24,7 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
 
     protected $guarded = [];
 
-    protected $appends = ['created_date', 'avatar'];
+    protected $appends = ['created_date', 'avatar', 'cover_image'];
 
 
     /**
@@ -62,7 +62,16 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
 
     public function getAvatarAttribute(): ?string
     {
-        return $this->getMedia('avatar')->first()?->original_url ?? asset('default-avatar.png');
+        return $this->getMedia('avatar')
+            ->where('is_verified', true)
+            ->first()?->original_url ?? asset('default-avatar.png');
+    }
+
+    public function getCoverImageAttribute(): ?string
+    {
+        return $this->getMedia('cover_image')
+            ->where('is_verified', true)
+            ->first()?->original_url ?? asset('background.png');
     }
 
 }

@@ -183,7 +183,7 @@ watch(
                             <div class="flex items-center">
                                 <div class="hs-tooltip inline-block">
                                     <a class="hs-tooltip-toggle relative inline-block" href="#">
-                                        <img class="inline-block size-[40px] rounded-full" src="https://images.unsplash.com/photo-1568602471122-7832951cc4c5?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=2&w=300&h=300&q=80" alt="Avatar">
+                                        <img class="inline-block size-[40px] rounded-full" :src="$page.props.auth.user.avatar" alt="Avatar">
                                         <span class="absolute bottom-0 end-0 block size-3 rounded-full ring-2 ring-white bg-green-700"></span>
                                     </a>
                                 </div>
@@ -237,12 +237,12 @@ watch(
                 <div class="col-span-3">
                     <div class="max-w-xs flex flex-col bg-white shadow-sm rounded-lg" v-if="isST">
                         <div class="bg-gray-100 border-b rounded-t-xl py-3 px-4 md:py-4 md:px-5 dark:bg-neutral-900 dark:border-neutral-700">
-                            <p class="mt-1 font-semibold">
+                            <p class="mt-1 font-semibold text-sm">
                                 ST Team
                             </p>
                         </div>
                         <div class="p-1 gap-y-3">
-                            <Link :href="route('message.show', 1)" v-for="team in teams" class="shrink-0 group block p-2 hover:bg-gray-100 rounded-lg">
+                            <Link :href="route('profile.show', team.id)" v-for="team in teams" class="shrink-0 group block p-2 hover:bg-gray-100 rounded-lg">
                                 <div class="flex items-center">
                                     <div class="hs-tooltip inline-block">
                                         <a class="hs-tooltip-toggle relative inline-block" href="#">
@@ -251,8 +251,8 @@ watch(
                                         </a>
                                     </div>
                                     <div class="ms-3">
-                                        <h3 class="font-semibold text-gray-800 dark:text-white">{{ team.name }}</h3>
-                                        <p class="text-sm font-medium text-gray-400 dark:text-neutral-500">{{ team.email }}</p>
+                                        <h3 class="font-semibold text-sm text-gray-800 dark:text-white">{{ team.name }}</h3>
+                                        <p class="text-sm text-gray-600 dark:text-neutral-500">{{ team.email }}</p>
                                     </div>
                                 </div>
                             </Link>

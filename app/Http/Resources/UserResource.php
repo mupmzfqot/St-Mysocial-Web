@@ -24,8 +24,8 @@ class UserResource extends JsonResource
             'created_at'        => $this->created_at->toDateTimeString(),
             'updated_at'        => $this->updated_at->toDateTimeString(),
             'roles'             => $this->roles->select('name', 'display_name')->toArray(),
-            'profile_img'       => null,
-            'cover_img'         => null,
+            'profile_img'       => $this->avatar,
+            'cover_img'         => $this->cover_image,
         ];
     }
 

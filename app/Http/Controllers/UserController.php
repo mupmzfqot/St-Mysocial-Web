@@ -215,6 +215,7 @@ class UserController extends Controller
                     ->orWhere('email', 'like', '%' . $searchTerm . '%')
                     ->orWhere('username', 'like', '%' . $searchTerm . '%');
             })
+            ->whereNot('id', auth()->user()->id)
             ->orderBy('name', 'asc')
             ->paginate(20)
             ->withQueryString();
