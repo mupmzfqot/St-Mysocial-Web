@@ -58,7 +58,7 @@ watch(
                                 </p>
                             </div>
                             <div class="p-1 gap-y-3">
-                                <Link :href="route('message.show', 1)" v-for="user in users.data" class="shrink-0 group block p-2 hover:bg-gray-100 rounded-lg">
+                                <Link :href="route('profile.show', user.id)" v-for="user in users.data" class="shrink-0 group block p-2 hover:bg-gray-100 rounded-lg">
                                     <div class="flex items-center">
                                         <div class="hs-tooltip inline-block">
                                             <a class="hs-tooltip-toggle relative inline-block" href="#">
@@ -67,8 +67,8 @@ watch(
                                             </a>
                                         </div>
                                         <div class="ms-3">
-                                            <h3 class="font-semibold text-gray-800 dark:text-white">{{ user.name }}</h3>
-                                            <p class="text-sm font-medium text-gray-400 dark:text-neutral-500">{{ user.email }}</p>
+                                            <h3 class="font-semibold text-sm text-gray-800 dark:text-white">{{ user.name }}</h3>
+                                            <p class="text-sm text-gray-600 dark:text-neutral-500">{{ user.email }}</p>
                                         </div>
                                     </div>
                                 </Link>

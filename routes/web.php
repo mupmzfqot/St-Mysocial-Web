@@ -11,6 +11,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\UserProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'create'])->name('home');
@@ -34,8 +35,8 @@ Route::get('registration-success', [UserController::class, 'registrationSuccess'
     ->middleware('auth')->name('registration-success');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::get('/profile/show/{id?}', [ProfileController::class, 'show'])->name('profile.show');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/profile/update-status-image/{id}', [ProfileController::class, 'updateProfileImageStatus'])->name('profile.update-status-image');
@@ -48,7 +49,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::prefix('message')->name('message.')->group(function () {
         Route::get('/', [MessageController::class, 'index'])->name('index');
-        Route::get('/get/{id}', [MessageController::class, 'get'])->name('show');
+        Route::get('/show/{id}', [MessageController::class, 'openConversation'])->name('show');
+        Route::post('/send/{id}', [MessageController::class, 'sendMessage'])->name('send');
+        Route::post('/mark-as-read/{conversation_id}', [MessageController::class, 'markAsRead'])->name('mark-as-read');
     });
 
     Route::get('team-st', [TeamController::class, 'get'])->name('team.get');
