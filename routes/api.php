@@ -28,4 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('get', [MessageController::class, 'getConversation']);
         Route::post('send', [MessageController::class, 'sendMessage']);
     });
+
+    Route::get('search-user', [UserController::class, 'searchUser']);
+    Route::get('get-albums', [UserController::class, 'getMedia']);
 });
