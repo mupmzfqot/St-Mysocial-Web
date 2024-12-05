@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -52,7 +53,7 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
 
     public function getCreatedDateAttribute()
     {
-        return $this->created_at->format('d M Y');
+        return $this->created_at?->format('d M Y');
     }
 
     public function scopeIsActive($query)
@@ -72,6 +73,18 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
         return $this->getMedia('cover_image')
             ->where('is_verified', true)
             ->first()?->original_url ?? asset('background.png');
+    }
+
+    public function conversations()
+    {
+        return $this->belongsToMany(Conversation::class, 'conversation_users')
+            ->withPivot('role', 'joined_at')
+            ->withTimestamps();
+    }
+
+    public function messages(): HasMany
+    {
+        return $this->hasMany(Message::class, 'sender_id');
     }
 
 }

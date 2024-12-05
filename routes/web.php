@@ -49,7 +49,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::prefix('message')->name('message.')->group(function () {
         Route::get('/', [MessageController::class, 'index'])->name('index');
-        Route::get('/get/{id}', [MessageController::class, 'get'])->name('show');
+        Route::get('/show/{id}', [MessageController::class, 'openConversation'])->name('show');
+        Route::post('/send/{id}', [MessageController::class, 'sendMessage'])->name('send');
+        Route::post('/mark-as-read/{conversation_id}', [MessageController::class, 'markAsRead'])->name('mark-as-read');
     });
 
     Route::get('team-st', [TeamController::class, 'get'])->name('team.get');

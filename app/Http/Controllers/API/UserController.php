@@ -4,7 +4,9 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class UserController extends Controller
 {
@@ -18,35 +20,28 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function searchUser(Request $request)
     {
-        //
+        $searchTerm = $request->search;
+        $users = User::query()
+            ->when($searchTerm, function ($query, $searchTerm) {
+                $query->where('name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('email', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('username', 'like', '%' . $searchTerm . '%');
+            })
+            ->whereNot('id', $request->user()->id)
+            ->orderBy('name', 'asc')
+            ->paginate(20);
+
+        return UserResource::collection($users);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function getMedia(Request $request)
     {
-        //
-    }
+        $user = $request->user()->id;
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+        $media = Media::query()->get();
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return $media;
     }
 }

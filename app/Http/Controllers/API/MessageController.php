@@ -1,19 +1,20 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\API;
 
 use App\Events\MessageSent;
+use App\Http\Controllers\Controller;
+use App\Http\Resources\UserResource;
 use App\Models\Conversation;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use Inertia\Inertia;
 
 class MessageController extends Controller
 {
-    public function index()
+    public function conversationList(Request $request)
     {
-        $currentUserId = auth()->id();
+        $currentUserId = $request->user()->id;
 
         $results = Conversation::query()
             ->where('type', 'private')
@@ -33,7 +34,7 @@ class MessageController extends Controller
             ])
             ->get();
 
-        $conversations = $results->map(function ($conversation) {
+        $conversation = $results->map(function ($conversation) {
             return [
                 'id' => $conversation->id,
                 'user_id' => $conversation->users->first()->id,
@@ -43,61 +44,45 @@ class MessageController extends Controller
             ];
         });
 
-        return Inertia::render('Messages/Index', compact('conversations'));
+        return response()->json([
+            'data' => $conversation
+        ]);
     }
 
-    public function openConversation(Request $request, $user_id)
+    public function getConversation(Request $request)
     {
-        $authUserId = auth()->id();
-        $user = User::find($user_id);
+        $authUserId = $request->user()->id;
+        $recipientId = $request->recipient_id;
 
         $conversation = Conversation::query()
             ->where('type', 'private')
-            ->whereHas('users', function ($query) use ($authUserId, $user_id) {
-                $query->whereIn('user_id', [$authUserId, $user_id]);
+            ->whereHas('users', function ($query) use ($authUserId, $recipientId) {
+                $query->whereIn('user_id', [$authUserId, $recipientId]);
             }, '=', 2)
             ->first();
 
         if (!$conversation) {
             $conversation = Conversation::query()->create(['type' => 'private']);
-            $conversation->users()->attach([$authUserId, $user_id], ['joined_at' => now()]);
+            $conversation->users()->attach([$authUserId, $recipientId], ['joined_at' => now()]);
         }
 
         $messages = $conversation->messages()
             ->with('sender')
             ->orderBy('created_at')
             ->get()
-            ->map(function ($message) {
-                return [
-                    'id' => $message->id,
-                    'conversation_id' => $message->conversation_id,
-                    'content' => $message->content,
-                    'sender_id' => $message->sender_id,
-                    'sender_name' => $message->sender->name,
-
-                ];
+            ->map(function ($message) use($recipientId) {
+                return $this->formatResult($message, $recipientId);
             });
 
-        Gate::authorize('view', $conversation);
+        return response()->json([
+            'data' => $messages
+        ]);
 
-        return inertia('Messages/Show', compact('conversation', 'messages', 'user'));
     }
 
-    public function markAsRead(Conversation $conversation)
+    public function sendMessage(Request $request)
     {
-        Gate::authorize('view', $conversation);
-
-        $conversation->messages()
-            ->where('is_read', false)
-            ->whereNot('sender_id', auth()->id())
-            ->update(['is_read' => true]);
-
-        return response()->noContent();
-    }
-
-    public function sendMessage(Request $request, $conversation_id)
-    {
-        $conversation = Conversation::query()->find($conversation_id);
+        $conversation = Conversation::query()->find($request->conversation_id);
         Gate::authorize('send', $conversation);
 
         $message = $conversation->messages()->create([
@@ -108,13 +93,19 @@ class MessageController extends Controller
         broadcast(new MessageSent($message));
 
         return response()->json([
-            'id' => $message->id,
-            'conversation_id' => $message->conversation_id,
-            'content' => $message->content,
-            'sender_id' => $message->sender_id,
-            'sender_name' => $message->sender->name,
+            'data' => $this->formatResult($message, $request->recipient_id),
         ]);
 
     }
 
+    private function formatResult($message, $recipient_id)
+    {
+        return [
+            'id' => $message->id,
+            'conversation_id' => $message->conversation_id,
+            'content' => $message->content,
+            'sender_id' => $message->sender_id,
+            'recipient' => new UserResource(User::find($recipient_id))
+        ];
+    }
 }
