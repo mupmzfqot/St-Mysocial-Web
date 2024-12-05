@@ -20,6 +20,8 @@ class CreatePost
             'user_id'  => $request->user()->id,
             'published' => $published,
             'type'  => $request->post('type'),
+            'location' => $request->post('location'),
+            'feeling' => $request->post('feeling'),
         ];
 
         DB::beginTransaction();

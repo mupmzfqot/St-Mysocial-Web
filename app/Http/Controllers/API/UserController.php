@@ -7,6 +7,7 @@ use App\Http\Resources\UserResource;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class UserController extends Controller
@@ -59,5 +60,46 @@ class UserController extends Controller
 
         return response()->json(['data' => $media]);
 
+    }
+
+    public function updateProfileImage(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $request->validate(['image' => 'required|image']);
+            Media::query()->where('model_id', $request->user()->id)
+                ->where('model_type', User::class)
+                ->where('collection_name', 'avatar')
+                ->delete();
+
+            User::find($request->user()->id)->addMediaFromRequest('image')->toMediaCollection('avatar');
+
+            DB::commit();
+            return response()->json(['message' => 'Profile image updated successfully', 'error' => 0]);
+
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage(), 'error' => 1]);
+        }
+
+    }
+
+    public function updateProfileCover(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $request->validate(['image' => 'required|image']);
+            Media::query()->where('model_id', $request->user()->id)
+                ->where('model_type', User::class)
+                ->where('collection_name', 'cover_image')
+                ->delete();
+
+            User::find($request->user()->id)->addMediaFromRequest('image')->toMediaCollection('cover_image');
+
+            DB::commit();
+            return response()->json(['message' => 'Profile cover updated successfully', 'error' => 0]);
+
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage(), 'error' => 1]);
+        }
     }
 }

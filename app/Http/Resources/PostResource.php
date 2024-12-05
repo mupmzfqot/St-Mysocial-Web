@@ -23,6 +23,8 @@ class PostResource extends JsonResource
             'post_type'     => $this->type,
             'created_at'    => $this->created_at->diffForHumans(),
             'updated_at'    => $this->updated_at->diffForHumans(),
+            'location'      => $this->location,
+            'feeling'       => $this->feeling,
             'author'        => [
                 'id'            => $this->author->id,
                 'name'          => $this->author->name,
