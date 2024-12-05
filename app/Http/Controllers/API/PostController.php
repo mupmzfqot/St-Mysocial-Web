@@ -22,6 +22,7 @@ class PostController extends Controller
             ->when($searchTerm, function ($query, $search) {
                 $query->where('post', 'like', '%' . $search . '%');
             })
+            ->where('type', $request->query('type'))
             ->published()
             ->with(['author', 'media'])
             ->paginate($perPage);
@@ -91,7 +92,7 @@ class PostController extends Controller
         return PostResource::collection($posts);
     }
 
-    public function storeComment(Request $request)
+    public function storeComments(Request $request)
     {
         Comment::query()->create([
             'post_id' => $request->post_id,
