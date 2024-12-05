@@ -52,7 +52,13 @@ class AuthController extends Controller
                 'username' => $request->username,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
+                'gender' => $request->gender,
             ]);
+
+            if($request->hasFile('profile_image')) {
+                $user->addMediaFromRequest('profile_image')
+                    ->toMediaCollection('avatar');
+            }
 
             $domain = substr(strrchr($request->email, "@"), 1);
             if($domain === config('mail.st_user_email_domain')) {
