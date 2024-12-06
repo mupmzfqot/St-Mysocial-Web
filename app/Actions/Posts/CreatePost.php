@@ -45,14 +45,9 @@ class CreatePost
             }
 
             if ($request->hasFile('files')) {
-
-                if(is_array($request->file('files'))) {
-                    foreach ($request->files as $file) {
-                        $post->addMedia($file)
-                            ->toMediaCollection('post_media');
-                    }
-                } else {
-                    $post->addMedia($request->file('files'))->toMediaCollection('post_media');
+                foreach ($request->file('files') as $file) {
+                    $post->addMedia($file)
+                        ->toMediaCollection('post_media');
                 }
             }
 
