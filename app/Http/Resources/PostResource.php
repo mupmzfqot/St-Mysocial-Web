@@ -20,6 +20,7 @@ class PostResource extends JsonResource
             'view_count'    => $this->view_count,
             'like_count'    => $this->like_count,
             'comment_count' => $this->comment_count,
+            'repost_count'  => $this->repost_count ?? 0,
             'post_type'     => $this->type,
             'created_at'    => $this->created_at->diffForHumans(),
             'updated_at'    => $this->updated_at->diffForHumans(),
