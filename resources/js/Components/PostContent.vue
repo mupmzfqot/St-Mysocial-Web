@@ -1,11 +1,12 @@
 <script setup>
 import {Link, router, useForm} from "@inertiajs/vue3";
-import {MessageSquareText, Heart, SquarePen } from "lucide-vue-next";
+import {MessageSquareText, Heart, MinusCircle, CheckCircle } from "lucide-vue-next";
 import PostMedia from "@/Components/PostMedia.vue";
 
 const props = defineProps({
     posts: Object,
-    likedColor: String
+    likedColor: String,
+    postStatus: false,
 });
 
 const form = useForm({
@@ -34,6 +35,12 @@ const showPost = (id) => {
                         <div class="text-base font-semibold text-gray-800 dark:text-neutral-400 hover:text-blue-700">{{ post.author.name }}</div>
                         <div class="text-xs text-gray-500 dark:text-neutral-500">{{ post.created_at }}</div>
                     </div>
+                    <span v-if="!post.published && postStatus" class="py-1 px-3 inline-flex items-center gap-x-1 ms-auto text-xs font-medium bg-red-100 text-red-800 rounded-full dark:bg-red-500/10 dark:text-red-500">
+                      <MinusCircle class="size-3" />Not Published
+                    </span>
+                    <span v-if="post.published && postStatus" class="py-1 px-3 inline-flex items-center gap-x-1 ms-auto text-xs font-medium bg-teal-100 text-teal-800 rounded-full dark:bg-teal-500/10 dark:text-teal-500">
+                      <CheckCircle class="size-3" />Published
+                    </span>
                 </Link>
                 <div class="mt-2 text-gray-800 dark:text-neutral-400" v-html="post.post"></div>
 
