@@ -204,13 +204,14 @@ watch(
                         <Link :href="route('message.index')" type="button" class="inline-flex items-center gap-x-2 py-3 px-4 text-sm text-start font-semibold border border-gray-200 text-gray-800 hover:text-blue-600 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700 dark:text-white dark:hover:text-blue-500">
                             <MessageSquareMore class="shrink-0 size-4" />
                             Messages
+                            <span class="inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium bg-red-500 text-white ms-auto">0</span>
                         </Link>
                         <Link :href="route('liked-posts')" type="button" class="inline-flex items-center gap-x-2 py-3 px-4 text-sm text-start font-semibold border border-gray-200 text-gray-800 hover:text-blue-600 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700 dark:text-white dark:hover:text-blue-500">
-                            <Heart class="shrink-0 size-4" />
+                            <Heart class="shrink-0 size-4 text-red-600 fill-red-600" />
                             My Likes
                         </Link>
                         <Link :href="route('top-posts')" type="button" class="inline-flex items-center gap-x-2 py-3 px-4 text-sm text-start font-semibold border border-gray-200 text-gray-800 hover:text-blue-600 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700 dark:text-white dark:hover:text-blue-500">
-                            <Star class="shrink-0 size-4" />
+                            <Star class="shrink-0 size-4 text-yellow-600 fill-yellow-500" />
                             Top Posts
                         </Link>
 <!--                        <button v-if="isST" type="button" class="inline-flex items-center gap-x-2 py-3 px-4 text-sm text-start font-semibold border border-gray-200 text-gray-800 hover:text-blue-600 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700 dark:text-white dark:hover:text-blue-500">-->
