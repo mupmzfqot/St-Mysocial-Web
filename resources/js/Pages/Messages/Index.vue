@@ -24,7 +24,7 @@ const truncatedText = (originalText) => {
 
         <div class="flex flex-col bg-white border shadow-sm rounded-xl p-1">
             <Link :href="route('message.show', user.user_id)" v-for="user in conversations"
-                  class="shrink-0 group block p-3 hover:bg-gray-100 rounded-lg">
+                  class="shrink-0 group block p-2 hover:bg-gray-100 rounded-lg">
                 <div class="flex items-center">
                     <div class="hs-tooltip inline-block">
                         <a class="hs-tooltip-toggle relative inline-block" href="#">
