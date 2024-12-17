@@ -53,9 +53,7 @@ class RegisteredUserController extends Controller
             Mail::to($user->email)->send(new RegistrationSuccess($user));
         }
 
-        $admins = User::query()->whereHas('roles', function ($query) {
-            $query->where('name', 'admin');
-        })->get();
+        $admins = getUserAdmin();
 
         Notification::send($admins, new NewRegisteredUserNotification($user));
 

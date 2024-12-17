@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\Post;
 use App\Models\User;
+use App\Notifications\NewProfileImage;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -25,7 +28,19 @@ class ProfileController extends Controller
     public function show($id = null)
     {
         $user = User::query()->find($id);
-        return Inertia::render('Homepage/UserProfile', compact('user'));
+        $totalPosts = $user->posts()->count();
+        $totalLikes = $user->likes()->count();
+        $totalComments = $user->comments()->count();
+        $posts = Post::query()
+            ->with('author', 'media', 'comments.user', 'tags')
+            ->orderBy('created_at', 'desc')
+            ->published()
+            ->where('user_id', $id)
+            ->paginate(30);
+
+        return Inertia::render('Homepage/UserProfile',
+            compact('user', 'totalPosts', 'totalLikes', 'totalComments', 'posts')
+        );
     }
 
     /**
@@ -102,9 +117,12 @@ class ProfileController extends Controller
             $user = auth()->user();
             DB::beginTransaction();
             $user->clearMediaCollection($request->type);
-            $user->addMedia($request->file)->toMediaCollection($request->type);
+            $user->addMedia($request->file)->toMediaCollection($request->type)->update(['is_verified' => true]);
+
             DB::commit();
 
+            $admins = getUserAdmin();
+            Notification::send($admins, new NewProfileImage($user, 'avatar'));
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -116,16 +134,23 @@ class ProfileController extends Controller
     public function indexPhotos()
     {
         $photos = User::whereHas('media', function ($query) {
-            $query->where('collection_name', 'avatar')
-                ->where('is_verified', false);
-        })->paginate(10);
+                $query->where('collection_name', 'avatar')
+                    ->where('is_verified', false);
+            })
+            ->with(['media' => function ($query) {
+                $query->where('collection_name', 'avatar')
+                    ->where('is_verified', false);
+            }])
+            ->paginate(10);
 
         return Inertia::render('Profile/Photos', compact('photos'));
     }
 
     public function updateProfileImageStatus(Request $request, $id)
     {
-        Media::where('id', $id)->update(['is_verified' => $request->status]);
+        Media::where('id', $id)
+            ->where('collection_name', 'avatar')
+            ->update(['is_verified' => $request->status]);
         return redirect()->back();
     }
 }

@@ -1,7 +1,6 @@
 <script setup>
-import {Head, Link, useForm, usePage} from "@inertiajs/vue3";
+import {Head} from "@inertiajs/vue3";
 import HomeLayout from "@/Layouts/HomeLayout.vue";
-import {MessageSquareText, Heart} from "lucide-vue-next";
 import PostContent from "@/Components/PostContent.vue";
 
 const props = defineProps({

@@ -121,7 +121,7 @@ const changeStatus = (media, status) => {
                                 </td>
                                 <td class="size-px whitespace-nowrap align-top">
                                     <a class="block p-6" href="#">
-                                        <img :src="photo.avatar" class="object-scale-down size-20" alt="photo">
+                                        <img :src="photo.media[0].original_url" class="object-scale-down size-20" alt="photo">
                                     </a>
                                 </td>
                                 <td class="size-px whitespace-nowrap align-top">

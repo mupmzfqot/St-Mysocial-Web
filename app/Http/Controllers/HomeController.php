@@ -6,8 +6,11 @@ use App\Actions\Posts\CreatePost;
 use App\Models\Comment;
 use App\Models\Post;
 use App\Models\PostLiked;
+use App\Models\User;
+use App\Notifications\NewComment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Inertia\Inertia;
 
 class HomeController extends Controller
@@ -15,7 +18,7 @@ class HomeController extends Controller
     public function index()
     {
         $posts = Post::query()
-            ->with('author', 'media', 'comments.user')
+            ->with('author', 'media', 'comments.user', 'tags')
             ->orderBy('created_at', 'desc')
             ->published()
             ->where('type', 'st')
@@ -71,27 +74,45 @@ class HomeController extends Controller
     {
         $posts = Post::query()
             ->with('author', 'media', 'comments.user')
-            ->with('author', 'media', 'comments.user')
             ->orderBy('created_at', 'desc')
-            ->where('user_id', auth()->id())
+            ->published()
             ->paginate(30);
 
-        return Inertia::render('Homepage/CreatePost', compact('posts'));
+        $stUsers = User::query()->whereHas('roles', function ($query) {
+                $query->where('name', 'user');
+            })
+            ->where('id', '!=', auth()->id())
+            ->select('id', 'name')
+            ->where('is_active', true)->get();
+
+        $isPrivilegedUser = auth()->user()->hasAnyRole(['admin', 'user']);
+        $defaultType = $isPrivilegedUser ? 'st' : 'public';
+
+        return Inertia::render('Homepage/CreatePost', compact('posts', 'stUsers', 'defaultType'));
     }
 
     public function storePost(Request $request, CreatePost $createPost)
     {
+        $request->validate([
+            'content' => 'required|string',
+            'group'   => 'required'
+        ]);
+
         $createPost->handle($request);
-        return redirect()->route('homepage');
+        //return redirect()->route('homepage');
     }
 
     public function storeComment(Request $request)
     {
-        Comment::query()->create([
+        $comment = Comment::query()->create([
             'post_id' => $request->post_id,
             'message' => $request->message,
             'user_id' => auth()->id()
         ]);
+
+        $postUser = Post::find($request->post_id)?->user;
+        Notification::send($postUser, new NewComment($comment, User::find(auth()->id())));
+
 
     }
 
@@ -114,8 +135,9 @@ class HomeController extends Controller
             ->orderBy(DB::raw('comment_count + like_count'), 'desc')
             ->where('comment_count', '>', 0)
             ->where('like_count', '>', 0)
-            ->take(10)
-            ->get();
+            ->published()
+            ->paginate(30);
+
 
         return Inertia::render('Homepage/TopPost', compact('posts'));
     }

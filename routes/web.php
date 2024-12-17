@@ -11,7 +11,6 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\UserProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'create'])->name('home');
@@ -23,11 +22,13 @@ Route::middleware(['auth', 'verified', 'role:user|public_user'])->group(function
     Route::get('/liked-posts', [HomeController::class, 'showLikedPosts'])->name('liked-posts');
     Route::get('/top-posts', [HomeController::class, 'showTopPosts'])->name('top-posts');
     Route::prefix('user-post')->name('user-post.')->group(function () {
-        Route::post('store', [HomeController::class, 'storePost'])->name('store');
+        Route::post('store', [PostController::class, 'store'])->name('store');
         Route::get('show/{id}', [HomeController::class, 'showPost'])->name('show-post');
         Route::post('comment', [HomeController::class, 'storeComment'])->name('store-comment');
         Route::post('like', [HomeController::class, 'storeLike'])->name('send-like');
     });
+
+    Route::get('st-user', [UserController::class, 'stIndex'])->name('st-user');
 
 });
 

@@ -1,14 +1,10 @@
 <script setup>
 import {Head, useForm} from "@inertiajs/vue3";
-import {
-    Loader2,
-    X,
-    ImagePlus,
-    ChevronDown
-} from "lucide-vue-next";
-import {ref, computed} from "vue";
+import {AlertCircle, ChevronDown, ImagePlus, Loader2, X} from "lucide-vue-next";
+import {computed, ref} from "vue";
 import HomeLayout from "@/Layouts/HomeLayout.vue";
 import PostContent from "@/Components/PostContent.vue";
+import MultiSelect from "@/Components/MultiSelect.vue";
 
 const MAX_FILES = 10;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -20,15 +16,22 @@ const previews = ref([]);
 const dragOver = ref(false);
 const isLoading = ref(false);
 const errors = ref({});
+const showSuccessMessage = ref(false);
+const successMessage = ref('');
+const showErrorMessage = ref(false);
+const errorMessage = ref('');
 
 const props = defineProps({
-    posts: Object
+    posts: Object,
+    stUsers: Object,
+    defaultType: String
 });
 
 const form = useForm({
     content: '',
     files: [],
-    type: 'st',
+    type: props.defaultType,
+    userTags: []
 });
 
 const remainingChars = computed(() => {
@@ -110,17 +113,25 @@ const submit = () => {
 
     isLoading.value = true;
     errors.value = {};
+    showSuccessMessage.value = false;
+    showErrorMessage.value = false;
 
     form.post(route('user-post.store'), {
-        onSuccess: () => {
-            console.log('Upload successful');
+        onSuccess: (page) => {
+            const flash = page.props.flash;
+
+            if (flash.success) {
+                successMessage.value = flash.success;
+                showSuccessMessage.value = true;
+            }
+
             form.reset();
             previews.value = [];
             isLoading.value = false;
         },
-        onError: (errors) => {
-            console.error('Upload failed:', errors);
-            errors.value = errors;
+        onError: (error) => {
+            errorMessage.value = Object.values(error)[0];
+            showErrorMessage.value = true;
             isLoading.value = false;
         },
         preserveScroll: true,
@@ -182,7 +193,7 @@ const submit = () => {
                 <form @submit.prevent="submit" mt-2>
                     <!-- Textarea with drag-drop zone -->
                     <div
-                        class="mb-3 relative"
+                        class="mb-0 relative"
                         @drop="handleDrop"
                         @dragover="handleDragOver"
                         @dragleave="handleDragLeave"
@@ -202,8 +213,10 @@ const submit = () => {
                         </div>
                     </div>
 
+                    <MultiSelect :stUsers="stUsers" v-model="form.userTags" v-if="!$page.props.auth.user.roles.includes('public_user')" />
+
                     <!-- Error messages -->
-                    <div v-if="Object.keys(errors).length > 0" class="mb-3">
+                    <div v-if="Object.keys(errors).length > 0" class="mb-3 px-2 py-1">
                         <p v-for="error in errors" :key="error" class="text-red-500 text-sm">
                             {{ error }}
                         </p>
@@ -212,7 +225,7 @@ const submit = () => {
                     <div class="mb-3 grid gap-3 md:flex md:justify-between md:items-center">
                         <div class="inline-flex gap-x-3">
                             <!-- Post type select -->
-                            <div class="relative">
+                            <div class="relative" v-if="defaultType === 'st'">
                                 <select
                                     v-model="form.type"
                                     class="appearance-none h-[46px] pl-4 pr-10 min-w-[120px] rounded-lg border border-gray-200 text-sm dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 focus:border-blue-500 focus:ring-blue-500 bg-gray-50 dark:bg-neutral-700"
@@ -246,6 +259,7 @@ const submit = () => {
                             >
                                 <ImagePlus class="shrink-0 size-5" />
                             </button>
+
                         </div>
 
                         <!-- Submit button -->
@@ -259,6 +273,14 @@ const submit = () => {
                         </button>
                     </div>
                 </form>
+
+                <div v-if="showSuccessMessage" class="mt-4 p-4 rounded-lg bg-green-50 dark:bg-green-900">
+                    <p class="text-green-800 dark:text-green-200">{{ successMessage }}</p>
+                </div>
+
+                <div v-if="showErrorMessage" class="w-full mt-4 px-3 py-2 rounded-lg bg-red-50 dark:bg-red-900 text-sm inline-flex items-center gap-x-2 text-red-800 dark:text-red-200">
+                    <AlertCircle class="shrink-0 size-4" /><span>{{ errorMessage }}</span>
+                </div>
             </div>
         </div>
 

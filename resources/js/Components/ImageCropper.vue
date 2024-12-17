@@ -1,9 +1,11 @@
 <script setup>
-import { ref, onBeforeUnmount } from 'vue'
-import { CircleStencil, Cropper, Preview } from 'vue-advanced-cropper'
+import { ref, onBeforeUnmount, computed } from 'vue'
+import { CircleStencil, RectangleStencil, Cropper, Preview } from 'vue-advanced-cropper'
 import 'vue-advanced-cropper/dist/style.css'
 import 'vue-advanced-cropper/dist/theme.classic.css'
-import {useForm} from "@inertiajs/vue3";
+import { useForm } from "@inertiajs/vue3";
+import { useToast } from "vue-toast-notification";
+import 'vue-toast-notification/dist/theme-sugar.css';
 
 // Function to detect the actual image type
 function getMimeType(file, fallback = null) {
@@ -40,8 +42,18 @@ const props = defineProps({
     defaultImage: {
         type: String,
         required: false,
+    },
+    aspectRatio: {
+        type: Number,
+        default: 1
+    },
+    rectangular: {
+        type: Boolean,
+        default: false
     }
-})
+});
+
+const emit = defineEmits(['uploaded']);
 
 // Reactive variables
 const image = ref({
@@ -56,6 +68,23 @@ const result = ref({
 
 const cropperRef = ref(null)
 const fileInputRef = ref(null)
+
+const toast = useToast();
+
+// Computed properties for cropper settings
+const stencilComponent = computed(() => props.rectangular ? RectangleStencil : CircleStencil);
+const stencilSize = computed(() => {
+    return props.rectangular 
+        ? { width: 600, height: 200 }  // Cover photo size
+        : { width: 300, height: 300 }; // Avatar size
+});
+
+const stencilProps = computed(() => ({
+    handlers: {},
+    movable: true,
+    resizable: props.rectangular, // Only allow resizing for cover photos
+    aspectRatio: props.aspectRatio,
+}));
 
 // Methods
 function crop() {
@@ -110,8 +139,8 @@ const uploadPhoto = () => {
 
             // Convert the Blob to a File
             const file = new File([blob], `${props.type}.jpg`, {
-                type: 'image/jpeg', // Set the file type
-                lastModified: Date.now() // Optional: set the last modified date
+                type: 'image/jpeg',
+                lastModified: Date.now()
             });
 
             useForm({
@@ -119,22 +148,31 @@ const uploadPhoto = () => {
                 type: props.type,
             }).post(props.url, {
                 onSuccess: (res) => {
-                    if (res.collection_name === 'avatar') {
+                    if (res.collection_name === props.type) {
                         props.defaultImage = res;
                     }
                     reset();
-
+                    emit('uploaded'); // Emit event when upload is successful
+                    
+                    // Show success notification
+                    toast.success(`${props.type === 'avatar' ? 'Profile picture' : 'Cover photo'} updated successfully!`, {
+                        position: 'top-right',
+                        duration: 3000,
+                        dismissible: true
+                    });
                 },
                 onError: (errors) => {
                     console.error('Upload failed:', errors);
+                    // Show error notification
+                    toast.error(`Failed to update ${props.type === 'avatar' ? 'profile picture' : 'cover photo'}. Please try again.`, {
+                        position: 'top-right',
+                        duration: 5000,
+                        dismissible: true
+                    });
                 },
-                // You may want to use `preserveScroll` to prevent scroll reset on the page after upload
                 preserveScroll: true,
             });
-
         }, 'image/jpeg');
-
-
     }
 }
 
@@ -147,71 +185,108 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-
-    <div class="flex flex-wrap items-center">
-        <div class="cropper-wrapper">
+    <div class="flex flex-col items-center w-full">
+        <div class="cropper-wrapper w-full" :class="{ 'cover-photo': props.rectangular }">
             <Cropper
                 ref="cropperRef"
                 class="upload-example-cropper"
                 :src="image.src"
-                :stencil-component="CircleStencil"
-                :stencil-size="{ width: 300, height: 300 }"
-                :stencil-props="{ handlers: {}, movable: false, resizable: false, aspectRatio: 1 }"
+                :stencil-component="stencilComponent"
+                :stencil-size="stencilSize"
+                :stencil-props="stencilProps"
                 image-restriction="stencil"
                 @change="onChange"
             />
         </div>
 
-        <div class="group" v-if="!image.src">
-            <span v-if="!defaultImage" class="group-has-[div]:hidden flex shrink-0 justify-center items-center size-20 border-2 border-dotted border-gray-300 text-gray-400 cursor-pointer rounded-full hover:bg-gray-50 dark:border-neutral-700 dark:text-neutral-600 dark:hover:bg-neutral-700/50">
-                <svg class="shrink-0 size-7" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <circle cx="12" cy="10" r="3"></circle>
-                  <path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"></path>
-                </svg>
-            </span>
+        <div class="group mt-4 w-full" v-if="!image.src">
+            <div class="flex flex-col items-center">
+                <span v-if="!props.defaultImage" 
+                    class="group-has-[div]:hidden flex shrink-0 justify-center items-center border-2 border-dotted border-gray-300 text-gray-400 cursor-pointer hover:bg-gray-50 dark:border-neutral-700 dark:text-neutral-600 dark:hover:bg-neutral-700/50"
+                    :class="[
+                        props.rectangular 
+                            ? 'w-full max-w-lg h-32 rounded-lg' 
+                            : 'size-20 rounded-full'
+                    ]"
+                >
+                    <svg class="shrink-0 size-7" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 5h16c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V7c0-1.1.9-2 2-2z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                </span>
 
-            <img v-if="defaultImage" class="inline-block size-[100px] rounded-full" :src="defaultImage.original_url" alt="Avatar">
+                <img v-if="props.defaultImage" 
+                    :class="[
+                        props.rectangular 
+                            ? 'w-full max-w-lg h-32 rounded-lg object-cover' 
+                            : 'size-20 rounded-full object-cover'
+                    ]"
+                    :src="props.defaultImage.original_url" 
+                    :alt="props.rectangular ? 'Cover Photo' : 'Avatar'"
+                >
+            </div>
 
-        </div>
-        <div class="grow px-4">
-            <div class="flex items-center gap-x-2">
-                <button v-if="!image.src"
+            <div class="flex items-center justify-center gap-x-2 mt-4">
+                <button
                     type="button"
                     @click="fileInputRef.click()"
-                    class="py-2 px-3 inline-flex items-center gap-x-2 text-xs font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none"
+                    class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none"
                 >
                     <input type="file" hidden ref="fileInputRef" @change="loadImage" accept="image/*" />
                     Upload Photo
                 </button>
-                <form @submit.prevent="uploadPhoto" v-if="image.src">
-                    <button
-                            type="submit"
-                            class="py-2 px-3 inline-flex items-center gap-x-2 text-xs font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none"
-                    >
-                        Save changes
-                    </button>
-                </form>
-                <button
-                    type="button"
-                    @click="reset"
-                    class="py-2 px-3 inline-flex items-center gap-x-2 text-xs font-semibold rounded-lg border border-gray-200 bg-white text-gray-500 shadow-sm hover:bg-gray-50 focus:outline-none focus:bg-gray-50"
-                >
-                    Delete
-                </button>
             </div>
         </div>
+
+        <form @submit.prevent="uploadPhoto" v-if="image.src" class="mt-4 flex gap-2">
+            <button
+                type="submit"
+                class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none"
+            >
+                Save changes
+            </button>
+            <button
+                type="button"
+                @click="reset"
+                class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-500 shadow-sm hover:bg-gray-50 focus:outline-none focus:bg-gray-50"
+            >
+                Cancel
+            </button>
+        </form>
     </div>
 </template>
 
 <style scoped>
 .cropper-wrapper {
-    max-width: 300px;
-    max-height: 300px;
-    margin-bottom: 16px;
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    aspect-ratio: 1;
+    margin: 0 auto;
+}
+
+.cropper-wrapper.cover-photo {
+    aspect-ratio: 3/1;
+    max-height: 60vh;
 }
 
 .upload-example-cropper {
-    overflow: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+@media (max-width: 640px) {
+    .cropper-wrapper {
+        aspect-ratio: 1;
+        height: 300px;
+    }
+    
+    .cropper-wrapper.cover-photo {
+        aspect-ratio: 3/2;
+        height: 200px;
+    }
 }
 </style>

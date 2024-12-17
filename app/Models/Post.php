@@ -67,9 +67,14 @@ class Post extends Model implements HasMedia
         return $query->where('published', true);
     }
 
-    public function getIsLikedAttribute()
+    public function getIsLikedAttribute(): bool
     {
         return $this->likes()->where('user_id', auth()->id())->exists();
+    }
+
+    public function tags(): HasMany
+    {
+        return $this->hasMany(PostTag::class);
     }
 
 }
