@@ -2,9 +2,14 @@
 import {Head, Link} from "@inertiajs/vue3";
 import HomeLayout from "@/Layouts/HomeLayout.vue";
 import { MessageSquareMore } from "lucide-vue-next";
+import PostContent from "@/Components/PostContent.vue";
 
 defineProps({
-    user: Object
+    user: Object,
+    totalPosts: Number,
+    totalComments: Number,
+    totalLikes: Number,
+    posts: Object
 })
 </script>
 
@@ -24,15 +29,15 @@ defineProps({
                 <h3 class="mt-2 font-semibold text-gray-800">{{ user.name }}</h3>
                 <p class="text-gray-500 text-sm">{{ user.email }}</p>
                 <!-- Stats -->
-                <div class="flex justify-center items-center space-x-6 mt-4 text-gray-800 text-sm">
+                <div class="flex justify-center items-center space-x-6 mt-2 text-gray-800 text-sm">
                     <div class="text-center">
-                        <p class=""><b>20</b> Stars</p>
+                        <p class=""><b>{{ totalPosts }}</b> Posts</p>
                     </div>
                     <div class="text-center">
-                        <p class=""><b>10</b> Followers</p>
+                        <p class=""><b>{{ totalLikes }}</b> Likes</p>
                     </div>
                     <div class="text-center">
-                        <p class=""><b>15</b> Projects</p>
+                        <p class=""><b>{{ totalComments }}</b> Comments</p>
                     </div>
                 </div>
 
@@ -42,6 +47,11 @@ defineProps({
                     </Link>
                 </div>
             </div>
+        </div>
+
+        <div class="py-4">
+            <h2 class="font-medium mb-2">Recent Posts</h2>
+            <PostContent :posts="posts" />
         </div>
     </HomeLayout>
 </template>

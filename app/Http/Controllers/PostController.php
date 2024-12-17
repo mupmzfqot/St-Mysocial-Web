@@ -35,13 +35,16 @@ class PostController extends Controller
 
     public function store(Request $request, CreatePost $createPost)
     {
-        $request->validate([
-            'content' => 'required|string',
-            'group'   => 'nullable'
-        ]);
+        try {
+            $post = $createPost->handle($request);
+            if(is_string($post)) {
+                return redirect()->back()->withErrors(['error' => $post]);
+            }
 
-        $createPost->handle($request);
+            return redirect()->back()->with('success', 'Post created successfully!');
 
-        return redirect()->route('post.index');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
+        }
     }
 }

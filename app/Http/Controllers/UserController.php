@@ -224,4 +224,15 @@ class UserController extends Controller
         return Inertia::render('Homepage/Search', compact('users'));
     }
 
+    public function stIndex()
+    {
+        $stUser = User::query()->whereHas('roles', function ($query) {
+                $query->where('name', 'user');
+            })
+            ->select('id', 'name')
+            ->where('is_active', true)->get();
+
+        return response()->json($stUser);
+    }
+
 }

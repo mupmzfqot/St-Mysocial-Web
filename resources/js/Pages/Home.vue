@@ -1,9 +1,7 @@
 <script setup>
-import {Head, Link, router, useForm, usePage} from "@inertiajs/vue3";
+import {Head, Link} from "@inertiajs/vue3";
 import HomeLayout from "@/Layouts/HomeLayout.vue";
-import {MessageSquareText, Heart, SquarePen } from "lucide-vue-next";
-import PrimaryButton from "@/Components/PrimaryButton.vue";
-import PostMedia from "@/Components/PostMedia.vue";
+import {SquarePen} from "lucide-vue-next";
 import PostContent from "@/Components/PostContent.vue";
 
 const props = defineProps({
@@ -13,18 +11,6 @@ const props = defineProps({
     likedColor: String
 });
 
-const form = useForm({
-    post_id: ''
-});
-
-const sendLike = (id) => {
-    form.post_id = id;
-    form.post(route('user-post.send-like'), { preserveScroll: true });
-}
-
-const showPost = (id) => {
-    router.visit(route('user-post.show-post', id));
-}
 </script>
 
 <template>

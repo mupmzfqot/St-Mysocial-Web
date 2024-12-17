@@ -44,9 +44,18 @@ const showPost = (id) => {
                 </Link>
                 <div class="mt-2 text-gray-800 dark:text-neutral-400" v-html="post.post"></div>
 
+
+
                 <!-- Image Grid -->
                 <PostMedia :medias="post.media" v-if="post.media.length > 0" />
                 <!-- End Image Grid -->
+
+                <div class="flex flex-wrap mt-2 gap-x-1" v-if="post.tags">
+                    <p class="text-xs text-gray-800 dark:text-gray-200">Tags: </p>
+                    <p class="text-xs text-blue-700 italic dark:text-gray-200" v-for="tag in post.tags" :key="tag.id">
+                        {{ tag.name }},
+                    </p>
+                </div>
             </div>
 
             <div class="inline-flex gap-x-3">

@@ -27,6 +27,11 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
 
     protected $appends = ['created_date', 'avatar', 'cover_image'];
 
+    public function receivesBroadcastNotificationsOn(): string
+    {
+        return 'users.'.$this->id;
+    }
+
 
     /**
      * The attributes that should be hidden for serialization.
@@ -85,6 +90,21 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
     public function messages(): HasMany
     {
         return $this->hasMany(Message::class, 'sender_id');
+    }
+
+    public function posts(): HasMany
+    {
+        return $this->hasMany(Post::class);
+    }
+
+    public function likes(): HasMany
+    {
+        return $this->hasMany(PostLiked::class, 'user_id', 'id');
+    }
+
+    public function comments(): HasMany
+    {
+        return $this->hasMany(Comment::class, 'user_id', 'id');
     }
 
 }
