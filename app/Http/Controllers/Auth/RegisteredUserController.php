@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\RegistrationRequest;
+use App\Jobs\SendEmailVerificationJob;
 use App\Mail\RegistrationSuccess;
 use App\Models\User;
 use App\Notifications\NewRegisteredUserNotification;
@@ -44,13 +45,15 @@ class RegisteredUserController extends Controller
 
         $domain = substr(strrchr($request->email, "@"), 1);
         if($domain === config('mail.st_user_email_domain')) {
-            $user->sendEmailVerificationNotification();
+            SendEmailVerificationJob::dispatch($user);
             $user->update(['is_active' => true]);
             $user->assignRole('user');
         } else {
             $user->assignRole('public_user');
 
-            Mail::to($user->email)->send(new RegistrationSuccess($user));
+            dispatch(function () use ($user) {
+                Mail::to($user->email)->send(new RegistrationSuccess($user));
+            });
         }
 
         $admins = getUserAdmin();
