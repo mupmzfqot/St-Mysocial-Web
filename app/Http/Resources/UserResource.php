@@ -14,6 +14,7 @@ class UserResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $roles = $this->roles->select('name', 'display_name')->toArray();
         return [
             'id'                => $this->id,
             'name'              => $this->name,
@@ -23,9 +24,10 @@ class UserResource extends JsonResource
             'is_active'         => (bool) $this->is_active,
             'created_at'        => $this->created_at->toDateTimeString(),
             'updated_at'        => $this->updated_at->toDateTimeString(),
-            'roles'             => $this->roles->select('name', 'display_name')->toArray(),
+            'roles'             => $roles,
             'profile_img'       => $this->avatar,
             'cover_img'         => $this->cover_image,
+            'user_type'         => in_array('user', array_column($roles, 'name')) ? 'st' : 'public'
         ];
     }
 
