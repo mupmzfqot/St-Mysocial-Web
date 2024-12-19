@@ -53,6 +53,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/show/{id}', [MessageController::class, 'openConversation'])->name('show');
         Route::post('/send/{id}', [MessageController::class, 'sendMessage'])->name('send');
         Route::post('/mark-as-read/{conversation_id}', [MessageController::class, 'markAsRead'])->name('mark-as-read');
+        Route::get('/unread-count', [MessageController::class, 'getUnreadCount'])->name('unread-count');
     });
 
     Route::get('team-st', [TeamController::class, 'get'])->name('team.get');

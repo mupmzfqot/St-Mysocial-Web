@@ -2,6 +2,7 @@
 import {Head, router} from "@inertiajs/vue3";
 import HomeLayout from "@/Layouts/HomeLayout.vue";
 import {ref, onMounted, onBeforeUnmount, watch, nextTick} from 'vue';
+import axios from "axios";
 
 const props = defineProps({
     messages: Object,
@@ -31,11 +32,26 @@ function textareaAutoHeight(el, offsetTop = 0) {
     el.style.height = `${el.scrollHeight + offsetTop}px`;
 }
 
-onMounted(() => {
+const markAsRead = async() => {
+    await axios.post(route('message.mark-as-read', props.conversation.id));
+};
 
-    Echo.private(`conversation.${props.conversation.id}`).listen('MessageSent', (event) => {
-        activeMessages.value.push(event);
-    });
+onMounted(() => {
+    markAsRead();
+
+    Echo.private(`conversation.${props.conversation.id}`)
+        .listen('MessageSent', (event) => {
+            activeMessages.value.push(event);
+        })
+        .listen('MessagesRead', (event) => {
+            // Update read_at status for all messages when they're read
+            activeMessages.value = activeMessages.value.map(message => {
+                if (!message.read_at && message.sender_id === $page.props.auth.user.id) {
+                    return { ...message, read_at: new Date() };
+                }
+                return message;
+            });
+        });
 
     const textareas = ['#hs-textarea-ex-1'];
     const cleanupFunctions = [];
