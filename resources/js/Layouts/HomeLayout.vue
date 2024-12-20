@@ -204,7 +204,7 @@ watch(
 
     <!-- ========== MAIN CONTENT ========== -->
     <main id="content">
-        <div class="max-w-[85rem] max-h-100 mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-[85rem] min-h-screen mx-auto py-6 px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-12 gap-4">
                 <div class="col-span-3">
                     <div class="max-w-xs flex flex-col bg-white shadow-sm rounded-lg">

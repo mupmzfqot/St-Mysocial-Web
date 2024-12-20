@@ -1,31 +1,94 @@
 <script setup>
-import {Link, router, useForm} from "@inertiajs/vue3";
+import {Link, router} from "@inertiajs/vue3";
 import {MessageSquareText, Heart, MinusCircle, CheckCircle } from "lucide-vue-next";
 import PostMedia from "@/Components/PostMedia.vue";
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 
 const props = defineProps({
-    posts: Object,
+    posts: {
+        type: Object,
+        required: true
+    },
     likedColor: String,
-    postStatus: false,
+    postStatus: {
+        type: Boolean,
+        default: false
+    },
 });
 
-const form = useForm({
-    post_id: ''
-});
+const loading = ref(false);
+const posts = ref(props.posts.data || []);
+
+// Watch for changes in props.posts and update local posts
+watch(() => props.posts.data, (newPosts) => {
+    if (newPosts) {
+        posts.value = [...posts.value, ...newPosts];
+    }
+}, { deep: true });
+
+const handleScroll = () => {
+    if (loading.value) return;
+    
+    const scrollPosition = window.scrollY;
+    const windowHeight = window.innerHeight;
+    const documentHeight = document.documentElement.scrollHeight;
+    
+    // Load more when user scrolls to 80% of the page
+    if (scrollPosition + windowHeight >= documentHeight * 0.8) {
+        loadMore();
+    }
+};
+
+const loadMore = () => {
+    if (loading.value || !props.posts.next_page_url) return;
+    
+    loading.value = true;
+    console.log('Loading more posts...'); // Debug log
+    
+    const nextPage = props.posts.current_page + 1;
+    router.get(
+        window.location.pathname,
+        { page: nextPage },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: (page) => {
+                console.log('New posts loaded:', page.props.posts.data); // Debug log
+                loading.value = false;
+            },
+            onError: (error) => {
+                console.error('Error loading posts:', error); // Debug log
+                loading.value = false;
+            }
+        }
+    );
+};
 
 const sendLike = (id) => {
-    form.post_id = id;
-    form.post(route('user-post.send-like'), { preserveScroll: false });
-}
+    router.post(route('user-post.send-like'), {
+        post_id: id
+    }, {
+        preserveScroll: true
+    });
+};
 
 const showPost = (id) => {
     router.visit(route('user-post.show-post', id));
-}
+};
 
+onMounted(() => {
+    window.addEventListener('scroll', handleScroll);
+    console.log('Initial posts:', props.posts); // Debug log
+});
+
+onUnmounted(() => {
+    window.removeEventListener('scroll', handleScroll);
+});
 </script>
 
 <template>
-    <div v-for="post in posts.data" class="flex flex-col bg-white border shadow-sm rounded-xl py-3 px-4 mb-2 dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-700/70">
+    <div class="flex flex-col">
+        <div v-for="post in posts" :key="post.id" class="flex flex-col bg-white border shadow-sm rounded-xl py-3 px-4 mb-2 dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-700/70">
             <div class="cursor-pointer" @click="showPost(post.id)">
                 <Link :href="route('profile.show', post.author.id)" class="flex items-center">
                     <div class="shrink-0">
@@ -43,8 +106,6 @@ const showPost = (id) => {
                     </span>
                 </Link>
                 <div class="mt-2 text-gray-800 dark:text-neutral-400" v-html="post.post"></div>
-
-
 
                 <!-- Image Grid -->
                 <PostMedia :medias="post.media" v-if="post.media.length > 0" />
@@ -73,6 +134,24 @@ const showPost = (id) => {
                 </div>
             </div>
         </div>
+        
+        <!-- Debug info -->
+        <div class="text-sm text-gray-500 text-center my-2">
+            Current Page: {{ props.posts.current_page }} / Total Pages: {{ props.posts.last_page }}
+            <br>
+            Posts loaded: {{ posts.length }}
+        </div>
+
+        <!-- Loading indicator -->
+        <div v-if="loading" class="flex justify-center my-4">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+
+        <!-- End message -->
+        <div v-if="!loading && !props.posts.next_page_url" class="text-center text-gray-500 my-4">
+            No more posts to load
+        </div>
+    </div>
 </template>
 
 <style scoped>

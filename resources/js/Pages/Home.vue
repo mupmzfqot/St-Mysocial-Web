@@ -5,7 +5,10 @@ import {SquarePen} from "lucide-vue-next";
 import PostContent from "@/Components/PostContent.vue";
 
 const props = defineProps({
-    posts: Object,
+    posts: {
+        type: Object,
+        required: true,
+    },
     title: String,
     description: String,
     likedColor: String
