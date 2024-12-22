@@ -28,11 +28,11 @@ watch(() => props.posts.data, (newPosts) => {
 
 const handleScroll = () => {
     if (loading.value) return;
-    
+
     const scrollPosition = window.scrollY;
     const windowHeight = window.innerHeight;
     const documentHeight = document.documentElement.scrollHeight;
-    
+
     // Load more when user scrolls to 80% of the page
     if (scrollPosition + windowHeight >= documentHeight * 0.8) {
         loadMore();
@@ -41,10 +41,10 @@ const handleScroll = () => {
 
 const loadMore = () => {
     if (loading.value || !props.posts.next_page_url) return;
-    
+
     loading.value = true;
     console.log('Loading more posts...'); // Debug log
-    
+
     const nextPage = props.posts.current_page + 1;
     router.get(
         window.location.pathname,
@@ -111,7 +111,7 @@ onUnmounted(() => {
                 <PostMedia :medias="post.media" v-if="post.media.length > 0" />
                 <!-- End Image Grid -->
 
-                <div class="flex flex-wrap mt-2 gap-x-1" v-if="post.tags">
+                <div class="flex flex-wrap mt-2 gap-x-1" v-if="post.tags.length > 0">
                     <p class="text-xs text-gray-800 dark:text-gray-200">Tags: </p>
                     <p class="text-xs text-blue-700 italic dark:text-gray-200" v-for="tag in post.tags" :key="tag.id">
                         {{ tag.name }},
@@ -134,7 +134,7 @@ onUnmounted(() => {
                 </div>
             </div>
         </div>
-        
+
         <!-- Debug info -->
         <div class="text-sm text-gray-500 text-center my-2">
             Current Page: {{ props.posts.current_page }} / Total Pages: {{ props.posts.last_page }}
