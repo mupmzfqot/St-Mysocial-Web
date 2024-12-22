@@ -13,6 +13,15 @@ const props = defineProps({
 const content = ref('');
 const activeMessages = ref([...props.messages]);
 const isFriendTyping = ref(false);
+const messagesContainer = ref(null);
+
+const scrollToBottom = () => {
+    nextTick(() => {
+        if (messagesContainer.value) {
+            messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+        }
+    });
+};
 
 const sendMessage = async (conversationId) => {
 
@@ -23,6 +32,7 @@ const sendMessage = async (conversationId) => {
             })
             .then((response) => {
                 content.value = "";
+                scrollToBottom();
             });
     }
 }
@@ -38,10 +48,12 @@ const markAsRead = async() => {
 
 onMounted(() => {
     markAsRead();
+    scrollToBottom();
 
     Echo.private(`conversation.${props.conversation.id}`)
         .listen('MessageSent', (event) => {
             activeMessages.value.push(event);
+            scrollToBottom();
         })
         .listen('MessagesRead', (event) => {
             // Update read_at status for all messages when they're read
@@ -95,7 +107,8 @@ onMounted(() => {
             <h1 class="font-semibold text-xl dark:text-white">Messages</h1>
         </div>
 
-        <div class="flex flex-col bg-white border shadow-sm rounded-xl p-1">
+        <div class="flex flex-col bg-white border shadow-sm rounded-xl p-1 h-[calc(100vh-180px)]">
+            <!-- Header -->
             <div class="shrink-0 group block p-3 bg-gray-100 rounded-lg">
                 <div class="flex items-center">
                     <div class="hs-tooltip inline-block">
@@ -112,7 +125,8 @@ onMounted(() => {
                 </div>
             </div>
 
-            <div class="py-3 px-4">
+            <!-- Messages Container -->
+            <div ref="messagesContainer" class="flex-1 overflow-y-auto py-3 px-4 flex flex-col-reverse">
                 <!-- Chat Bubble -->
                 <ul class="space-y-2" v-if="activeMessages.length > 0" id="messagesContainer">
                     <li :class="['max-w-md flex gap-x-2 sm:gap-x-4', message.sender_id === $page.props.auth.user.id ? 'justify-end ms-auto' : '']"
@@ -130,18 +144,18 @@ onMounted(() => {
                 <div v-else class="text-sm text-gray-400 dark:text-white py-3">
                     <p>No message.</p>
                 </div>
+            </div>
 
-
-                <!-- End Chat Bubble -->
-
-                <hr class="my-3">
-
+            <!-- Input Area -->
+            <div class="shrink-0 border-t mt-auto">
                 <!-- Textarea -->
                 <div class="relative">
-                    <textarea id="hs-textarea-ex-1" @input="sendTypingEvent" v-model="content" class="p-4 pb-12 block w-full border-gray-200 rounded-lg
-                        text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none
-                         dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
-                              placeholder="Send message..."></textarea>
+                    <textarea id="hs-textarea-ex-1" @input="sendTypingEvent" v-model="content" 
+                        class="p-4 pb-12 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 
+                        focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 
+                        dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 
+                        dark:focus:ring-neutral-600 max-h-32"
+                        placeholder="Send message..."></textarea>
 
                     <!-- Toolbar -->
                     <div class="absolute bottom-px inset-x-px p-2 rounded-b-md bg-white dark:bg-neutral-900">
