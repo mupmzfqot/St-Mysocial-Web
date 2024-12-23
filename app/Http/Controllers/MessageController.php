@@ -83,8 +83,9 @@ class MessageController extends Controller
         return inertia('Messages/Show', compact('conversation', 'messages', 'user'));
     }
 
-    public function markAsRead(Conversation $conversation)
+    public function markAsRead($conversation_id, Request $request)
     {
+        $conversation = Conversation::query()->find($conversation_id);
         Gate::authorize('view', $conversation);
 
         $conversation->messages()
@@ -117,4 +118,26 @@ class MessageController extends Controller
 
     }
 
+    public function getUnreadCount()
+    {
+        $currentUserId = auth()->id();
+
+        $unreadCount = Conversation::query()
+            ->select('id', 'type', 'name')
+            ->where('type', 'private')
+            ->whereHas('users', function ($query) use ($currentUserId) {
+                $query->where('user_id', $currentUserId);
+            })
+            ->whereHas('messages', function ($query) use ($currentUserId) {
+                $query->where('is_read', false)
+                    ->where('sender_id', '!=', $currentUserId);
+            })
+            ->withCount('messages')
+            ->get();
+
+        return response()->json([
+            'conversations' => $unreadCount,
+            'total' => array_sum(array_column($unreadCount->toArray(), 'messages_count')),
+        ]);
+    }
 }

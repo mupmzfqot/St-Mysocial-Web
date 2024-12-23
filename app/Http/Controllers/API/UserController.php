@@ -35,7 +35,10 @@ class UserController extends Controller
             ->orderBy('name', 'asc')
             ->paginate(20);
 
-        return UserResource::collection($users);
+        return  response()->json([
+            'error' => 0,
+            'data' => UserResource::collection($users),
+        ], 200);
     }
 
     public function getMedia(Request $request)
@@ -58,7 +61,10 @@ class UserController extends Controller
              ];
         });
 
-        return response()->json(['data' => $media]);
+        return response()->json([
+            'error' => 0,
+            'data' => $media
+        ]);
 
     }
 
