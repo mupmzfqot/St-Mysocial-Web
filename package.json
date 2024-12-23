@@ -23,6 +23,7 @@
     },
     "dependencies": {
         "@headlessui/vue": "^1.7.23",
+        "@vueup/vue-quill": "^1.2.0",
         "dropzone": "^6.0.0-beta.2",
         "lodash": "^4.17.21",
         "lucide-vue-next": "^0.438.0",

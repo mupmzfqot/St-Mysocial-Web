@@ -5,6 +5,8 @@ import {computed, ref} from "vue";
 import HomeLayout from "@/Layouts/HomeLayout.vue";
 import PostContent from "@/Components/PostContent.vue";
 import MultiSelect from "@/Components/MultiSelect.vue";
+import { QuillEditor } from '@vueup/vue-quill'
+import '@vueup/vue-quill/dist/vue-quill.snow.css'
 
 const MAX_FILES = 10;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -20,6 +22,7 @@ const showSuccessMessage = ref(false);
 const successMessage = ref('');
 const showErrorMessage = ref(false);
 const errorMessage = ref('');
+const quillEditor = ref(null);
 
 const props = defineProps({
     posts: Object,
@@ -138,6 +141,21 @@ const submit = () => {
     });
 };
 
+const insertLink = () => {
+    const url = prompt('Enter URL:');
+    if (url) {
+        const range = quillEditor.value.getQuill().getSelection();
+        if (range) {
+            quillEditor.value.getQuill().format('link', url);
+        } else {
+            quillEditor.value.getQuill().insertText(quillEditor.value.getQuill().getLength() - 1, url, {
+                'link': url
+            });
+        }
+    }
+};
+
+
 </script>
 
 <template>
@@ -191,25 +209,34 @@ const submit = () => {
                 </div>
 
                 <form @submit.prevent="submit" mt-2>
-                    <!-- Textarea with drag-drop zone -->
+                    <!-- Quill Editor with drag-drop zone -->
                     <div
                         class="mb-0 relative"
                         @drop="handleDrop"
                         @dragover="handleDragOver"
                         @dragleave="handleDragLeave"
                     >
-                        <textarea
-                            id="post-content"
-                            v-model="form.content"
-                            :maxlength="MAX_CONTENT_LENGTH"
-                            class="p-4 pb-12 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
-                            :class="{ 'border-2 border-blue-400 border-dashed': dragOver }"
-                            placeholder="What's on your mind?"
-                        ></textarea>
-
-                        <!-- Character counter -->
-                        <div class="absolute bottom-3 right-3 text-sm text-gray-500">
-                            {{ remainingChars }} characters remaining
+                        <QuillEditor
+                            ref="quillEditor"
+                            v-model:content="form.content"
+                            contentType="html"
+                            :options="{
+                                placeholder: 'What\'s on your mind?',
+                                modules: {
+                                    toolbar: false
+                                }
+                            }"
+                            :style="{
+                                height: '150px',
+                                marginBottom: '5px'
+                            }"
+                            class="bg-white dark:bg-neutral-900 rounded-lg first-letter-cap"
+                        />
+                        <div
+                            v-if="dragOver"
+                            class="absolute inset-0 bg-blue-500 bg-opacity-10 border-2 border-blue-500 border-dashed rounded-lg flex items-center justify-center"
+                        >
+                            <p class="text-blue-500 font-medium">Drop files here</p>
                         </div>
                     </div>
 
@@ -239,6 +266,25 @@ const submit = () => {
                             </div>
 
                             <!-- Media upload button -->
+                            <button
+                                type="button"
+                                class="inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent text-blue-600 hover:text-blue-800 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-400 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                                @click="triggerFileInput"
+                            >
+                                <ImagePlus class="w-4 h-4"/>
+                                Add media
+                            </button>
+                            <button
+                                type="button"
+                                class="inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent text-blue-600 hover:text-blue-800 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-400 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                                @click="insertLink"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                                </svg>
+                                Add link
+                            </button>
                             <input
                                 ref="fileInput"
                                 type="file"
@@ -247,18 +293,18 @@ const submit = () => {
                                 accept="image/*,video/*"
                                 @change="handleFiles"
                             />
-                            <button
-                                type="button"
-                                @click="triggerFileInput"
-                                :disabled="previews.length >= MAX_FILES"
-                                :class="[
-                                    'hover:text-blue-600 inline-flex justify-center items-center size-[46px] rounded bg-gray-50 text-gray-800 dark:bg-neutral-700 dark:text-neutral-400',
-                                    { 'opacity-50 cursor-not-allowed': previews.length >= MAX_FILES }
-                                ]"
-                                :title="previews.length >= MAX_FILES ? 'Maximum files reached' : 'Add media'"
-                            >
-                                <ImagePlus class="shrink-0 size-5" />
-                            </button>
+<!--                            <button-->
+<!--                                type="button"-->
+<!--                                @click="triggerFileInput"-->
+<!--                                :disabled="previews.length >= MAX_FILES"-->
+<!--                                :class="[-->
+<!--                                    'hover:text-blue-600 inline-flex justify-center items-center size-[46px] rounded bg-gray-50 text-gray-800 dark:bg-neutral-700 dark:text-neutral-400',-->
+<!--                                    { 'opacity-50 cursor-not-allowed': previews.length >= MAX_FILES }-->
+<!--                                ]"-->
+<!--                                :title="previews.length >= MAX_FILES ? 'Maximum files reached' : 'Add media'"-->
+<!--                            >-->
+<!--                                <ImagePlus class="shrink-0 size-5" />-->
+<!--                            </button>-->
 
                         </div>
 
@@ -298,5 +344,13 @@ const submit = () => {
 <style scoped>
 .aspect-square {
     aspect-ratio: 1 / 1;
+}
+
+.first-letter-cap :deep(.ql-editor p:first-of-type::first-letter) {
+    text-transform: uppercase !important;
+}
+
+.ql-editor {
+  text-transform: capitalize !important;
 }
 </style>
