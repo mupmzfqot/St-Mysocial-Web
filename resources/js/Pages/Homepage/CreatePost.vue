@@ -293,18 +293,6 @@ const insertLink = () => {
                                 accept="image/*,video/*"
                                 @change="handleFiles"
                             />
-<!--                            <button-->
-<!--                                type="button"-->
-<!--                                @click="triggerFileInput"-->
-<!--                                :disabled="previews.length >= MAX_FILES"-->
-<!--                                :class="[-->
-<!--                                    'hover:text-blue-600 inline-flex justify-center items-center size-[46px] rounded bg-gray-50 text-gray-800 dark:bg-neutral-700 dark:text-neutral-400',-->
-<!--                                    { 'opacity-50 cursor-not-allowed': previews.length >= MAX_FILES }-->
-<!--                                ]"-->
-<!--                                :title="previews.length >= MAX_FILES ? 'Maximum files reached' : 'Add media'"-->
-<!--                            >-->
-<!--                                <ImagePlus class="shrink-0 size-5" />-->
-<!--                            </button>-->
 
                         </div>
 

@@ -103,6 +103,7 @@ class HomeController extends Controller
         $posts = Post::query()
             ->with('author', 'media', 'comments.user')
             ->orderBy('created_at', 'desc')
+            ->where('user_id', auth()->id())
             ->paginate(30)
             ->through(function ($post) {
                 // Ensure we have all necessary data loaded
