@@ -30,11 +30,6 @@ class NewComment extends Notification
         return ['database'];
     }
 
-    public function broadcastOn()
-    {
-
-    }
-
 
     public function toArray(object $notifiable): array
     {

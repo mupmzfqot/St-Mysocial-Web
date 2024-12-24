@@ -2,6 +2,8 @@
 
 namespace App\Notifications;
 
+use App\Models\PostLiked;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -14,10 +16,10 @@ class NewLike extends Notification
     /**
      * Create a new notification instance.
      */
-    public function __construct()
-    {
-        //
-    }
+    public function __construct(
+        protected PostLiked $post,
+        Protected User $user
+    ){}
 
     /**
      * Get the notification's delivery channels.
@@ -26,18 +28,7 @@ class NewLike extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
-    }
-
-    /**
-     * Get the mail representation of the notification.
-     */
-    public function toMail(object $notifiable): MailMessage
-    {
-        return (new MailMessage)
-                    ->line('The introduction to the notification.')
-                    ->action('Notification Action', url('/'))
-                    ->line('Thank you for using our application!');
+        return ['database'];
     }
 
     /**
@@ -48,7 +39,10 @@ class NewLike extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            //
+            'id'        => $this->post->post_id,
+            'name'      => 'Post Liked',
+            'message'   => "{$this->user->name} like your post.",
+            'url'       => route('user-post.show-post', $this->post->post_id),
         ];
     }
 }
