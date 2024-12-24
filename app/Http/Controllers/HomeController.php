@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Posts\CreateComment;
 use App\Actions\Posts\CreatePost;
 use App\Models\Comment;
 use App\Models\Post;
 use App\Models\PostLiked;
 use App\Models\User;
 use App\Notifications\NewComment;
+use App\Notifications\NewLike;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -140,18 +142,9 @@ class HomeController extends Controller
         //return redirect()->route('homepage');
     }
 
-    public function storeComment(Request $request)
+    public function storeComment(Request $request, CreateComment $createComment)
     {
-        $comment = Comment::query()->create([
-            'post_id' => $request->post_id,
-            'message' => $request->message,
-            'user_id' => auth()->id()
-        ]);
-
-        $postUser = Post::find($request->post_id)?->user;
-        Notification::send($postUser, new NewComment($comment, User::find(auth()->id())));
-
-
+        $createComment->handle($request);
     }
 
     public function storeLike(Request $request)
@@ -159,11 +152,21 @@ class HomeController extends Controller
         $liked = PostLiked::query()->where('post_id', $request->post_id)->where('user_id', auth()->id())->first();
 
         if(!$liked) {
-            PostLiked::query()->create([
+            $postLiked = PostLiked::query()->create([
                 'post_id' => $request->post_id,
                 'user_id' => auth()->id()
             ]);
+
+            $postUser = Post::query()->find($request->post_id)?->author;
+            Notification::send($postUser, new NewLike($postLiked, User::find(auth()->id())));
         }
+
+
+    }
+
+    public function dislike(Request $request)
+    {
+
     }
 
     public function showTopPosts()

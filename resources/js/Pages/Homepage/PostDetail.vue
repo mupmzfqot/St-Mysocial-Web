@@ -133,9 +133,7 @@ const insertLink = () => {
                         <h3 class="flex gap-x-1.5 text-sm font-medium text-gray-800 dark:text-white">
                             {{ comment.user.name }}
                         </h3>
-                        <p class="mt-1 text-sm text-gray-600 dark:text-neutral-400">
-                            {{ comment.message }}
-                        </p>
+                        <p class="mt-1 text-sm text-gray-600 dark:text-neutral-400" v-html="comment.message"></p>
                         <p class="mt-1 text-xs italic text-gray-600 dark:text-neutral-400">
                             {{ comment.created_at }}
                         </p>
