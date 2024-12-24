@@ -101,6 +101,7 @@ class PostController extends Controller
         ]);
 
         return response()->json([
+            'error'     => 0,
             'message'   => 'Comment has been sent.',
         ], 201);
 
@@ -118,6 +119,7 @@ class PostController extends Controller
         }
 
         return response()->json([
+            'error'     => 0,
             'message'   => 'Post has been liked',
         ], 201);
     }
