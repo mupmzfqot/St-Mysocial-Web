@@ -37,8 +37,12 @@ class AuthenticatedSessionController extends Controller
             return redirect()->intended(route('dashboard', absolute: false));
         }
 
-        if(auth()->user()->hasAnyRole(['user', 'public_user'])) {
+        if(auth()->user()->hasRole('user')) {
             return redirect()->intended(route('homepage', absolute: false));
+        }
+
+        if(auth()->user()->hasRole('public_user')) {
+            return redirect()->intended(route('public', absolute: false));
         }
 
         return redirect()->intended(route('/', absolute: false));
