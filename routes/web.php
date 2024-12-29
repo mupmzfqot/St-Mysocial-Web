@@ -26,6 +26,7 @@ Route::middleware(['auth', 'verified', 'role:user|public_user'])->group(function
         Route::get('show/{id}', [HomeController::class, 'showPost'])->name('show-post');
         Route::post('comment', [HomeController::class, 'storeComment'])->name('store-comment');
         Route::post('like', [HomeController::class, 'storeLike'])->name('send-like');
+        Route::post('like-comment', [HomeController::class, 'storeCommentLike'])->name('send-comment-like');
     });
 
     Route::get('st-user', [UserController::class, 'stIndex'])->name('st-user');

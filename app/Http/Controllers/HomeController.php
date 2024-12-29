@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use App\Actions\Posts\CreateComment;
 use App\Actions\Posts\CreatePost;
 use App\Models\Comment;
+use App\Models\CommentLiked;
 use App\Models\Post;
 use App\Models\PostLiked;
 use App\Models\User;
 use App\Notifications\NewComment;
+use App\Notifications\NewCommentLike;
 use App\Notifications\NewLike;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -43,7 +45,8 @@ class HomeController extends Controller
     }
 
     public function publicPost()
-    {$posts = Post::query()
+    {
+        $posts = Post::query()
         ->with('author', 'media', 'comments.user')
         ->orderBy('created_at', 'desc')
         ->published()
@@ -91,7 +94,7 @@ class HomeController extends Controller
     public function showPost($id)
     {
         $post = Post::query()
-            ->with('author', 'media', 'comments.user')
+            ->with('author', 'media', 'comments.user', 'comments.media')
             ->orderBy('created_at', 'desc')
             ->published()
             ->where('id', $id)
@@ -157,10 +160,29 @@ class HomeController extends Controller
                 'user_id' => auth()->id()
             ]);
 
-            $postUser = Post::query()->find($request->post_id)?->author;
-            Notification::send($postUser, new NewLike($postLiked, User::find(auth()->id())));
+            $post = Post::query()->find($request->post_id);
+            if($post->user_id != auth()->id()) {
+                Notification::send($post?->author, new NewLike($postLiked, User::find(auth()->id())));
+            }
         }
 
+    }
+
+    public function storeCommentLike(Request $request)
+    {
+        $liked = CommentLiked::query()->where('comment_id', $request->comment_id)->where('user_id', auth()->id())->first();
+
+        if(!$liked) {
+            $commentLiked = CommentLiked::query()->create([
+                'comment_id' => $request->comment_id,
+                'user_id' => auth()->id()
+            ]);
+
+            $comment = Comment::query()->find($request->comment_id);
+            if($comment->user_id != auth()->id()) {
+                Notification::send($comment?->user, new NewCommentLike($comment, User::find(auth()->id())));
+            }
+        }
 
     }
 

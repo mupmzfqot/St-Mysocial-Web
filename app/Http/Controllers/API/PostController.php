@@ -2,15 +2,21 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Actions\Posts\CreateComment;
 use App\Actions\Posts\CreatePost;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PostResource;
 use App\Models\Comment;
+use App\Models\CommentLiked;
 use App\Models\Post;
 use App\Models\PostLiked;
+use App\Models\User;
+use App\Notifications\NewCommentLike;
+use App\Notifications\NewLike;
 use Gate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 class PostController extends Controller
 {
@@ -92,18 +98,21 @@ class PostController extends Controller
         return PostResource::collection($posts);
     }
 
-    public function storeComments(Request $request)
+    public function storeComments(Request $request, CreateComment $createComment)
     {
-        Comment::query()->create([
-            'post_id' => $request->post_id,
-            'message' => $request->message,
-            'user_id' => $request->user()->id
-        ]);
-
-        return response()->json([
-            'error'     => 0,
-            'message'   => 'Comment has been sent.',
-        ], 201);
+        try {
+            $createComment->handle($request);
+            return response()->json([
+                'error'     => 0,
+                'message'   => 'Comment has been sent.',
+            ], 201);
+        } Catch (\Exception $e) {
+            return response()->json([
+                'error'     => 0,
+                'message'   => 'Failed to send comment.',
+                'response' => $e->getMessage(),
+            ]);
+        }
 
     }
 
@@ -116,11 +125,38 @@ class PostController extends Controller
                 'post_id' => $request->post_id,
                 'user_id' => $request->user()->id
             ]);
+
+            $post = Post::query()->find($request->post_id);
+            if($post->user_id != auth()->id()) {
+                Notification::send($post?->author, new NewLike($postLiked, User::find(auth()->id())));
+            }
         }
 
         return response()->json([
             'error'     => 0,
             'message'   => 'Post has been liked',
         ], 201);
+    }
+
+    public function storeCommentLike(Request $request)
+    {
+        $liked = CommentLiked::query()->where('comment_id', $request->comment_id)->where('user_id', auth()->id())->first();
+
+        if(!$liked) {
+            $commentLiked = CommentLiked::query()->create([
+                'comment_id' => $request->comment_id,
+                'user_id' => auth()->id()
+            ]);
+
+            $comment = Comment::query()->find($request->comment_id);
+            if($comment->user_id != auth()->id()) {
+                Notification::send($comment?->user, new NewCommentLike($comment, User::find(auth()->id())));
+            }
+
+            return response()->json([
+                'error'     => 0,
+                'message'   => 'Comment has been liked',
+            ]);
+        }
     }
 }
