@@ -21,7 +21,7 @@ class Post extends Model implements HasMedia
 
     protected $guarded = [];
 
-    protected $appends = ['is_liked'];
+    protected $appends = ['is_liked', 'commented'];
 
     public function registerMediaConversions(?Media $media = null): void
     {
@@ -68,6 +68,11 @@ class Post extends Model implements HasMedia
     }
 
     public function getIsLikedAttribute(): bool
+    {
+        return $this->likes()->where('user_id', auth()->id())->exists();
+    }
+
+    public function getCommentedAttribute(): bool
     {
         return $this->likes()->where('user_id', auth()->id())->exists();
     }

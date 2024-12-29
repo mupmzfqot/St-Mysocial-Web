@@ -18,7 +18,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::resource('posts', PostController::class);
 
     Route::get('top-posts', [PostController::class, 'topPosts']);
-    Route::post('posts/comment', [PostController::class, 'storeComment']);
+    Route::post('posts/comment', [PostController::class, 'storeComments']);
     Route::post('posts/like', [PostController::class, 'storeLike']);
 
     Route::post('update-profile-image', [UserController::class, 'updateProfileImage']);

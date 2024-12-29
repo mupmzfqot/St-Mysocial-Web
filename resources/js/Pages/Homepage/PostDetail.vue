@@ -1,5 +1,5 @@
 <script setup>
-import {Head, Link, useForm} from "@inertiajs/vue3";
+import {Head, Link, router, useForm} from "@inertiajs/vue3";
 import HomeLayout from "@/Layouts/HomeLayout.vue";
 import {Heart, ImagePlus, Link as LinkIcon, MessageSquareText, X} from "lucide-vue-next";
 import PostMedia from "@/Components/PostMedia.vue";
@@ -33,6 +33,14 @@ const submitComment = () => {
 
 const sendLike = () => {
     form.post(route('user-post.send-like'), { preserveScroll: true });
+};
+
+const sendCommentLike = (id) => {
+    router.post(route('user-post.send-comment-like'), {
+        comment_id: id
+    }, {
+        preserveScroll: true
+    });
 };
 
 const triggerFileInput = () => {
@@ -93,7 +101,7 @@ const insertLink = () => {
                     <div class="text-xs text-gray-500 dark:text-neutral-500">{{ post.created_at }}</div>
                 </div>
             </Link>
-            <div class="mt-2 text-gray-500 dark:text-neutral-400" v-html="post.post"></div>
+            <div class="mt-2 text-gray-800 dark:text-neutral-400" v-html="post.post"></div>
 
             <!-- Image Grid -->
             <PostMedia :medias="post.media" v-if="post.media.length > 0" />
@@ -130,13 +138,25 @@ const insertLink = () => {
 
                     <!-- Right Content -->
                     <div class="grow pt-0.5 pb-8">
-                        <h3 class="flex gap-x-1.5 text-sm font-medium text-gray-800 dark:text-white">
+                        <h3 class="flex gap-x-1.5 text-sm justify-between font-medium text-gray-800 dark:text-white">
                             {{ comment.user.name }}
+                            <p class="mt-1 text-xs italic text-gray-400 dark:text-neutral-400">
+                                {{ comment.created_at }}
+                            </p>
                         </h3>
                         <p class="mt-1 text-sm text-gray-600 dark:text-neutral-400" v-html="comment.message"></p>
-                        <p class="mt-1 text-xs italic text-gray-600 dark:text-neutral-400">
-                            {{ comment.created_at }}
-                        </p>
+                        <PostMedia :medias="comment.media" :small="true" v-if="comment.media.length > 0" />
+
+
+                        <div class="inline-flex gap-x-3">
+                            <div class="mt-3 inline-flex items-center gap-x-1 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600">
+                                <a href="" @click.prevent="sendCommentLike(comment.id)">
+                                    <Heart class="shrink-0 size-4 fill-red-500 text-transparent" v-if="comment.is_liked" />
+                                    <Heart class="shrink-0 size-4 text-gray-500" v-else />
+                                </a>
+                                {{ comment.like_count }} Likes
+                            </div>
+                        </div>
                     </div>
                     <!-- End Right Content -->
                 </div>

@@ -6,6 +6,7 @@ defineProps({
         type: Array,
         required: true,
     },
+    small: Boolean
 });
 
 const isModalOpen = ref(false);
@@ -59,7 +60,7 @@ const handleKeydown = (e) => {
 <template>
     <div :class="['rounded-lg overflow-hidden py-2', medias.length === 1 ? 'gallery full' : 'gallery grid']">
         <!-- Jika hanya satu gambar -->
-        <template v-if="medias.length === 1">
+        <template v-if="medias.length === 1" >
             <div v-if="isVideo(medias[0])" class="video-container">
                 <video
                     controls
@@ -67,10 +68,11 @@ const handleKeydown = (e) => {
                     class="w-full h-auto"
                 ></video>
             </div>
+
             <img v-else
                 :src="medias[0].original_url"
                 :alt="medias[0].name"
-                class="w-full h-80 hover:opacity-90 cursor-pointer"
+                :class="['hover:opacity-90 cursor-pointer', small === true ? 'h-32' : 'w-full h-80']"
                 @click.stop="previewMedia(medias[0])"
             />
         </template>
@@ -92,7 +94,7 @@ const handleKeydown = (e) => {
                 <img v-else
                     :src="media.preview_url"
                     :alt="media.name"
-                    class="w-full h-40 object-cover hover:opacity-90 cursor-pointer"
+                     :class="['hover:opacity-90 cursor-pointer', small === true ? 'h-32' : 'w-full h-80']"
                     @click.stop="previewMedia(medias)"
                 />
                 <!-- Overlay untuk gambar lebih dari 4 -->

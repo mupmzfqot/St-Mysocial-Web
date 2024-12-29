@@ -24,7 +24,15 @@ class CommentResource extends JsonResource
                 'email'         => $this->user->email,
                 'profile_img'   => null
             ],
+            'media'         => $this->getMedia('comment_media')->map(fn ($item) => [
+                'id'            => $item->id,
+                'filename'      => $item->file_name,
+                'preview_url'   => $item->preview_url,
+                'original_url'  => $item->original_url,
+                'extension'     => $item->extension,
+            ]),
             'created_at'    => $this->created_at,
+            'liked'         => (bool) $this->is_liked,
         ];
     }
 }

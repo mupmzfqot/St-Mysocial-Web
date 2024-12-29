@@ -34,12 +34,14 @@ class PostResource extends JsonResource
             ],
             'media'         => $this->getMedia('*')->map(fn ($item) => [
                 'id'            => $item->id,
-                'filename'      => $item->filename,
+                'filename'      => $item->file_name,
                 'preview_url'   => $item->preview_url,
                 'original_url'  => $item->original_url,
                 'extension'     => $item->extension,
             ]),
             'comments'      => CommentResource::collection($this->whenLoaded('comments')),
+            'liked'      => (bool) $this->is_liked,
+            'commented'  => (bool) $this->commented,
         ];
     }
 }
