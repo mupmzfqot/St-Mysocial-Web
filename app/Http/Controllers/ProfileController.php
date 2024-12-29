@@ -59,9 +59,16 @@ class ProfileController extends Controller
             ]);
         }
 
+        $totalPosts = auth()->user()?->posts()->count();
+        $totalLikes = auth()->user()?->likes()->count();
+        $totalComments = auth()->user()?->comments()->count();
+
         return  Inertia::render('Profile/UserEdit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
+            'totalPosts' => $totalPosts,
+            'totalLikes' => $totalLikes,
+            'totalComments' => $totalComments,
             'media' => [
                 'avatar' => $request->user()->getMedia('avatar')->first(),
                 'cover-image' => $request->user()->getMedia('cover-image')->first(),

@@ -16,7 +16,10 @@ defineProps({
     status: {
         type: String,
     },
-    media: Object
+    media: Object,
+    totalPosts: 0,
+    totalLikes: 0,
+    totalComments: 0,
 });
 
 const { user: user } = usePage().props.auth;
@@ -66,13 +69,13 @@ const showCoverCropper = ref(false);
                 <!-- Stats -->
                 <div class="flex justify-center items-center space-x-6 mt-4 text-gray-800 text-sm">
                     <div class="text-center">
-                        <p class=""><b>20</b> Stars</p>
+                        <p class=""><b>{{ totalPosts }}</b> Posts</p>
                     </div>
                     <div class="text-center">
-                        <p class=""><b>10</b> Followers</p>
+                        <p class=""><b>{{ totalLikes }}</b> Likes</p>
                     </div>
                     <div class="text-center">
-                        <p class=""><b>15</b> Projects</p>
+                        <p class=""><b>{{ totalComments }}</b> Comments</p>
                     </div>
                 </div>
             </div>
