@@ -51,13 +51,7 @@ class HomeController extends Controller
         ->orderBy('created_at', 'desc')
         ->published()
         ->where('type', 'public')
-        ->paginate(30)
-        ->through(function ($post) {
-            // Ensure we have all necessary data loaded
-            $post->load('likes');
-            return $post;
-        })
-        ->withQueryString();
+        ->paginate(30);
 
         $title = 'Public Post';
         $description = 'Post for Public';
@@ -186,9 +180,14 @@ class HomeController extends Controller
 
     }
 
-    public function dislike(Request $request)
+    public function unlike(Request $request)
     {
+        PostLiked::query()->where('post_id', $request->post_id)->where('user_id', auth()->id())->delete();
+    }
 
+    public function unlikeComment(Request $request)
+    {
+        CommentLiked::query()->where('comment_id', $request->comment_id)->where('user_id', auth()->id())->delete();
     }
 
     public function showTopPosts()
@@ -211,6 +210,14 @@ class HomeController extends Controller
         return Inertia::render('Homepage/TopPost', [
             'posts' => $posts
         ]);
+    }
+
+    public function notifications()
+    {
+        auth()->user()->unreadNotifications->markAsRead();
+        $notifications = auth()->user()->notifications()->paginate(20);
+
+        return Inertia::render('Homepage/Notifications', compact('notifications'));
     }
 
 }

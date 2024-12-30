@@ -160,13 +160,13 @@ watch(
                                     {{ notif.data.message }}
                                 </a>
                                 <a href="#" v-if="notifications.length === 0" class="flex items-center gap-x-3.5 py-2 px-3 font-light italic text-gray-800">
-                                    No notifications yet.
+                                    No notifications.
                                 </a>
                             </div>
-                            <div class="p-1 space-y-0.5" v-if="notifications.length > 0">
-                                <a href="#" class="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100">
-                                    <CircleCheckBig class="shrink-0 size-4 text-green-700" /> Mark all as read
-                                </a>
+                            <div class="p-1 space-y-0.5">
+                                <Link :href="route('notifications')" class="flex items-center gap-x-1 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100">
+                                    <CircleCheckBig class="shrink-0 size-4 text-green-700" /> Show all notifications
+                                </Link>
                             </div>
 
                         </div>

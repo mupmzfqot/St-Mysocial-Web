@@ -35,12 +35,20 @@ const sendLike = () => {
     form.post(route('user-post.send-like'), { preserveScroll: true });
 };
 
+const unlike = (id) => {
+    form.post(route('user-post.unlike'), { preserveScroll: true });
+};
+
 const sendCommentLike = (id) => {
     router.post(route('user-post.send-comment-like'), {
         comment_id: id
     }, {
         preserveScroll: true
     });
+};
+
+const unlikeComment = (id) => {
+    router.post(route('user-post.unlike-comment'), { comment_id: id }, { preserveScroll: true });
 };
 
 const triggerFileInput = () => {
@@ -114,9 +122,11 @@ const insertLink = () => {
 
                 </Link>
                 <div class="mt-3 inline-flex items-center gap-x-1 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600" href="#">
-                    <a href="" @click.prevent="sendLike">
-                        <Heart class="shrink-0 size-4 fill-red-500 text-transparent" v-if="post.is_liked" />
-                        <Heart class="shrink-0 size-4 text-gray-500" v-else />
+                    <a href="" @click.prevent="unlike" v-if="post.is_liked" >
+                        <Heart class="shrink-0 size-4 fill-red-500 text-transparent" />
+                    </a>
+                    <a href="" @click.prevent="sendLike" v-else>
+                        <Heart class="shrink-0 size-4 text-gray-500" />
                     </a>
                     {{ post.like_count }} Likes
                 </div>
@@ -150,9 +160,11 @@ const insertLink = () => {
 
                         <div class="inline-flex gap-x-3">
                             <div class="mt-3 inline-flex items-center gap-x-1 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600">
-                                <a href="" @click.prevent="sendCommentLike(comment.id)">
-                                    <Heart class="shrink-0 size-4 fill-red-500 text-transparent" v-if="comment.is_liked" />
-                                    <Heart class="shrink-0 size-4 text-gray-500" v-else />
+                                <a href="" @click.prevent="unlikeComment(comment.id)" v-if="comment.is_liked">
+                                    <Heart class="shrink-0 size-4 fill-red-500 text-transparent" />
+                                </a>
+                                <a href="" @click.prevent="sendCommentLike(comment.id)" v-else>
+                                    <Heart class="shrink-0 size-4 text-gray-500" />
                                 </a>
                                 {{ comment.like_count }} Likes
                             </div>
