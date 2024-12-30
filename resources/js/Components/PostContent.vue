@@ -22,7 +22,7 @@ const posts = ref(props.posts.data || []);
 // Watch for changes in props.posts and update local posts
 watch(() => props.posts.data, (newPosts) => {
     if (newPosts) {
-        posts.value = [...posts.value, ...newPosts];
+        posts.value = newPosts;
     }
 }, { deep: true });
 
@@ -65,11 +65,11 @@ const loadMore = () => {
 };
 
 const sendLike = (id) => {
-    router.post(route('user-post.send-like'), {
-        post_id: id
-    }, {
-        preserveScroll: true
-    });
+    router.post(route('user-post.send-like'), { post_id: id }, { preserveScroll: true });
+};
+
+const unlike = (id) => {
+    router.post(route('user-post.unlike'), { post_id: id }, { preserveScroll: true });
 };
 
 const showPost = (id) => {
@@ -126,10 +126,13 @@ onUnmounted(() => {
 
                 </Link>
                 <div class="mt-3 inline-flex items-center gap-x-1 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600">
-                    <a href="" @click.prevent="sendLike(post.id)">
+                    <a href="#" v-if="post.is_liked" @click.prevent="unlike(post.id)">
                         <Heart class="shrink-0 size-4 fill-red-500 text-transparent" v-if="post.is_liked" />
-                        <Heart class="shrink-0 size-4 text-gray-500" v-else />
                     </a>
+                    <a href="#" @click.prevent="sendLike(post.id)" v-else>
+                        <Heart class="shrink-0 size-4 text-gray-500" />
+                    </a>
+
                     {{ post.like_count }} Likes
                 </div>
             </div>

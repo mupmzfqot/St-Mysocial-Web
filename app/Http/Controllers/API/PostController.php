@@ -138,6 +138,16 @@ class PostController extends Controller
         ], 201);
     }
 
+    public function unlikePost(Request $request)
+    {
+        PostLiked::query()->where('post_id', $request->post_id)->where('user_id', auth()->id())->delete();
+
+        return response()->json([
+            'error'     => 0,
+            'message'   => 'Post has been unliked',
+        ], 201);
+    }
+
     public function storeCommentLike(Request $request)
     {
         $liked = CommentLiked::query()->where('comment_id', $request->comment_id)->where('user_id', auth()->id())->first();
@@ -158,5 +168,15 @@ class PostController extends Controller
                 'message'   => 'Comment has been liked',
             ]);
         }
+    }
+
+    public function unlikeComment(Request $request)
+    {
+        CommentLiked::query()->where('comment_id', $request->comment_id)->where('user_id', auth()->id())->delete();
+
+        return response()->json([
+            'error'     => 0,
+            'message'   => 'Comment has been unliked',
+        ], 201);
     }
 }
