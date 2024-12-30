@@ -27,25 +27,21 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(LoginRequest $request)
     {
-        $request->authenticate();
 
+        $request->authenticate();
         $request->session()->regenerate();
 
-        if(auth()->user()->hasRole('admin')) {
-            return redirect()->intended(route('dashboard', absolute: false));
-        }
+        $role = auth()->user()->getRoleNames()->first(); // Get the first role of the user
 
-        if(auth()->user()->hasRole('user')) {
-            return redirect()->intended(route('homepage', absolute: false));
-        }
+        $redirectRoutes = [
+            'admin' => 'dashboard',
+            'user' => 'homepage',
+            'public_user' => 'public',
+        ];
 
-        if(auth()->user()->hasRole('public_user')) {
-            return redirect()->intended(route('public', absolute: false));
-        }
-
-        return redirect()->intended(route('/', absolute: false));
+        return Inertia::location(route($redirectRoutes[$role] ?? '/', absolute: false));
     }
 
     /**
