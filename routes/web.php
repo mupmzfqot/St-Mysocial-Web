@@ -29,6 +29,7 @@ Route::middleware(['auth', 'verified', 'role:user|public_user'])->group(function
         Route::post('unlike', [HomeController::class, 'unlike'])->name('unlike');
         Route::post('like-comment', [HomeController::class, 'storeCommentLike'])->name('send-comment-like');
         Route::post('unlike-comment', [HomeController::class, 'unlikeComment'])->name('unlike-comment');
+        Route::post('delete-comment', [HomeController::class, 'deleteComment'])->name('delete-comment');
     });
 
     Route::get('st-user', [UserController::class, 'stIndex'])->name('st-user');

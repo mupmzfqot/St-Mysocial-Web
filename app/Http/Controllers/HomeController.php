@@ -190,6 +190,19 @@ class HomeController extends Controller
         CommentLiked::query()->where('comment_id', $request->comment_id)->where('user_id', auth()->id())->delete();
     }
 
+    public function deleteComment(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $comment = Comment::query()->find($request->comment_id);
+            $comment->likes()->delete();
+            $comment->delete();
+            DB::commit();
+        } Catch (\Exception $e) {
+            DB::rollBack();
+        }
+    }
+
     public function showTopPosts()
     {
         $posts = Post::query()

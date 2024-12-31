@@ -7,6 +7,7 @@ import PostContent from "@/Components/PostContent.vue";
 import MultiSelect from "@/Components/MultiSelect.vue";
 import { QuillEditor } from '@vueup/vue-quill'
 import '@vueup/vue-quill/dist/vue-quill.snow.css'
+import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
 
 const MAX_FILES = 10;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -23,6 +24,10 @@ const successMessage = ref('');
 const showErrorMessage = ref(false);
 const errorMessage = ref('');
 const quillEditor = ref(null);
+const showLinkModal = ref(false);
+const linkUrl = ref('');
+const linkText = ref('');
+const selectedRange = ref(null);
 
 const props = defineProps({
     posts: Object,
@@ -141,21 +146,35 @@ const submit = () => {
     });
 };
 
-const insertLink = () => {
-    const url = prompt('Enter URL:');
-    if (url) {
-        const range = quillEditor.value.getQuill().getSelection();
-        if (range) {
-            quillEditor.value.getQuill().format('link', url);
-        } else {
-            quillEditor.value.getQuill().insertText(quillEditor.value.getQuill().getLength() - 1, url, {
-                'link': url
-            });
-        }
+const openLinkDialog = () => {
+    selectedRange.value = quillEditor.value.getQuill().getSelection();
+    if (selectedRange.value && selectedRange.value.length > 0) {
+        linkText.value = quillEditor.value.getQuill().getText(selectedRange.value.index, selectedRange.value.length);
     }
+    showLinkModal.value = true;
 };
 
-
+const insertLink = () => {
+    if (linkUrl.value) {
+        const displayText = linkText.value || linkUrl.value;
+        const quill = quillEditor.value.getQuill();
+        
+        if (selectedRange.value) {
+            if (selectedRange.value.length > 0) {
+                quill.deleteText(selectedRange.value.index, selectedRange.value.length);
+            }
+            quill.insertText(selectedRange.value.index, displayText, { 'link': linkUrl.value });
+        } else {
+            quill.insertText(quill.getLength() - 1, displayText, { 'link': linkUrl.value });
+        }
+    }
+    
+    // Reset the form
+    linkUrl.value = '';
+    linkText.value = '';
+    showLinkModal.value = false;
+    selectedRange.value = null;
+};
 </script>
 
 <template>
@@ -277,7 +296,7 @@ const insertLink = () => {
                             <button
                                 type="button"
                                 class="inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent text-blue-600 hover:text-blue-800 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-400 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
-                                @click="insertLink"
+                                @click="openLinkDialog"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
                                     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
@@ -327,6 +346,79 @@ const insertLink = () => {
 
         <PostContent :posts="posts" :post-status="true" />
     </HomeLayout>
+
+    <TransitionRoot appear :show="showLinkModal" as="template">
+        <Dialog as="div" @close="showLinkModal = false" class="relative z-10">
+            <TransitionChild
+                as="template"
+                enter="duration-300 ease-out"
+                enter-from="opacity-0"
+                enter-to="opacity-100"
+                leave="duration-200 ease-in"
+                leave-from="opacity-100"
+                leave-to="opacity-0"
+            >
+                <div class="fixed inset-0 bg-black/25" />
+            </TransitionChild>
+
+            <div class="fixed inset-0 overflow-y-auto">
+                <div class="flex min-h-full items-center justify-center p-4 text-center">
+                    <TransitionChild
+                        as="template"
+                        enter="duration-300 ease-out"
+                        enter-from="opacity-0 scale-95"
+                        enter-to="opacity-100 scale-100"
+                        leave="duration-200 ease-in"
+                        leave-from="opacity-100 scale-100"
+                        leave-to="opacity-0 scale-95"
+                    >
+                        <DialogPanel class="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                            <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900">
+                                Insert Link
+                            </DialogTitle>
+                            <div class="mt-4">
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700">URL</label>
+                                    <input
+                                        type="url"
+                                        v-model="linkUrl"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                        placeholder="https://example.com"
+                                    />
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700">Link Text (optional)</label>
+                                    <input
+                                        type="text"
+                                        v-model="linkText"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                        placeholder="Display text"
+                                    />
+                                </div>
+                            </div>
+
+                            <div class="mt-4 flex justify-end space-x-2">
+                                <button
+                                    type="button"
+                                    class="inline-flex justify-center rounded-md border border-transparent bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"
+                                    @click="showLinkModal = false"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    class="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                                    @click="insertLink"
+                                >
+                                    Insert
+                                </button>
+                            </div>
+                        </DialogPanel>
+                    </TransitionChild>
+                </div>
+            </div>
+        </Dialog>
+    </TransitionRoot>
 </template>
 
 <style scoped>
