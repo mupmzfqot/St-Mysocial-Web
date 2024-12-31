@@ -158,5 +158,13 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+.text-gray-800 :deep(a) {
+    color: #3b82f6; /* Tailwind blue-500 */
+    text-decoration: none;
+}
 
+.text-gray-800 :deep(a:hover) {
+    color: #2563eb; /* Tailwind blue-600 */
+    text-decoration: underline;
+}
 </style>

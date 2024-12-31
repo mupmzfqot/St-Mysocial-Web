@@ -65,15 +65,4 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        // Drop the triggers if the migration is rolled back
-        DB::statement("DROP TRIGGER IF EXISTS after_comment_insert");
-        DB::statement("DROP TRIGGER IF EXISTS after_comment_delete");
-        DB::statement("DROP TRIGGER IF EXISTS after_post_liked_insert");
-        DB::statement("DROP TRIGGER IF EXISTS after_post_liked_delete");
-    }
 };
