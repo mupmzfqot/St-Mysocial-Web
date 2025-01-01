@@ -55,7 +55,7 @@ class CreatePost
                 $post = Post::query()->create($data);
             }
 
-            if(!empty($request->userTags)) {
+            if(!empty($request->userTags) && !auth()->user()->hasRole('admin')) {
                 PostTag::query()->where('post_id', $post->id)->delete();
                 foreach ($request->userTags as $tag) {
                     PostTag::query()->create([
@@ -66,7 +66,13 @@ class CreatePost
                 }
 
                 $taggedUser = User::query()->whereIn('id', $request->userTags)->get();
-                Notification::send($taggedUser, new TagUserPost($post, auth()->user()));
+                Notification::send($taggedUser, new TagUserPost($post, auth()->user(), false));
+
+            }
+
+            if (auth()->user()->hasRole('admin')) {
+                $taggedUser = User::query()->whereHas('roles', function ($query) { $query->where('name', 'user'); })->get();
+                Notification::send($taggedUser, new TagUserPost($post, auth()->user(), true));
             }
 
             if ($request->hasFile('files')) {

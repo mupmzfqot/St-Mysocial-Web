@@ -18,7 +18,8 @@ class TagUserPost extends Notification
      */
     public function __construct(
         protected Post $post,
-        protected User $user
+        protected User $user,
+        protected bool $isAdmin,
     ){}
 
     /**
@@ -31,8 +32,6 @@ class TagUserPost extends Notification
         return ['database'];
     }
 
-
-
     /**
      * Get the array representation of the notification.
      *
@@ -40,10 +39,13 @@ class TagUserPost extends Notification
      */
     public function toArray(object $notifiable): array
     {
+        $message = $this->isAdmin ? "Administrator created new post."
+            : "You were tag you in {$this->user->name} post.";
+
         return [
             'id'        => $this->post->id,
             'name'      => 'Post Tag',
-            'message'   => "You were tag you in {$this->user->name} post.",
+            'message'   => $message,
             'url'       => route('user-post.show-post', $this->post->id),
         ];
     }
