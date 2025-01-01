@@ -94,7 +94,7 @@ const handleKeydown = (e) => {
                 <img v-else
                     :src="media.preview_url"
                     :alt="media.name"
-                     :class="['hover:opacity-90 cursor-pointer', small === true ? 'h-32' : 'w-full h-80']"
+                     :class="['hover:opacity-90 cursor-pointer', small === true ? 'h-32' : 'w-full h-40']"
                     @click.stop="previewMedia(medias)"
                 />
                 <!-- Overlay untuk gambar lebih dari 4 -->

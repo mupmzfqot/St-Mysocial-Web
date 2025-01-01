@@ -5,8 +5,11 @@ namespace App\Actions\Posts;
 use App\Models\Post;
 use App\Models\PostTag;
 use App\Models\User;
+use App\Notifications\TagUserPost;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 class CreatePost
@@ -19,10 +22,11 @@ class CreatePost
 
             $validated = $request->validate([
                 'content' => 'required|string|max:1000',
+                'files' => 'nullable|array',
                 'files.*' => [
-                    'nullable',
+                    'file',
                     'mimetypes:image/jpeg,image/png,image/gif,video/mp4,video/quicktime',
-                    'max:10240' // 10MB
+                    'max:20480' // 20MB
                 ],
                 'type' => 'required|in:st,public'
             ], [
@@ -60,12 +64,27 @@ class CreatePost
                         'name'     => User::query()->find($tag)?->name
                     ]);
                 }
+
+                $taggedUser = User::query()->whereIn('id', $request->userTags)->get();
+                Notification::send($taggedUser, new TagUserPost($post, auth()->user()));
             }
 
             if ($request->hasFile('files')) {
                 foreach ($request->file('files') as $file) {
-                    $post->addMedia($file)
-                        ->toMediaCollection('post_media');
+                    if ($file->isValid()) {
+                        try {
+                            $post->addMedia($file)
+                                ->toMediaCollection('post_media');
+                        } catch (\Exception $e) {
+                            Log::error('File upload failed: ' . $e->getMessage(), [
+                                'file' => $file->getClientOriginalName(),
+                                'error' => $e->getMessage()
+                            ]);
+                            throw new \Exception('Failed to upload file: ' . $file->getClientOriginalName());
+                        }
+                    } else {
+                        throw new \Exception('Invalid file upload: ' . $file->getClientOriginalName());
+                    }
                 }
             }
 
@@ -73,6 +92,7 @@ class CreatePost
             return $post;
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error($e->getMessage());
             return $e->getMessage();
         }
     }
