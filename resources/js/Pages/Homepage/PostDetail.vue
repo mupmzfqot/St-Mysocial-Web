@@ -202,7 +202,7 @@ const insertLink = () => {
                                 </a>
                                 {{ comment.like_count }} Likes
                             </div>
-                            <a href="#" @click.prevent="openDeleteConfirm(comment.id)" class="inline-flex items-center text-xs text-red-500 hover:text-red-700">
+                            <a href="#" v-if="comment.user_id === $page.props.auth.user.id" @click.prevent="openDeleteConfirm(comment.id)" class="inline-flex items-center text-xs text-red-500 hover:text-red-700">
                                 <X class="shrink-0 size-4" /> delete comment
                             </a>
                         </div>

@@ -128,10 +128,10 @@ watch(
                                     <div class="p-6">
                                         <div v-if="post.media && post.media.length > 0" class="flex -space-x-2">
                                             <template v-for="(media, index) in post.media.slice(0, 3)" :key="media.id">
-                                                <img 
-                                                    :src="media.preview_url" 
+                                                <img
+                                                    :src="media.preview_url"
                                                     :alt="media.name"
-                                                    class="inline-block size-[46px] rounded-full ring-2 ring-white dark:ring-neutral-900"
+                                                    class="inline-block size-[46px]"
                                                 />
                                             </template>
                                             <div v-if="post.media.length > 3" class="hs-dropdown [--placement:top-left] relative inline-flex">
