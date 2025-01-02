@@ -127,16 +127,16 @@ watch(
                                 <td class="size-px whitespace-nowrap align-top">
                                     <div class="p-6">
                                         <div v-if="post.media && post.media.length > 0" class="flex -space-x-2">
-                                            <template v-for="(media, index) in post.media.slice(0, 3)" :key="media.id">
+                                            <template v-for="(media, index) in post.media.filter(m => m.mime_type.startsWith('image/')).slice(0, 3)" :key="media.id">
                                                 <img
                                                     :src="media.preview_url"
                                                     :alt="media.name"
                                                     class="inline-block size-[46px]"
                                                 />
                                             </template>
-                                            <div v-if="post.media.length > 3" class="hs-dropdown [--placement:top-left] relative inline-flex">
+                                            <div v-if="post.media.filter(m => m.mime_type.startsWith('image/')).length > 3" class="hs-dropdown [--placement:top-left] relative inline-flex">
                                                 <button class="inline-flex items-center justify-center size-[46px] rounded-full bg-gray-100 border-2 border-white font-medium text-gray-700 shadow-sm align-middle hover:bg-gray-200 focus:outline-none focus:bg-gray-300 text-sm dark:bg-neutral-700 dark:text-white dark:hover:bg-neutral-600 dark:focus:bg-neutral-600 dark:border-neutral-800">
-                                                    <span class="font-medium leading-none">+{{ post.media.length - 3 }}</span>
+                                                    <span class="font-medium leading-none">+{{ post.media.filter(m => m.mime_type.startsWith('image/')).length - 3 }}</span>
                                                 </button>
                                             </div>
                                         </div>
