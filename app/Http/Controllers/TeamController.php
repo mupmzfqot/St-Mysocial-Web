@@ -11,8 +11,9 @@ class TeamController extends Controller
     {
         $query = User::query()
             ->whereHas('roles', function ($query) {
-                $query->whereIn('name', ['admin', 'user']);
+                $query->where('name', 'user');
             })
+            ->whereNotNull('email_verified_at')
             ->where('is_active', true);
 
         if(auth()->user()) {
