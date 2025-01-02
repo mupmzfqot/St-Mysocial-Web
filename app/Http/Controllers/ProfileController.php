@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\Post;
 use App\Models\User;
+use App\Notifications\ChangeProfileImageStatus;
 use App\Notifications\NewProfileImage;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
@@ -142,22 +143,47 @@ class ProfileController extends Controller
     {
         $photos = User::whereHas('media', function ($query) {
                 $query->where('collection_name', 'avatar')
-                    ->where('is_verified', false);
+                    ->where('is_verified', true);
             })
             ->with(['media' => function ($query) {
                 $query->where('collection_name', 'avatar')
-                    ->where('is_verified', false);
+                    ->where('is_verified', true);
             }])
-            ->paginate(10);
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->withQueryString();
 
         return Inertia::render('Profile/Photos', compact('photos'));
     }
 
+    public function indexCovers()
+    {
+        $photos = User::whereHas('media', function ($query) {
+                $query->where('collection_name', 'cover_image')
+                    ->where('is_verified', true);
+            })
+            ->with(['media' => function ($query) {
+                $query->where('collection_name', 'cover_image')
+                    ->where('is_verified', true);
+            }])
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->withQueryString();
+
+        return Inertia::render('Profile/Cover', compact('photos'));
+    }
+
     public function updateProfileImageStatus(Request $request, $id)
     {
-        Media::where('id', $id)
-            ->where('collection_name', 'avatar')
+        $media = Media::where('id', $id)
+            ->where('collection_name', $request->type)
             ->update(['is_verified' => $request->status]);
+
+
+
+        $user = User::query()->whereHas('media', function ($query) use($id) { $query->where('id', $id); })->first();
+        $status = $request->status == 1 ? 'approve' : 'remove';
+        Notification::send($user, new ChangeProfileImageStatus($user, $request->type, $status));
         return redirect()->back();
     }
 }

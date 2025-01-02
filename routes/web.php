@@ -104,6 +104,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     });
 
     Route::get('profile-photos', [ProfileController::class, 'indexPhotos'])->name('profile-photos');
+    Route::get('profile-covers', [ProfileController::class, 'indexCovers'])->name('profile-covers');
 
 
     Route::get('app-setting', [SettingController::class, 'index'])->name('app-setting');

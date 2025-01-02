@@ -19,7 +19,7 @@ const readNotification = (item) => {
 
 <template>
     <!-- ========== HEADER ========== -->
-    <header class="sticky top-0 inset-x-0 flex flex-wrap md:justify-start md:flex-nowrap z-[48] w-full bg-white border-b text-sm py-2.5 lg:ps-[260px]">
+    <header class="sticky top-0 inset-x-0 flex flex-wrap md:justify-start md:flex-nowrap z-[48] w-full bg-white border-b text-sm py-2.5 lg:ps-[260px] bg-gradient-blue">
         <nav class="px-4 sm:px-6 flex basis-full items-center w-full mx-auto">
             <div class="me-5 lg:me-0 lg:hidden">
                 <!-- Logo -->
@@ -100,17 +100,18 @@ const readNotification = (item) => {
                     </div>
 
                     <!-- Dropdown -->
-                    <div class="hs-dropdown [--placement:bottom-right] relative inline-flex">
-                        <button id="hs-dropdown-account" type="button" class="size-[38px] inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-full border border-transparent text-gray-800 focus:outline-none disabled:opacity-50 disabled:pointer-events-none" aria-haspopup="menu" aria-expanded="false" aria-label="Dropdown">
-                            <UserCircle class="shrink-0 size-7" />
+                    <div class="hs-dropdown [--placement:bottom-right] relative inline-flex ms-2">
+                        <button id="hs-dropdown-custom-trigger" type="button" class="hs-dropdown-toggle py-1 ps-1 pe-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-full border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800">
+                            <img class="w-8 h-auto rounded-full" :src="$page.props.auth.user.avatar" alt="Avatar">
+                            <svg class="hs-dropdown-open:rotate-180 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                         </button>
 
-                        <div class="hs-dropdown-menu transition-[opacity,margin] duration hs-dropdown-open:opacity-100 opacity-0 hidden min-w-60 bg-white shadow-md rounded-lg mt-2 after:h-4 after:absolute after:-bottom-4 after:start-0 after:w-full before:h-4 before:absolute before:-top-4 before:start-0 before:w-full" role="menu" aria-orientation="vertical" aria-labelledby="hs-dropdown-account">
-                            <div class="py-3 px-5 bg-gray-100 rounded-t-lg">
-                                <p class="text-sm text-gray-500">Signed in as</p>
-                                <p class="text-sm font-medium text-gray-800">{{ $page.props.auth.user.name }}</p>
+                        <div class="hs-dropdown-menu transition-[opacity,margin] duration hs-dropdown-open:opacity-100 opacity-0 border border-gray-200 hidden min-w-60 bg-white shadow-md rounded-lg mt-2 dark:bg-neutral-800 dark:border dark:border-neutral-700" role="menu" aria-orientation="vertical" aria-labelledby="hs-dropdown-custom-trigger">
+                            <div class="py-3 px-5 bg-gray-100 rounded-t-lg dark:bg-neutral-700">
+                                <p class="text-sm text-gray-500 dark:text-neutral-500">Signed in as</p>
+                                <p class="text-sm font-medium text-gray-800 dark:text-neutral-200">{{ $page.props.auth.user.name }}</p>
                             </div>
-                            <div class="p-1.5 space-y-0.5">
+                            <div class="p-1 space-y-0.5">
                                 <Link :href="route('profile.edit')" class="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100">
                                     <UserIcon class="shrink-0 size-4" />Profile
                                 </Link>
@@ -121,6 +122,7 @@ const readNotification = (item) => {
                         </div>
                     </div>
                     <!-- End Dropdown -->
+
                 </div>
             </div>
         </nav>

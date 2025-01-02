@@ -27,7 +27,7 @@ const changeStatus = (media, status) => {
     confirmData.id = media.id;
     confirmData.message = `Do you want to update user profile status?`;
     confirmData.url = route('profile.update-status-image', media.id);
-    confirmData.data = { status: status, type: 'avatar' };
+    confirmData.data = { status: status, type: 'cover_image' };
 }
 
 
@@ -122,7 +122,7 @@ const changeStatus = (media, status) => {
                                 </td>
                                 <td class="size-px whitespace-nowrap align-top">
                                     <a class="block p-6" href="#">
-                                        <img class="inline-block size-[62px] rounded-full" :src="photo.media[0].original_url" alt="Avatar">
+                                        <img class="inline-block height-[22px]" :src="photo.media[0].original_url" alt="Avatar">
                                     </a>
                                 </td>
                                 <td class="size-px whitespace-nowrap align-top">
