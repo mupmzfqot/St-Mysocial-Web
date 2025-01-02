@@ -5,6 +5,7 @@ import {CircleCheckBig, Heart, Images, LogOut, MessageSquareMore, Rss, Star, Sti
 import {debounce} from "lodash";
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
+import { useUnreadMessages } from '@/Composables/useUnreadMessages';
 
 const { auth: { roles: userRoles } } = usePage().props;
 const { unreadNotifications: notifications } = usePage().props;
@@ -29,18 +30,12 @@ const fetchTeams = async () => {
     teams.value = response.data;
 }
 
-const unreadMessageCount = ref(0);
+const { unreadMessageCount, fetchUnreadMessageCount } = useUnreadMessages();
 
-// Function to fetch unread message count
-const fetchUnreadMessageCount = async () => {
-    try {
-        const response = await fetch(route('message.unread-count'));
-        const data = await response.json();
-        unreadMessageCount.value = data.total;
-    } catch (error) {
-        console.error('Error fetching unread message count:', error);
-    }
-};
+// Add navigation event listener
+router.on('finish', () => {
+    fetchUnreadMessageCount();
+});
 
 // Poll for unread messages every 30 seconds
 let pollInterval;
