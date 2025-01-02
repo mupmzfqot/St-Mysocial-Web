@@ -116,7 +116,9 @@ class HomeController extends Controller
             })
             ->where('id', '!=', auth()->id())
             ->select('id', 'name')
-            ->where('is_active', true)->get();
+            ->whereNotNull('email_verified_at')
+            ->where('is_active', true)
+            ->get();
 
         $isPrivilegedUser = auth()->user()->hasAnyRole(['admin', 'user']);
         $defaultType = $isPrivilegedUser ? 'st' : 'public';

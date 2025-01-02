@@ -79,7 +79,7 @@ function isActiveNav(path) {
                         </li>
 
                         <li>
-                            <Link :href="route('post.index')" type="button" :class="['flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-none focus:bg-gray-100', isActiveNav('/post') ? 'bg-blue-100': '']">
+                            <Link :href="route('post.index')" type="button" :class="['flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-none focus:bg-gray-100', isActiveNav('/post') || isActiveNav('/post/create') ? 'bg-blue-100': '']">
                                 <MessageSquareMore class="shrink-0 size-4" /> Post Creation
                             </Link>
                         </li>
