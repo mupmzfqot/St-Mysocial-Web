@@ -132,7 +132,10 @@ class MessageController extends Controller
                 $query->where('is_read', false)
                     ->where('sender_id', '!=', $currentUserId);
             })
-            ->withCount('messages')
+            ->withCount(['messages' => function ($query) use ($currentUserId) {
+                $query->where('is_read', false)
+                    ->where('sender_id', '!=', $currentUserId);
+            }])
             ->get();
 
         return response()->json([

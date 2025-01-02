@@ -2,10 +2,13 @@
 import {Head, Link, router} from "@inertiajs/vue3";
 import HomeLayout from "@/Layouts/HomeLayout.vue";
 import {ref} from "vue";
+import { useUnreadMessages } from '@/Composables/useUnreadMessages';
 
 const props = defineProps({
     conversations: Object
 });
+
+const { getUnreadCountForConversation } = useUnreadMessages();
 
 const truncatedText = (originalText) => {
     return originalText.length > 50
@@ -31,8 +34,14 @@ const truncatedText = (originalText) => {
                             <img class="inline-block size-[40px] rounded-full" :src="user.avatar" alt="Avatar">
                         </a>
                     </div>
-                    <div class="ms-3">
-                        <h3 class="font-semibold text-sm text-gray-800 dark:text-white">{{ user.name }}</h3>
+                    <div class="ms-3 flex-grow">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-semibold text-sm text-gray-800 dark:text-white">{{ user.name }}</h3>
+                            <span v-if="getUnreadCountForConversation(user.user_id) > 0" 
+                                  class="inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium bg-red-500 text-white">
+                                {{ getUnreadCountForConversation(user.user_id) }}
+                            </span>
+                        </div>
                         <p v-if="user.latest_message.length > 0"
                            class="text-sm font-medium text-gray-400 dark:text-neutral-500"
                            v-html="truncatedText(user.latest_message[0].content)"></p>

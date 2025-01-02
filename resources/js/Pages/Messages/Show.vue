@@ -14,6 +14,8 @@ const content = ref('');
 const activeMessages = ref([...props.messages]);
 const isFriendTyping = ref(false);
 const messagesContainer = ref(null);
+const isWebSocketConnected = ref(true);
+const pollingInterval = ref(null);
 
 const scrollToBottom = () => {
     nextTick(() => {
@@ -23,17 +25,53 @@ const scrollToBottom = () => {
     });
 };
 
-const sendMessage = async (conversationId) => {
+const fetchMessages = async () => {
+    try {
+        const response = await axios.get(route('message.fetch', props.conversation.id));
+        const newMessages = response.data;
+        
+        // Only update if there are new messages
+        if (newMessages.length > activeMessages.value.length) {
+            activeMessages.value = newMessages;
+            scrollToBottom();
+        }
+    } catch (error) {
+        console.error('Error fetching messages:', error);
+    }
+};
 
+const startPolling = () => {
+    if (!pollingInterval.value) {
+        pollingInterval.value = setInterval(fetchMessages, 3000); // Poll every 3 seconds
+    }
+};
+
+const stopPolling = () => {
+    if (pollingInterval.value) {
+        clearInterval(pollingInterval.value);
+        pollingInterval.value = null;
+    }
+};
+
+const sendMessage = async (conversationId) => {
     if (content.value.trim() !== "") {
-        await axios
-            .post(route('message.send', conversationId), {
+        try {
+            const response = await axios.post(route('message.send', conversationId), {
                 message: content.value,
-            })
-            .then((response) => {
-                content.value = "";
-                scrollToBottom();
             });
+            
+            content.value = "";
+            
+            // If WebSocket is down, immediately add the message to the list
+            if (!isWebSocketConnected.value) {
+                activeMessages.value.push(response.data);
+            }
+            
+            scrollToBottom();
+        } catch (error) {
+            console.error('Error sending message:', error);
+            // Handle error (you might want to show a notification to the user)
+        }
     }
 }
 
@@ -50,13 +88,14 @@ onMounted(() => {
     markAsRead();
     scrollToBottom();
 
-    Echo.private(`conversation.${props.conversation.id}`)
+    const channel = Echo.private(`conversation.${props.conversation.id}`);
+
+    channel
         .listen('MessageSent', (event) => {
             activeMessages.value.push(event);
             scrollToBottom();
         })
         .listen('MessagesRead', (event) => {
-            // Update read_at status for all messages when they're read
             activeMessages.value = activeMessages.value.map(message => {
                 if (!message.read_at && message.sender_id === $page.props.auth.user.id) {
                     return { ...message, read_at: new Date() };
@@ -64,6 +103,39 @@ onMounted(() => {
                 return message;
             });
         });
+
+    // Add connection status handlers using Laravel Echo's methods
+    Echo.connector.pusher.connection.bind('connected', () => {
+        isWebSocketConnected.value = true;
+        stopPolling();
+        console.log('WebSocket connected');
+    });
+
+    Echo.connector.pusher.connection.bind('disconnected', () => {
+        isWebSocketConnected.value = false;
+        startPolling();
+        console.log('WebSocket disconnected, falling back to polling');
+    });
+
+    Echo.connector.pusher.connection.bind('error', () => {
+        isWebSocketConnected.value = false;
+        startPolling();
+        console.log('WebSocket error, falling back to polling');
+    });
+
+    // Initial connection status check
+    isWebSocketConnected.value = Echo.connector.pusher.connection.state === 'connected';
+    if (!isWebSocketConnected.value) {
+        startPolling();
+    }
+
+    // Cleanup connection handlers on component unmount
+    onBeforeUnmount(() => {
+        Echo.connector.pusher.connection.unbind('connected');
+        Echo.connector.pusher.connection.unbind('disconnected');
+        Echo.connector.pusher.connection.unbind('error');
+        stopPolling();
+    });
 
     const textareas = ['#hs-textarea-ex-1'];
     const cleanupFunctions = [];

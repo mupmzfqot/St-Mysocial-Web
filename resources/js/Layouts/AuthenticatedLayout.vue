@@ -66,3 +66,14 @@ onMounted(() => {
 
     <!-- ========== END MAIN CONTENT ========== -->
 </template>
+
+<style scoped>
+.bg-gradient-blue {
+    background: rgb(181,95,200);
+    background: linear-gradient(90deg, rgba(181,95,200,1) 0%, rgba(0,31,241,1) 100%);
+}
+.bg-gradient-blue-reverse {
+    background: rgb(0,31,241);
+    background: linear-gradient(90deg, rgba(0,31,241,1) 0%, rgba(181,95,200,1) 100%);
+}
+</style>
