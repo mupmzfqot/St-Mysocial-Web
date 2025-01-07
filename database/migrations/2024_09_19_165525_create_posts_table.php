@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('posts', function (Blueprint $table) {
             $table->id();
-            $table->string('post');
+            $table->text('post');
             $table->foreignIdFor(\App\Models\User::class)->constrained()->cascadeOnDelete();
             $table->boolean('published')->default(false);
             $table->integer('rating')->default(0);
