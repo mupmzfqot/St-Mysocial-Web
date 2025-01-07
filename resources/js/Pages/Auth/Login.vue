@@ -7,6 +7,7 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import TogglePassword from "@/Components/TogglePassword.vue";
+import { useReCaptcha } from "vue-recaptcha-v3";
 
 defineProps({
     canResetPassword: {
@@ -17,17 +18,29 @@ defineProps({
     },
 });
 
+
 const form = useForm({
     email: '',
     password: '',
     remember: false,
+    recaptcha: '',
 });
+
+const { executeRecaptcha, recaptchaLoaded } = useReCaptcha()
+
+const recaptcha = async () => {
+    await recaptchaLoaded()
+    form.recaptcha = await executeRecaptcha('login')
+    submit()
+}
 
 const submit = () => {
     form.post(route('login'), {
         onFinish: () => form.reset('password'),
     });
 };
+
+
 </script>
 
 <template>
@@ -48,7 +61,7 @@ const submit = () => {
                         Login
                     </h3>
                     <div class="mt-16">
-                        <form @submit.prevent="submit">
+                        <form @submit.prevent="recaptcha">
                             <div>
                                 <InputLabel for="email" value="Email" />
 
@@ -74,11 +87,17 @@ const submit = () => {
                             </div>
 
                             <div class="block mt-4">
+
+                                <InputError class="mt-2" :message="form.errors.recaptcha" />
+                            </div>
+
+                            <div class="block mt-4">
                                 <label class="flex items-center">
                                     <Checkbox name="remember" v-model:checked="form.remember" />
                                     <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">Remember me</span>
                                 </label>
                             </div>
+
 
                             <div class="flex items-center justify-between mt-4">
                                 <PrimaryButton class="" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
@@ -105,4 +124,3 @@ const submit = () => {
 
     </GuestLayout>
 </template>
-

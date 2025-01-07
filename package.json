@@ -30,6 +30,7 @@
         "moment": "^2.30.1",
         "preline": "^2.4.1",
         "vue-advanced-cropper": "^2.8.9",
+        "vue-recaptcha-v3": "^2.0.1",
         "vue-toast-notification": "^3.1.3"
     }
 }

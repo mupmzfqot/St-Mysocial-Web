@@ -123,4 +123,9 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'recaptcha' => [
+        'recaptcha_site_key' => env('RECAPTCHA_SITE_KEY'),
+        'recaptcha_secret_key' => env('RECAPTCHA_SECRET_KEY'),
+    ],
+
 ];
