@@ -3,6 +3,7 @@
 namespace App\Actions\Migrations;
 
 use App\Models\User;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
@@ -59,6 +60,8 @@ class Users
                     }
                 }
             });
+
+        Artisan::call('db:seed', ['--class' => 'UserSeeder']);
     }
 
     private function getRoleByAccountType($accountType): string
