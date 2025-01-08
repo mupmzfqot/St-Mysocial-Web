@@ -13,7 +13,7 @@ class Users
     {
         DB::connection('mysql_2')
             ->table('users')
-            ->select('id', 'email', 'fullname', 'surname', 'account_type', 'regtime', 'originPhotoUrl', 'originCoverUrl')
+            ->select('id', 'email', 'fullname', 'surname', 'account_type', 'regtime', 'originPhotoUrl', 'originCoverUrl', 'removed')
             ->chunkById(1000, function ($users) {
                 $usersData = [];
                 $roleData = [];
