@@ -99,6 +99,14 @@ const changeStatus = (post, status) => {
                                 <th scope="col" class="px-6 py-3 text-start">
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
+                                          Posted Media
+                                        </span>
+                                    </div>
+                                </th>
+
+                                <th scope="col" class="px-6 py-3 text-start">
+                                    <div class="flex items-center gap-x-2">
+                                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                           Date
                                         </span>
                                     </div>
@@ -130,9 +138,24 @@ const changeStatus = (post, status) => {
                                     </a>
                                 </td>
                                 <td class="size-px whitespace-nowrap align-top">
-                                    <a class="block p-6" href="#">
-                                        <span class="text-sm text-gray-600 dark:text-neutral-400">{{ post.post }}</span>
-                                    </a>
+                                    <span class="text-sm text-gray-600 dark:text-neutral-400 text-wrap" v-html="post.post"></span>
+                                </td>
+                                <td class="size-px whitespace-nowrap align-top">
+                                    <div v-if="post.media && post.media.length > 0" class="flex -space-x-2">
+                                        <template v-for="(media, index) in post.media.filter(m => m.mime_type.startsWith('image/')).slice(0, 3)" :key="media.id">
+                                            <img
+                                                :src="media.preview_url"
+                                                :alt="media.name"
+                                                class="inline-block size-[46px]"
+                                            />
+                                        </template>
+                                        <div v-if="post.media.filter(m => m.mime_type.startsWith('image/')).length > 3" class="hs-dropdown [--placement:top-left] relative inline-flex">
+                                            <button class="inline-flex items-center justify-center size-[46px] rounded-full bg-gray-100 border-2 border-white font-medium text-gray-700 shadow-sm align-middle hover:bg-gray-200 focus:outline-none focus:bg-gray-300 text-sm dark:bg-neutral-700 dark:text-white dark:hover:bg-neutral-600 dark:focus:bg-neutral-600 dark:border-neutral-800">
+                                                <span class="font-medium leading-none">+{{ post.media.filter(m => m.mime_type.startsWith('image/')).length - 3 }}</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div v-else class="text-sm text-gray-500">No media</div>
                                 </td>
                                 <td class="size-px whitespace-nowrap align-top">
                                     <a class="block p-6" href="#">
