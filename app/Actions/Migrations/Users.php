@@ -14,7 +14,6 @@ class Users
         DB::connection('mysql_2')
             ->table('users')
             ->select('id', 'email', 'fullname', 'surname', 'account_type', 'regtime', 'originPhotoUrl', 'originCoverUrl')
-            ->where('removed', 0)
             ->chunkById(1000, function ($users) {
                 $usersData = [];
                 $roleData = [];
@@ -26,7 +25,7 @@ class Users
                         'username'          => $user->surname,
                         'name'              => $user->fullname,
                         'email_verified_at' => now(),
-                        'is_active'         => !in_array($user->account_type, [9, 11]),
+                        'is_active'         => !in_array($user->account_type, [9, 11]) && $user->removed == 0,
                         'password'          => Hash::make('userPass2025@ST'),
                         'created_at'        => date('Y-m-d H:i:s', $user->regtime),
                         'updated_at'        => date('Y-m-d H:i:s', $user->regtime),

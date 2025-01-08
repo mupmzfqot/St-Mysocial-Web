@@ -12,7 +12,6 @@ class Posts
     {
         $posts = DB::connection('mysql_2')
             ->table('posts')
-            ->where('removeAt', 0)
             ->get();
 
         foreach ($posts as $post) {
@@ -22,7 +21,7 @@ class Posts
                     'id'        => $post->id,
                     'post'      => $post->post,
                     'user_id'   => $userExist->id,
-                    'published' => $post->needToModerate == 0,
+                    'published' => $post->needToModerate == 0 && $post->removeAt == 0,
                     'type'      => 'st',
                     'created_at' => date('Y-m-d H:i:s', $post->createAt),
                     'updated_at' => date('Y-m-d H:i:s', $post->createAt)
