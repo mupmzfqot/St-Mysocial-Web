@@ -10,8 +10,6 @@ class Posts
 {
     public function handle(): void
     {
-        ini_set('upload_max_filesize', '200M');
-
         $posts = DB::connection('mysql_2')
             ->table('posts')
             ->get();
