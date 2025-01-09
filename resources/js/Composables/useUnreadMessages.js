@@ -1,18 +1,23 @@
-import { ref } from 'vue';
-
-const unreadMessageCount = ref(0);
-const unreadConversations = ref([]);
+import { ref, computed } from 'vue';
+import { usePage, router } from '@inertiajs/vue3';
 
 export function useUnreadMessages() {
-    const fetchUnreadMessageCount = async () => {
-        try {
-            const response = await fetch(route('message.unread-count'));
-            const data = await response.json();
-            unreadMessageCount.value = data.total;
-            unreadConversations.value = data.conversations;
-        } catch (error) {
-            console.error('Error fetching unread message count:', error);
-        }
+    const page = usePage();
+
+    const unreadMessageCount = computed(() => 
+        page.props.unreadCount?.total || 0
+    );
+
+    const unreadConversations = computed(() => 
+        page.props.unreadCount?.conversations || []
+    );
+
+    const fetchUnreadMessageCount = () => {
+        // Manually trigger a refresh of unread messages
+        router.reload({ 
+            only: ['unreadCount'],
+            preserveState: true 
+        });
     };
 
     const getUnreadCountForConversation = (conversationId) => {
@@ -20,10 +25,21 @@ export function useUnreadMessages() {
         return conversation ? conversation.messages_count : 0;
     };
 
+    const markConversationAsRead = (conversationId) => {
+        router.post(route('message.mark-as-read', conversationId), {}, {
+            preserveScroll: true,
+            onSuccess: () => {
+                // Trigger a refresh of unread messages after marking as read
+                fetchUnreadMessageCount();
+            }
+        });
+    };
+
     return {
         unreadMessageCount,
         unreadConversations,
         fetchUnreadMessageCount,
-        getUnreadCountForConversation
+        getUnreadCountForConversation,
+        markConversationAsRead
     };
 }

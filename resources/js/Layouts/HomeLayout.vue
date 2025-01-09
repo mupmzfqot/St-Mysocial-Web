@@ -1,5 +1,5 @@
 <script setup>
-import {onMounted, ref, watch, onUnmounted} from 'vue';
+import {onMounted, ref, watch, onUnmounted, computed} from 'vue';
 import {Link, router, usePage} from "@inertiajs/vue3";
 import {CircleCheckBig, Heart, Images, LogOut, MessageSquareMore, Rss, Star, StickyNote, UserIcon} from "lucide-vue-next";
 import {debounce} from "lodash";
@@ -30,12 +30,14 @@ const fetchTeams = async () => {
     teams.value = response.data;
 }
 
-const { unreadMessageCount, fetchUnreadMessageCount } = useUnreadMessages();
+const {
+    unreadMessageCount,
+    fetchUnreadMessageCount,
+    markConversationAsRead
+} = useUnreadMessages();
 
-// Add navigation event listener
-router.on('finish', () => {
-    fetchUnreadMessageCount();
-});
+// Computed property to determine if there are unread messages
+const hasUnreadMessages = computed(() => unreadMessageCount.value > 0);
 
 // Poll for unread messages every 30 seconds
 let pollInterval;
