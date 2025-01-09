@@ -79,11 +79,12 @@ class Users
             $parsedUrl = parse_url($url);
             $path = $parsedUrl['path'] ?? null;
             if($path && file_exists(public_path($path))) {
-                $newUser->addMedia(public_path($parsedUrl['path']))
-                    ->toMediaCollection($type)->update(['is_verified' => true]);
+                $user = User::find($newUser->id);
+                if ($user) {
+                    $user->addMedia(public_path($parsedUrl['path']))
+                        ->toMediaCollection($type)->update(['is_verified' => true]);
+                }
             }
-
         }
-
     }
 }
