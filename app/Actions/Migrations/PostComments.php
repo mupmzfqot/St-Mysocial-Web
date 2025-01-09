@@ -22,8 +22,7 @@ class PostComments
             $userExist = User::find($comment->fromUserId);
 
             if ($postExist && $userExist) {
-                $newComment = Comment::query()->create([
-                    'id'      => $comment->id,
+                $newComment = Comment::query()->firstOrCreate(['id' => $comment->id,], [
                     'message' => $comment->comment,
                     'user_id' => $userExist->id,
                     'post_id' => $postExist->id,
