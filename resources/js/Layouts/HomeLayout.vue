@@ -6,9 +6,11 @@ import {debounce} from "lodash";
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 import { useUnreadMessages } from '@/Composables/useUnreadMessages';
+import { TeamStore } from '@/Composables/useTeamStore';
 
 const { auth: { roles: userRoles } } = usePage().props;
 const { unreadNotifications: notifications } = usePage().props;
+const teams = ref([]);
 
 const isPublic = userRoles.includes("public_user");
 const isST = userRoles.includes("user");
@@ -24,17 +26,15 @@ const readNotification = (item) => {
     })
 }
 
-const teams = ref([]);
-const fetchTeams = async () => {
-    let response = await axios.get(route('team.get'));
-    teams.value = response.data;
-}
-
 const {
     unreadMessageCount,
     fetchUnreadMessageCount,
     markConversationAsRead
 } = useUnreadMessages();
+
+const fetchTeams = async () => {
+    teams.value = await TeamStore.fetchTeams();
+}
 
 // Computed property to determine if there are unread messages
 const hasUnreadMessages = computed(() => unreadMessageCount.value > 0);
@@ -269,7 +269,13 @@ function isActiveNav(path) {
                                 ST Team
                             </p>
                         </div>
-                        <div class="p-1 gap-y-3">
+                        <div class="p-1 gap-y-3 max-h-[70vh] overflow-y-auto 
+    [&::-webkit-scrollbar]:w-2
+    [&::-webkit-scrollbar-track]:rounded-full
+    [&::-webkit-scrollbar-track]:bg-gray-100
+    [&::-webkit-scrollbar-thumb]:rounded-full
+    [&::-webkit-scrollbar-thumb]:bg-gray-300 
+    hover:[&::-webkit-scrollbar-thumb]:bg-gray-400">
                             <Link :href="route('profile.show', team.id)" v-for="team in teams" class="shrink-0 group block p-2 hover:bg-gray-100 rounded-lg">
                                 <div class="flex items-center">
                                     <div class="hs-tooltip inline-block">

@@ -8,7 +8,11 @@ use Illuminate\Http\Request;
 class TeamController extends Controller
 {
     public function get()
-    {
+{
+    $cacheKey = 'team_users_' . (auth()->user() ? auth()->user()->id : 'guest');
+    $cacheDuration = now()->addHours(1); 
+
+    return \Cache::remember($cacheKey, $cacheDuration, function () {
         $query = User::query()
             ->whereHas('roles', function ($query) {
                 $query->where('name', 'user');
@@ -21,5 +25,6 @@ class TeamController extends Controller
         }
 
         return $query->get();
-    }
+    });
+}
 }

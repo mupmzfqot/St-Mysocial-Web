@@ -33,7 +33,6 @@ const handleScroll = () => {
     const windowHeight = window.innerHeight;
     const documentHeight = document.documentElement.scrollHeight;
 
-    // Load more when user scrolls to 80% of the page
     if (scrollPosition + windowHeight >= documentHeight * 0.8) {
         loadMore();
     }
@@ -43,7 +42,6 @@ const loadMore = () => {
     if (loading.value || !props.posts.next_page_url) return;
 
     loading.value = true;
-    console.log('Loading more posts...'); // Debug log
 
     const nextPage = props.posts.current_page + 1;
     router.get(
@@ -53,11 +51,9 @@ const loadMore = () => {
             preserveState: true,
             preserveScroll: true,
             onSuccess: (page) => {
-                console.log('New posts loaded:', page.props.posts.data); // Debug log
                 loading.value = false;
             },
             onError: (error) => {
-                console.error('Error loading posts:', error); // Debug log
                 loading.value = false;
             }
         }
@@ -78,7 +74,6 @@ const showPost = (id) => {
 
 onMounted(() => {
     window.addEventListener('scroll', handleScroll);
-    console.log('Initial posts:', props.posts); // Debug log
 });
 
 onUnmounted(() => {
@@ -88,7 +83,7 @@ onUnmounted(() => {
 
 <template>
     <div class="flex flex-col">
-        <div v-for="post in posts" :key="post.id" class="flex flex-col bg-white border shadow-sm rounded-xl py-3 px-4 mb-2 dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-700/70">
+        <div v-for="post in posts" :key="post.id" class="flex flex-col text-wrap bg-white border shadow-sm rounded-xl py-3 px-4 mb-2 dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-700/70">
             <div class="cursor-pointer" @click="showPost(post.id)">
                 <Link :href="route('profile.show', post.author.id)" class="flex items-center">
                     <div class="shrink-0">
@@ -146,8 +141,8 @@ onUnmounted(() => {
         </div>
 
         <!-- Loading indicator -->
-        <div v-if="loading" class="flex justify-center my-4">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div v-if="loading" class="flex justify-center items-center my-4">
+            <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 border-t-blue-600 animate-spin"></div>
         </div>
 
         <!-- End message -->
@@ -167,4 +162,5 @@ onUnmounted(() => {
     color: #2563eb; /* Tailwind blue-600 */
     text-decoration: underline;
 }
+
 </style>
