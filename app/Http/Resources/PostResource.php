@@ -54,6 +54,7 @@ class PostResource extends JsonResource
                         'content' => $items->pluck('original_url')->all(),
                     ];
                 })->values(),
+            'link'          => $this->link,
             'comments'      => CommentResource::collection($this->whenLoaded('comments')),
             'liked'         => (bool) $this->is_liked,
             'commented'     => (bool) $this->commented,
