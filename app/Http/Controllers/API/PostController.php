@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Actions\Posts\CreateComment;
-use App\Actions\Posts\CreatePost;
+use App\Actions\Posts\CreatePostAPI;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PostResource;
 use App\Models\Comment;
@@ -42,20 +42,21 @@ class PostController extends Controller
         $post = Post::find($id);
         if (!$post) {
             return response()->json([
-                'message' => 'Post not found',
+                'error'     => 1,
+                'message'   => 'Post not found',
             ], 404);
         }
 
         return new PostResource($post->load('comments'));
     }
 
-    public function store(Request $request, CreatePost $createPost)
+    public function store(Request $request, CreatePostAPI $createPost)
     {
         $created = $createPost->handle($request);
         return new PostResource($created);
     }
 
-    public function update(Request $request, $id, CreatePost $createPost)
+    public function update(Request $request, $id, CreatePostAPI $createPost)
     {
         try {
             $post = Post::find($id);
