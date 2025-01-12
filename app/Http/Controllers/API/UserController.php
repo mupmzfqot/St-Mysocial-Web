@@ -41,6 +41,26 @@ class UserController extends Controller
         ], 200);
     }
 
+    public function getTeams(Request $request)
+    {
+        $authId = $request->user()->id;
+        $cacheKey = 'team_users_' . $authId;
+        $cacheDuration = now()->addMinute(10);
+
+        return \Cache::remember($cacheKey, $cacheDuration, function ($authId) {
+            $query = User::query()
+                ->whereHas('roles', function ($query) {
+                    $query->where('name', 'user');
+                })
+                ->whereNotNull('email_verified_at')
+                ->where('is_active', true);
+
+            $query->where('id', '!=', $authId);
+
+            return UserResource::collection($query->get());
+        });
+    }
+
     public function getMedia(Request $request)
     {
         $user = $request->user()->id;
