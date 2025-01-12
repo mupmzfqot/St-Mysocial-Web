@@ -31,7 +31,8 @@ class PostController extends Controller
             ->where('type', $request->query('type'))
             ->published()
             ->with(['author', 'media'])
-            ->paginate($perPage);
+            ->paginate($perPage)
+            ->withQueryString();
 
         return PostResource::collection($posts);
     }
