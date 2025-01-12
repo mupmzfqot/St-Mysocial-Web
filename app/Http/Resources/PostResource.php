@@ -33,15 +33,30 @@ class PostResource extends JsonResource
                 'profile_img'   => null,
             ],
             'media'         => $this->getMedia('*')->map(fn ($item) => [
-                'id'            => $item->id,
-                'filename'      => $item->file_name,
-                'preview_url'   => $item->preview_url,
-                'original_url'  => $item->original_url,
-                'extension'     => $item->extension,
-            ]),
+                    'id'            => $item->id,
+                    'filename'      => $item->file_name,
+                    'preview_url'   => $item->preview_url,
+                    'original_url'  => $item->original_url,
+                    'extension'     => $item->extension,
+                    'mime_type'     => $item->mime_type,
+                ])->groupBy(function ($item) {
+                    if (str_starts_with($item['mime_type'], 'video/')) {
+                        return 'video';
+                    } elseif (str_starts_with($item['mime_type'], 'image/')) {
+                        return 'image';
+                    } elseif ($item['mime_type'] === 'application/pdf') {
+                        return 'document';
+                    }
+                    return 'other';
+                })->map(function ($items, $type) {
+                    return [
+                        'type' => $type,
+                        'content' => $items->pluck('original_url')->all(),
+                    ];
+                })->values(),
             'comments'      => CommentResource::collection($this->whenLoaded('comments')),
-            'liked'      => (bool) $this->is_liked,
-            'commented'  => (bool) $this->commented,
+            'liked'         => (bool) $this->is_liked,
+            'commented'     => (bool) $this->commented,
         ];
     }
 }
