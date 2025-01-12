@@ -45,9 +45,9 @@ class UserController extends Controller
     {
         $authId = $request->user()->id;
         $cacheKey = 'team_users_' . $authId;
-        $cacheDuration = now()->addMinute(10);
+        $cacheDuration = now()->addMinutes(10);
 
-        return \Cache::remember($cacheKey, $cacheDuration, function ($authId) {
+        return \Cache::remember($cacheKey, $cacheDuration, function() use($authId) {
             $query = User::query()
                 ->whereHas('roles', function ($query) {
                     $query->where('name', 'user');
