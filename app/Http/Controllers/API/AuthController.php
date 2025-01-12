@@ -50,7 +50,7 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         try {
-            $request->validated([
+            $request->validate([
                 'name'  => 'required|string',
                 'email' => 'required|string|email|unique:users,email',
                 'username' => 'required|string|unique:users,username',
@@ -70,7 +70,8 @@ class AuthController extends Controller
 
             if($request->hasFile('profile_image')) {
                 $user->addMediaFromRequest('profile_image')
-                    ->toMediaCollection('avatar');
+                    ->toMediaCollection('avatar')
+                    ->update(['is_verified' => true]);
             }
 
             $domain = substr(strrchr($request->email, "@"), 1);
