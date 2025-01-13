@@ -126,7 +126,10 @@ class PostController extends Controller
             ->orderBy('created_at', 'asc')
             ->get();
 
-        return CommentResource::collection($comments);
+        return response()->json([
+            'error' => 0,
+            CommentResource::collection($comments)
+        ]);
     }
 
     public function storeLike(Request $request)
