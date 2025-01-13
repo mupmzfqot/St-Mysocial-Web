@@ -128,7 +128,7 @@ class PostController extends Controller
 
         return response()->json([
             'error' => 0,
-            CommentResource::collection($comments)
+            'data'  => CommentResource::collection($comments)
         ]);
     }
 
