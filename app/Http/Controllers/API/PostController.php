@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Actions\Posts\CreateComment;
 use App\Actions\Posts\CreatePostAPI;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\CommentResource;
 use App\Http\Resources\PostResource;
 use App\Models\Comment;
 use App\Models\CommentLiked;
@@ -118,12 +119,22 @@ class PostController extends Controller
 
     }
 
+    public function getComments(Request $request, $postId)
+    {
+        $comments = Comment::query()->where('post_id', $postId)
+            ->with('media')
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        return CommentResource::collection($comments);
+    }
+
     public function storeLike(Request $request)
     {
-        $liked = PostLiked::query()->where('post_id', $request->post_id)->where('user_id', auth()->id())->first();
+        $liked = PostLiked::query()->where('post_id', $request->post_id)->where('user_id', $request->user()->id)->first();
 
         if(!$liked) {
-            PostLiked::query()->create([
+            $postLiked = PostLiked::query()->create([
                 'post_id' => $request->post_id,
                 'user_id' => $request->user()->id
             ]);
