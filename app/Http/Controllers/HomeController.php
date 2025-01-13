@@ -196,7 +196,7 @@ class HomeController extends Controller
     {
         DB::beginTransaction();
         try {
-            $comment = Comment::query()->find($request->comment_id);
+            $comment = Comment::query()->find($request->content_id);
             $comment->likes()->delete();
             $comment->delete();
             DB::commit();
@@ -233,6 +233,14 @@ class HomeController extends Controller
         $notifications = auth()->user()->notifications()->paginate(20);
 
         return Inertia::render('Homepage/Notifications', compact('notifications'));
+    }
+
+    public function deletePost(Request $request)
+    {
+        $post = Post::query()->where('user_id', auth()->id())->whereId($request->content_id)->first();
+        $post->comments()->delete();
+        $post->likes()->delete();
+        $post->delete();
     }
 
 }

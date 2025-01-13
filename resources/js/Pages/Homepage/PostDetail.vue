@@ -1,7 +1,7 @@
 <script setup>
 import {Head, Link, router, useForm} from "@inertiajs/vue3";
 import HomeLayout from "@/Layouts/HomeLayout.vue";
-import {Heart, ImagePlus, Link as LinkIcon, MessageSquareText, X, EllipsisVertical} from "lucide-vue-next";
+import {Heart, ImagePlus, Link as LinkIcon, MessageSquareText, X, XCircle} from "lucide-vue-next";
 import PostMedia from "@/Components/PostMedia.vue";
 import { QuillEditor } from '@vueup/vue-quill'
 import '@vueup/vue-quill/dist/vue-quill.snow.css'
@@ -20,11 +20,13 @@ const linkUrl = ref('');
 const linkText = ref('');
 const selectedRange = ref(null);
 const showDeleteConfirmModal = ref(false);
-const commentToDelete = ref(null);
+const contentToDelete = ref(null);
+const deleteRoute = ref(null);
+const deleteContentName = ref(null);
 
 const form = useForm({
     message: '',
-    post_id: props.post.id,
+    post_id: props.post ? props.post.id : null,
     files: []
 });
 
@@ -53,16 +55,25 @@ const sendCommentLike = (id) => {
     });
 };
 
-const openDeleteConfirm = (id) => {
-    commentToDelete.value = id;
+const openDeleteCommentConfirm = (id) => {
+    contentToDelete.value = id;
+    deleteContentName.value = 'Comment';
+    deleteRoute.value = route('user-post.delete-comment');
     showDeleteConfirmModal.value = true;
 };
 
-const deleteComment = () => {
-    if (commentToDelete.value) {
-        router.post(route('user-post.delete-comment'), { comment_id: commentToDelete.value }, { preserveScroll: true });
+const openDeletePostConfirm = (id) => {
+    contentToDelete.value = id;
+    deleteContentName.value = 'Post';
+    deleteRoute.value = route('user-post.delete');
+    showDeleteConfirmModal.value = true;
+};
+
+const deleteContent = () => {
+    if (contentToDelete.value) {
+        router.post(deleteRoute.value, { content_id: contentToDelete.value }, { preserveScroll: true });
         showDeleteConfirmModal.value = false;
-        commentToDelete.value = null;
+        contentToDelete.value = null;
     }
 };
 
@@ -134,7 +145,7 @@ const insertLink = () => {
 <template>
     <Head title="Post Detail" />
     <HomeLayout>
-        <div class="flex flex-col bg-white border shadow-sm rounded-xl pt-3 px-4 mb-3 dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-700/70">
+        <div v-if="post" class="flex flex-col bg-white border shadow-sm rounded-xl pt-3 px-4 mb-3 dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-700/70">
             <Link :href="route('profile.show', post.author.id)" class="flex items-center">
                 <div class="shrink-0">
                     <img class="size-10 rounded-full" :src="post.author.avatar" alt="Avatar">
@@ -165,6 +176,10 @@ const insertLink = () => {
                     </a>
                     {{ post.like_count }} Likes
                 </div>
+
+                <a href="#" @click.prevent="openDeletePostConfirm(post.id)" v-if="$page.props.auth.user.id === post.user_id" class="mt-3 inline-flex items-center gap-x-1 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-red-900 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600">
+                    <XCircle class="shrink-0 size-4 text-red-700" />Delete post
+                </a>
             </div>
 
             <hr class="mt-3">
@@ -202,8 +217,8 @@ const insertLink = () => {
                                 </a>
                                 {{ comment.like_count }} Likes
                             </div>
-                            <a href="#" v-if="comment.user_id === $page.props.auth.user.id" @click.prevent="openDeleteConfirm(comment.id)" class="inline-flex items-center text-xs text-red-500 hover:text-red-700">
-                                <X class="shrink-0 size-4" /> delete comment
+                            <a href="#" v-if="comment.user_id === $page.props.auth.user.id" @click.prevent="openDeleteCommentConfirm(comment.id)" class="inline-flex items-center text-xs text-red-500 hover:text-red-700">
+                                <XCircle class="shrink-0 size-4" />&nbsp; delete comment
                             </a>
                         </div>
                     </div>
@@ -305,6 +320,28 @@ const insertLink = () => {
 
             </div>
             <!-- End Comments -->
+        </div>
+        <div v-else class="bg-red-50 border-s-4 border-red-500 p-4 dark:bg-red-800/30" role="alert" tabindex="-1" aria-labelledby="hs-bordered-red-style-label">
+            <div class="flex">
+                <div class="shrink-0">
+                    <!-- Icon -->
+                    <span class="inline-flex justify-center items-center size-8 rounded-full border-4 border-red-100 bg-red-200 text-red-800 dark:border-red-900 dark:bg-red-800 dark:text-red-400">
+                          <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 6 6 18"></path>
+                            <path d="m6 6 12 12"></path>
+                          </svg>
+                    </span>
+                    <!-- End Icon -->
+                </div>
+                <div class="ms-3">
+                    <h3 id="hs-bordered-red-style-label" class="text-gray-800 font-semibold dark:text-white">
+                        Info!
+                    </h3>
+                    <p class="text-sm text-gray-700 dark:text-neutral-400">
+                        Post deleted!
+                    </p>
+                </div>
+            </div>
         </div>
 
         <!-- Link Modal -->
@@ -409,11 +446,11 @@ const insertLink = () => {
                         >
                             <DialogPanel class="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
                                 <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900">
-                                    Delete Comment
+                                    Delete {{ deleteContentName }}
                                 </DialogTitle>
                                 <div class="mt-2">
                                     <p class="text-sm text-gray-500">
-                                        Are you sure you want to delete this comment? This action cannot be undone.
+                                        Are you sure want to delete this {{ deleteContentName }}? This action cannot be undone.
                                     </p>
                                 </div>
 
@@ -428,7 +465,7 @@ const insertLink = () => {
                                     <button
                                         type="button"
                                         class="inline-flex justify-center rounded-md border border-transparent bg-red-100 px-4 py-2 text-sm font-medium text-red-900 hover:bg-red-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
-                                        @click="deleteComment"
+                                        @click="deleteContent"
                                     >
                                         Delete
                                     </button>
@@ -439,6 +476,9 @@ const insertLink = () => {
                 </div>
             </Dialog>
         </TransitionRoot>
+
+
+
     </HomeLayout>
 </template>
 

@@ -1,8 +1,9 @@
 <script setup>
 import {Link, router} from "@inertiajs/vue3";
-import {MessageSquareText, Heart, MinusCircle, CheckCircle } from "lucide-vue-next";
+import {MessageSquareText, Heart, MinusCircle, CheckCircle, XCircle } from "lucide-vue-next";
 import PostMedia from "@/Components/PostMedia.vue";
 import { onMounted, onUnmounted, ref, watch } from 'vue';
+import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from "@headlessui/vue";
 
 const props = defineProps({
     posts: {
@@ -18,6 +19,21 @@ const props = defineProps({
 
 const loading = ref(false);
 const posts = ref(props.posts.data || []);
+const showDeleteConfirmModal = ref(false);
+const postToDelete = ref(false);
+
+const openDeleteConfirm = (id) => {
+    postToDelete.value = id;
+    showDeleteConfirmModal.value = true;
+};
+
+const deletePost = () => {
+    if (postToDelete.value) {
+        router.post(route('user-post.delete'), { post_id: postToDelete.value }, { preserveScroll: true });
+        showDeleteConfirmModal.value = false;
+        postToDelete.value = null;
+    }
+};
 
 // Watch for changes in props.posts and update local posts
 watch(() => props.posts.data, (newPosts) => {
@@ -130,14 +146,11 @@ onUnmounted(() => {
 
                     {{ post.like_count }} Likes
                 </div>
-            </div>
-        </div>
 
-        <!-- Debug info -->
-        <div class="text-sm text-gray-500 text-center my-2">
-            Current Page: {{ props.posts.current_page }} / Total Pages: {{ props.posts.last_page }}
-            <br>
-            Posts loaded: {{ posts.length }}
+                <a href="#" @click.prevent="openDeleteConfirm(post.id)" v-if="$page.props.auth.user.id === post.user_id" class="mt-3 inline-flex items-center gap-x-1 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-red-900 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600">
+                    <XCircle class="shrink-0 size-4 text-red-700" />Delete post
+                </a>
+            </div>
         </div>
 
         <!-- Loading indicator -->
@@ -145,11 +158,75 @@ onUnmounted(() => {
             <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 border-t-blue-600 animate-spin"></div>
         </div>
 
+        <!-- Debug info -->
+        <div class="text-sm text-gray-500 text-center my-2">
+            Current Page: {{ props.posts.current_page }} / Total Pages: {{ props.posts.last_page }} | Posts loaded: {{ posts.length }}
+        </div>
+
         <!-- End message -->
         <div v-if="!loading && !props.posts.next_page_url" class="text-center text-gray-500 my-4">
             No more posts to load
         </div>
     </div>
+
+    <!-- Delete Confirmation Modal -->
+    <TransitionRoot appear :show="showDeleteConfirmModal" as="template">
+        <Dialog as="div" @close="showDeleteConfirmModal = false" class="relative z-10">
+            <TransitionChild
+                as="template"
+                enter="duration-300 ease-out"
+                enter-from="opacity-0"
+                enter-to="opacity-100"
+                leave="duration-200 ease-in"
+                leave-from="opacity-100"
+                leave-to="opacity-0"
+            >
+                <div class="fixed inset-0 bg-black/25" />
+            </TransitionChild>
+
+            <div class="fixed inset-0 overflow-y-auto">
+                <div class="flex min-h-full items-center justify-center p-4 text-center">
+                    <TransitionChild
+                        as="template"
+                        enter="duration-300 ease-out"
+                        enter-from="opacity-0 scale-95"
+                        enter-to="opacity-100 scale-100"
+                        leave="duration-200 ease-in"
+                        leave-from="opacity-100 scale-100"
+                        leave-to="opacity-0 scale-95"
+                    >
+                        <DialogPanel class="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                            <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900">
+                                Delete Post
+                            </DialogTitle>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-500">
+                                    Are you sure you want to delete this post? This action cannot be undone.
+                                </p>
+                            </div>
+
+                            <div class="mt-4 flex justify-end space-x-2">
+                                <button
+                                    type="button"
+                                    class="inline-flex justify-center rounded-md border border-transparent bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"
+                                    @click="showDeleteConfirmModal = false"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    class="inline-flex justify-center rounded-md border border-transparent bg-red-100 px-4 py-2 text-sm font-medium text-red-900 hover:bg-red-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
+                                    @click="deletePost"
+                                >
+                                    Delete
+                                </button>
+                            </div>
+                        </DialogPanel>
+                    </TransitionChild>
+                </div>
+            </div>
+        </Dialog>
+    </TransitionRoot>
 </template>
 
 <style scoped>

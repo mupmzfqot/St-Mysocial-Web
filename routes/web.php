@@ -24,6 +24,7 @@ Route::middleware(['auth', 'verified', 'role:user|public_user'])->group(function
     Route::prefix('user-post')->name('user-post.')->group(function () {
         Route::post('store', [PostController::class, 'store'])->name('store');
         Route::get('show/{id}', [HomeController::class, 'showPost'])->name('show-post');
+        Route::post('delete', [HomeController::class, 'deletePost'])->name('delete');
         Route::post('comment', [HomeController::class, 'storeComment'])->name('store-comment');
         Route::post('like', [HomeController::class, 'storeLike'])->name('send-like');
         Route::post('unlike', [HomeController::class, 'unlike'])->name('unlike');
