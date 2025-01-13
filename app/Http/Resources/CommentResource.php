@@ -22,7 +22,7 @@ class CommentResource extends JsonResource
                 'id'            => $this->user->id,
                 'name'          => $this->user->name,
                 'email'         => $this->user->email,
-                'profile_img'   => null
+                'profile_img'   => $this->avatar
             ],
             'media'         => $this->getMedia('comment_media')->map(fn ($item) => [
                 'id'            => $item->id,
