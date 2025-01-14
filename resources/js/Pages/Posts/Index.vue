@@ -19,9 +19,7 @@ watch(
         (q) => router.get(route('post.index'), { search: q }, {
             preserveState: true,
             preserveScroll: true,
-            only: ['posts'],
-            replace: true,
-            forceFormData: true }), 500
+        }), 500
     )
 );
 </script>
