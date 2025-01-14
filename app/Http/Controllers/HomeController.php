@@ -243,4 +243,22 @@ class HomeController extends Controller
         $post->delete();
     }
 
+    public function postLikedBy(Request $request, $postId)
+    {
+        $user = User::whereHas('likes', function ($query) use ($postId) {
+            $query->where('post_id', $postId);
+        })
+            ->get()
+            ->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'avatar' => $user->avatar
+                ];
+            });
+
+        return response()->json($user);
+    }
+
 }
