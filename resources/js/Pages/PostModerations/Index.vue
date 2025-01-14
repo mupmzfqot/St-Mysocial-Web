@@ -1,5 +1,5 @@
 <script setup>
-import {Head, Link, router} from "@inertiajs/vue3";
+import {Head, router} from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import {CheckCircle, ChevronRight, MinusCircle, Search, UserCircle} from "lucide-vue-next";
 import Breadcrumbs from "@/Components/Breadcrumbs.vue";
@@ -15,6 +15,7 @@ const props = defineProps({
 
 const search = ref(props.searchTerm);
 
+
 watch(
     search, debounce(
         (q) => router.get(route('post-moderation.index'), { search: q }, { preserveState: true }), 500
@@ -27,7 +28,7 @@ const confirmData = reactive({
 
 const changeStatus = (post, status) => {
     confirmData.id = post.id;
-    confirmData.message = `Do you want to activate user <b>${post.post}</b>?`;
+    confirmData.message = `Do you want to publish/unpublish this post?`;
     confirmData.url = route('post-moderation.update-status', post.id);
     confirmData.data = { is_active: status };
 }

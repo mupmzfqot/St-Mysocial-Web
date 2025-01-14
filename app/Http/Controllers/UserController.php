@@ -83,6 +83,9 @@ class UserController extends Controller
             ->when($searchTerm, function ($query, $search) {
                 $query->where('name', 'like', '%' . $search . '%');
             })
+            ->whereHas('roles', function ($query) {
+                $query->where('name', 'public_user');
+            })
             ->with(['roles' => function ($query) {
                 $query->select('name', 'display_name');
             }])

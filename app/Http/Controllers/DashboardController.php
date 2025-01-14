@@ -31,4 +31,20 @@ class DashboardController extends Controller
             'totalAccounts', 'totalActiveAccounts', 'totalBlockedAccounts'
         ));
     }
+
+    public function getPendingApprovals()
+    {
+        $pendingUsers = User::where('is_active', 0)
+            ->whereHas('roles', function ($query) {
+                $query->where('name', 'public_user');
+            })->count();
+
+        $pendingPosts = Post::where('published', 0)
+            ->count();
+
+        return response()->json([
+            'pendingUsers' => $pendingUsers,
+            'pendingPosts' => $pendingPosts,
+        ]);
+    }
 }

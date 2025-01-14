@@ -76,6 +76,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         Route::get('form/{id?}', [UserController::class, 'adminForm'])->name('form');
         Route::post('store', [UserController::class, 'store'])->name('store');
         Route::post('update-status/{id}', [UserController::class, 'updateActiveStatus'])->name('update-status');
+        Route::get('pending-approval', [DashboardController::class, 'getPendingApprovals'])->name('pending-approval');
     });
 
     Route::name('user.')->prefix('user')->group(function () {

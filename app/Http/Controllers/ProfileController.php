@@ -23,7 +23,9 @@ class ProfileController extends Controller
     public function index($id = null)
     {
         $user = User::query()->find($id);
-        return Inertia::render('Profile/Index', compact('user'));
+        $totalPost = Post::query()->where('user_id', $id)->count();
+        $totalActivePost = Post::query()->published()->where('user_id', $id)->count();
+        return Inertia::render('Profile/Index', compact('user', 'totalPost', 'totalActivePost'));
     }
 
     public function show($id = null)

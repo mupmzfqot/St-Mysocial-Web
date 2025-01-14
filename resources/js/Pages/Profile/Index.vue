@@ -11,15 +11,17 @@ import ConfirmDialog from "@/Components/ConfirmDialog.vue";
 
 const props = defineProps({
     user: Object,
+    totalPost: Number,
+    totalActivePost: Number
 })
 
 const form = useForm({
     name: props.user.name,
     username: props.user.username,
     email: props.user.email,
-    address: props.user.address || '',
-    instagram: props.user.instagram || '',
-    facebook: props.user.facebook || '',
+    // address: props.user.address || '',
+    // instagram: props.user.instagram || '',
+    // facebook: props.user.facebook || '',
 });
 
 const updateProfile = () => {
@@ -408,70 +410,68 @@ const verifyAccount = () => {
                                             </td>
                                         </tr>
 
-                                        <tr>
+<!--                                        <tr>-->
+<!--                                            <td class="size-px whitespace-nowrap">-->
+<!--                                                <div class="px-6 py-3">-->
+<!--                                                    <span class="text-sm text-gray-600 dark:text-neutral-400">Location</span>-->
+<!--                                                </div>-->
+<!--                                            </td>-->
+<!--                                            <td class="size-px whitespace-nowrap">-->
+<!--                                                <div class="px-6 py-3">-->
+<!--                                                    <TextInput-->
+<!--                                                        id="address"-->
+<!--                                                        type="text"-->
+<!--                                                        class="mt-1 block w-full"-->
+<!--                                                        v-model="form.address"-->
+<!--                                                        required-->
+<!--                                                        autofocus-->
+<!--                                                        autocomplete="address"-->
+<!--                                                    />-->
+<!--                                                </div>-->
+<!--                                            </td>-->
+<!--                                        </tr>-->
 
-                                            <td class="size-px whitespace-nowrap">
-                                                <div class="px-6 py-3">
-                                                    <span class="text-sm text-gray-600 dark:text-neutral-400">Location</span>
-                                                </div>
-                                            </td>
-                                            <td class="size-px whitespace-nowrap">
-                                                <div class="px-6 py-3">
-                                                    <TextInput
-                                                        id="address"
-                                                        type="text"
-                                                        class="mt-1 block w-full"
-                                                        v-model="form.address"
-                                                        required
-                                                        autofocus
-                                                        autocomplete="address"
-                                                    />
-                                                </div>
-                                            </td>
-                                        </tr>
+<!--                                        <tr>-->
+<!--                                            <td class="size-px whitespace-nowrap">-->
+<!--                                                <div class="px-6 py-3">-->
+<!--                                                    <span class="text-sm text-gray-600 dark:text-neutral-400">Facebook Page</span>-->
+<!--                                                </div>-->
+<!--                                            </td>-->
+<!--                                            <td class="size-px whitespace-nowrap">-->
+<!--                                                <div class="px-6 py-3">-->
+<!--                                                    <TextInput-->
+<!--                                                        id="facebook"-->
+<!--                                                        type="text"-->
+<!--                                                        class="mt-1 block w-full"-->
+<!--                                                        v-model="form.facebook"-->
+<!--                                                        required-->
+<!--                                                        autofocus-->
+<!--                                                        autocomplete="facebook"-->
+<!--                                                    />-->
+<!--                                                </div>-->
+<!--                                            </td>-->
+<!--                                        </tr>-->
 
-                                        <tr>
-
-                                            <td class="size-px whitespace-nowrap">
-                                                <div class="px-6 py-3">
-                                                    <span class="text-sm text-gray-600 dark:text-neutral-400">Facebook Page</span>
-                                                </div>
-                                            </td>
-                                            <td class="size-px whitespace-nowrap">
-                                                <div class="px-6 py-3">
-                                                    <TextInput
-                                                        id="facebook"
-                                                        type="text"
-                                                        class="mt-1 block w-full"
-                                                        v-model="form.facebook"
-                                                        required
-                                                        autofocus
-                                                        autocomplete="facebook"
-                                                    />
-                                                </div>
-                                            </td>
-                                        </tr>
-
-                                        <tr>
-                                            <td class="size-px whitespace-nowrap">
-                                                <div class="px-6 py-3">
-                                                    <span class="text-sm text-gray-600 dark:text-neutral-400">Instagram Page</span>
-                                                </div>
-                                            </td>
-                                            <td class="size-px whitespace-nowrap">
-                                                <div class="px-6 py-3">
-                                                    <TextInput
-                                                        id="instagram"
-                                                        type="text"
-                                                        class="mt-1 block w-full"
-                                                        v-model="form.instagram"
-                                                        required
-                                                        autofocus
-                                                        autocomplete="instagram"
-                                                    />
-                                                </div>
-                                            </td>
-                                        </tr>
+<!--                                        <tr>-->
+<!--                                            <td class="size-px whitespace-nowrap">-->
+<!--                                                <div class="px-6 py-3">-->
+<!--                                                    <span class="text-sm text-gray-600 dark:text-neutral-400">Instagram Page</span>-->
+<!--                                                </div>-->
+<!--                                            </td>-->
+<!--                                            <td class="size-px whitespace-nowrap">-->
+<!--                                                <div class="px-6 py-3">-->
+<!--                                                    <TextInput-->
+<!--                                                        id="instagram"-->
+<!--                                                        type="text"-->
+<!--                                                        class="mt-1 block w-full"-->
+<!--                                                        v-model="form.instagram"-->
+<!--                                                        required-->
+<!--                                                        autofocus-->
+<!--                                                        autocomplete="instagram"-->
+<!--                                                    />-->
+<!--                                                </div>-->
+<!--                                            </td>-->
+<!--                                        </tr>-->
 
                                         <tr>
                                             <td class="size-px whitespace-nowrap">
@@ -518,7 +518,7 @@ const verifyAccount = () => {
                 <div class="min-h-60 flex flex-col bg-white border shadow-sm rounded-xl dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-700/70">
                     <div class="flex flex-auto flex-col justify-center items-center p-4 md:p-5">
                         <img class="inline-block size-[120px] rounded-full"
-                             src="https://images.unsplash.com/photo-1568602471122-7832951cc4c5?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=2&w=300&h=300&q=80"
+                             :src="user.avatar"
                              alt="Avatar"
                         >
                         <h3 class="text-lg mt-3 font-bold text-gray-800 dark:text-white">
@@ -529,11 +529,11 @@ const verifyAccount = () => {
                         </p>
                         <div class="flex items-center gap-x-28 mt-5">
                             <div class="text-center">
-                                <p class="font-semibold text-gray-800 dark:text-neutral-400">0</p>
+                                <p class="font-semibold text-gray-800 dark:text-neutral-400">{{ totalPost }}</p>
                                 <p class="text-sm text-gray-600 dark:text-neutral-400">Total Posts</p>
                             </div>
                             <div class="text-center">
-                                <p class="font-semibold text-gray-800 dark:text-neutral-400">0</p>
+                                <p class="font-semibold text-gray-800 dark:text-neutral-400">{{ totalActivePost }}</p>
                                 <p class="text-sm text-gray-600 dark:text-neutral-400">Active Posts</p>
                             </div>
                         </div>

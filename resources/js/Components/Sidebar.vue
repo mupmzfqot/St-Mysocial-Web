@@ -1,13 +1,28 @@
 <script setup>
 import {Link, usePage} from "@inertiajs/vue3";
-import { LucideHome, Users, CircleUser, IdCard, MessageSquareMore, Settings, CircleHelp, SlidersHorizontal, LogOut } from "lucide-vue-next";
-import {ref} from "vue";
+import { LucideHome, Users, CircleUser, IdCard, MessageSquareMore, Settings, CircleHelp, SlidersHorizontal } from "lucide-vue-next";
+import {onMounted, ref} from "vue";
 
 const currentPath = ref(usePage().url)
+const pendingUserApprovals = ref(0)
+const pendingPostApprovals = ref(0)
 
 function isActiveNav(path) {
     return currentPath.value === path
 }
+
+async function fetchPendingApprovals() {
+    try {
+        const response = await axios.get(route('admin.pending-approval'))
+        pendingUserApprovals.value = response.data.pendingUsers;
+        pendingPostApprovals.value = response.data.pendingPosts;
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching pending approvals:', error)
+    }
+}
+
+onMounted(fetchPendingApprovals)
 
 </script>
 
@@ -87,12 +102,18 @@ function isActiveNav(path) {
                         <li>
                             <Link :href="route('post-moderation.index')" type="button" :class="['flex items-center gap-x-3.5 py-2 px-2.5 text-sm font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:bg-gray-100', isActiveNav('/post-moderation') ? 'bg-blue-100 text-gray-800': 'text-white']" aria-expanded="true" aria-controls="users-accordion-child">
                                 <MessageSquareMore class="shrink-0 size-4" /> Post Moderation
+                                <span class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full ms-auto text-xs font-medium bg-gray-100 text-red-800 dark:bg-white/10 dark:text-white">
+                                    {{ pendingPostApprovals }}
+                                </span>
                             </Link>
                         </li>
 
                         <li>
                             <Link :href="route('user.public')" :class="['flex items-center gap-x-3.5 py-2 px-2.5 text-sm font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:bg-gray-100', isActiveNav('/user/public-account') ? 'bg-blue-100 text-gray-800': 'text-white']">
                                 <IdCard class="shrink-0 size-4" /> Public Account
+                                <span class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full ms-auto text-xs font-medium bg-gray-100 text-red-800 dark:bg-white/10 dark:text-white">
+                                    {{ pendingUserApprovals }}
+                                </span>
                             </Link>
                         </li>
 

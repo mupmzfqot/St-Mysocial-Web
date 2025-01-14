@@ -16,7 +16,12 @@ const search = ref(props.searchTerm);
 
 watch(
     search, debounce(
-        (q) => router.get(route('post.index'), { search: q }, { preserveState: true }), 500
+        (q) => router.get(route('post.index'), { search: q }, {
+            preserveState: true,
+            preserveScroll: true,
+            only: ['posts'],
+            replace: true,
+            forceFormData: true }), 500
     )
 );
 </script>
