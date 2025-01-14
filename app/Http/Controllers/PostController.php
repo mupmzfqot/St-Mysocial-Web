@@ -6,10 +6,7 @@ use App\Actions\Posts\CreatePost;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
-use Spatie\Permission\Models\Role;
 
 class PostController extends Controller
 {
@@ -19,6 +16,9 @@ class PostController extends Controller
         $posts = Post::query()
             ->when($searchTerm, function ($query, $search) {
                 $query->where('post', 'like', '%' . $search . '%');
+            })
+            ->whereHas('author.roles', function ($query) {
+                $query->where('name', 'admin');
             })
             ->published()
             ->with(['author', 'media'])
