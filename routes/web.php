@@ -91,8 +91,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         Route::post('verify/{id}', [UserController::class, 'verifyAccount'])->name('verify');
     });
 
-    Route::get('/post', [PostController::class, 'index'])->name('post.index');
     Route::name('post.')->prefix('post')->group(function () {
+        Route::get('/index', [PostController::class, 'index'])->name('index');
         Route::get('create', [PostController::class, 'create'])->name('create');
         Route::get('edit/{id}', [PostController::class, 'edit'])->name('edit');
         Route::post('store', [PostController::class, 'store'])->name('store');
