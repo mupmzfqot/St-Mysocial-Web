@@ -29,7 +29,7 @@ const openDeleteConfirm = (id) => {
 
 const deletePost = () => {
     if (postToDelete.value) {
-        router.post(route('user-post.delete'), { post_id: postToDelete.value }, { preserveScroll: true });
+        router.post(route('user-post.delete'), { content_id: postToDelete.value }, { preserveScroll: true });
         showDeleteConfirmModal.value = false;
         postToDelete.value = null;
     }
