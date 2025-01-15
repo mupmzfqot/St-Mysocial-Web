@@ -33,6 +33,7 @@ class CommentResource extends JsonResource
             ]),
             'created_at'    => $this->created_at,
             'liked'         => (bool) $this->is_liked,
+            'like_count'    => (int) $this->like_count
         ];
     }
 }
