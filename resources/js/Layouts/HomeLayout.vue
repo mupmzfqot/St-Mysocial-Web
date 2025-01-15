@@ -16,11 +16,10 @@ const isPublic = userRoles.includes("public_user");
 const isST = userRoles.includes("user");
 
 const readNotification = (item) => {
-    router.post(route('read-notification', item.id), {}, {preserveScroll: true})
     router.visit(route('read-notification', item.id), {
         preserveScroll: true,
         method: 'post',
-        onFinish: visit => {
+        onSuccess: visit => {
             router.get(item.data.url)
         }
     })
@@ -269,12 +268,12 @@ function isActiveNav(path) {
                                 ST Team
                             </p>
                         </div>
-                        <div class="p-1 gap-y-3 max-h-[70vh] overflow-y-auto 
+                        <div class="p-1 gap-y-3 max-h-[70vh] overflow-y-auto
     [&::-webkit-scrollbar]:w-2
     [&::-webkit-scrollbar-track]:rounded-full
     [&::-webkit-scrollbar-track]:bg-gray-100
     [&::-webkit-scrollbar-thumb]:rounded-full
-    [&::-webkit-scrollbar-thumb]:bg-gray-300 
+    [&::-webkit-scrollbar-thumb]:bg-gray-300
     hover:[&::-webkit-scrollbar-thumb]:bg-gray-400">
                             <Link :href="route('profile.show', team.id)" v-for="team in teams" class="shrink-0 group block p-2 hover:bg-gray-100 rounded-lg">
                                 <div class="flex items-center">

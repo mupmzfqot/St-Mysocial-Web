@@ -9,13 +9,13 @@ defineProps({
 });
 
 const readNotification = (item) => {
-    router.post(route('read-notification', item.id), {}, {preserveScroll: true})
+    // router.post(route('read-notification', item.id), {}, {preserveScroll: true})
     router.visit(route('read-notification', item.id), {
         preserveScroll: true,
         method: 'post',
-        onFinish: visit => {
+        onSuccess: visit => {
             router.get(item.data.url)
-        }
+        },
     })
 }
 </script>

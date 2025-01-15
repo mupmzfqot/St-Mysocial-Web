@@ -65,8 +65,8 @@ class UserController extends Controller
     {
         $user = $request->user()->id;
 
-        $userMedia = User::find($user)->getMedia('*')->toArray();
-        $postMedia = Post::find($user)->getMedia('*')->toArray();
+        $userMedia = User::find($user)->getMedia('*')?->toArray();
+        $postMedia = Post::find($user)->getMedia('*')?->toArray();
 
         $mergedArray = array_merge($userMedia, $postMedia);
         $media = collect($mergedArray)->map(function ($item) {
