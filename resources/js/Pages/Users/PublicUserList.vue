@@ -5,7 +5,6 @@ import { ChevronRight, Search, UserCircle, CheckCircle, MinusCircle, UsersRound 
 import Breadcrumbs from "@/Components/Breadcrumbs.vue";
 import ConfirmDialog from "@/Components/ConfirmDialog.vue";
 import {reactive, ref, watch} from "vue";
-import moment from "moment/moment.js";
 import {debounce} from "lodash";
 import Pagination from "@/Components/Pagination.vue";
 

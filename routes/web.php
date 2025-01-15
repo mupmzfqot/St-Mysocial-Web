@@ -71,6 +71,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/active-users', [DashboardController::class, 'showActiveUsers'])->name('active-users');
+    Route::get('/most-liked-posts', [DashboardController::class, 'showMostLikedPosts'])->name('most-liked-posts');
+    Route::get('/most-comment-posts', [DashboardController::class, 'showMostCommentPosts'])->name('most-comment-posts');
+    Route::get('/most-user-posts', [DashboardController::class, 'showMostUserPost'])->name('most-user-posts');
+    Route::get('/user-posts', [DashboardController::class, 'showUserPosts'])->name('user-posts');
 
     Route::name('admin.')->prefix('admin')->group(function () {
         Route::get('/', [UserController::class, 'adminIndex'])->name('index');

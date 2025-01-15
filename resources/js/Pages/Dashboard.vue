@@ -1,8 +1,8 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import Breadcrumbs from "@/Components/Breadcrumbs.vue";
-import { ChevronRight, UsersRound } from "lucide-vue-next";
+import { ChevronRight, UsersRound, MessageSquare, Rss, MessageSquareMore, HandHeart, File, FileChartLine, UserRoundCheck } from "lucide-vue-next";
 
 const props = defineProps({
     users: Object,
@@ -48,7 +48,7 @@ const props = defineProps({
                                 Total users
                             </p>
                             <div class="mt-1 flex items-center gap-x-2">
-                                <h3 class="text-xl sm:text-2xl font-medium text-gray-800 dark:text-neutral-200">
+                                <h3 class="text-xl sm:text-xl font-medium text-gray-800 dark:text-neutral-200">
                                     {{ users.user_count + users.public_user_count }}
                                 </h3>
                             </div>
@@ -74,7 +74,7 @@ const props = defineProps({
                             </div>
                         </div>
                         <div class="shrink-0 flex justify-center items-center size-[46px] bg-blue-600 text-white rounded-full dark:bg-blue-900 dark:text-blue-200">
-                            <svg class="shrink-0 size-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></svg>
+                            <MessageSquareMore class="shrink-0 size-5" />
                         </div>
                     </div>
                 </div>
@@ -94,7 +94,7 @@ const props = defineProps({
                             </div>
                         </div>
                         <div class="shrink-0 flex justify-center items-center size-[46px] bg-blue-600 text-white rounded-full dark:bg-blue-900 dark:text-blue-200">
-                            <svg class="shrink-0 size-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6"/><path d="m12 12 4 10 1.7-4.3L22 16Z"/></svg>
+                            <MessageSquare class="shrink-0 size-5" />
                         </div>
                     </div>
                 </div>
@@ -114,10 +114,75 @@ const props = defineProps({
                             </div>
                         </div>
                         <div class="shrink-0 flex justify-center items-center size-[46px] bg-blue-600 text-white rounded-full dark:bg-blue-900 dark:text-blue-200">
-                            <svg class="shrink-0 size-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12s2.545-5 7-5c4.454 0 7 5 7 5s-2.546 5-7 5c-4.455 0-7-5-7-5z"/><path d="M12 13a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/><path d="M21 17v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2"/><path d="M21 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2"/></svg>
+                            <Rss class="shrink-0 size-5" />
                         </div>
                     </div>
                 </div>
+                <!-- End Card -->
+
+                <!-- Card -->
+                <Link :href="route('user-posts')" class="flex flex-col bg-white border shadow-sm rounded-xl dark:bg-neutral-900 dark:border-neutral-800">
+                    <div class="p-4 md:p-5 flex justify-between gap-x-3">
+                        <div class="flex items-center text-xl font-medium text-gray-800 dark:text-neutral-200">
+                            Individual do postings
+                        </div>
+                        <div class="shrink-0 flex justify-center items-center size-[46px] bg-blue-600 text-white rounded-full dark:bg-blue-900 dark:text-blue-200">
+                            <File class="shrink-0 size-5" />
+                        </div>
+                    </div>
+                </Link>
+                <!-- End Card -->
+
+                <!-- Card -->
+                <Link :href="route('most-user-posts')" class="flex flex-col bg-white border shadow-sm rounded-xl dark:bg-neutral-900 dark:border-neutral-800">
+                    <div class="p-4 md:p-5 flex justify-between gap-x-3">
+                        <div class="flex items-center gap-x-2 text-wrap text-xl font-medium text-gray-800 dark:text-neutral-200">
+                            Individual with most posting
+                        </div>
+                        <div class="shrink-0 flex justify-center items-center size-[46px] bg-blue-600 text-white rounded-full dark:bg-blue-900 dark:text-blue-200">
+                            <FileChartLine class="shrink-0 size-5" />
+                        </div>
+                    </div>
+                </Link>
+                <!-- End Card -->
+
+                <!-- Card -->
+                <Link :href="route('most-comment-posts')" class="flex flex-col bg-white border shadow-sm rounded-xl dark:bg-neutral-900 dark:border-neutral-800">
+                    <div class="p-4 md:p-5 flex justify-between gap-x-3">
+                        <div class="flex items-center gap-x-2 text-wrap text-xl font-medium text-gray-800 dark:text-neutral-200">
+                            Most Comment Posts
+                        </div>
+                        <div class="shrink-0 flex justify-center items-center size-[46px] bg-blue-600 text-white rounded-full dark:bg-blue-900 dark:text-blue-200">
+                            <MessageSquareMore class="shrink-0 size-5" />
+                        </div>
+                    </div>
+                </Link>
+                <!-- End Card -->
+
+                <!-- Card -->
+                <Link :href="route('most-liked-posts')" class="flex flex-col bg-white border shadow-sm rounded-xl dark:bg-neutral-900 dark:border-neutral-800">
+                    <div class="p-4 md:p-5 flex justify-between gap-x-3">
+                        <div class="flex items-center gap-x-2 text-wrap text-xl font-medium text-gray-800 dark:text-neutral-200">
+                            Most liked posts
+                        </div>
+                        <div class="shrink-0 flex justify-center items-center size-[46px] bg-blue-600 text-white rounded-full dark:bg-blue-900 dark:text-blue-200">
+                            <HandHeart class="shrink-0 size-5" />
+                        </div>
+                    </div>
+                </Link>
+                <!-- End Card -->
+
+                <!-- Card -->
+                <Link :href="route('active-users')" class="flex flex-col bg-white border shadow-sm rounded-xl dark:bg-neutral-900 dark:border-neutral-800">
+                    <div class="p-4 md:p-5 flex justify-between gap-x-3">
+                        <div class="flex items-center gap-x-2 text-wrap text-xl font-medium text-gray-800 dark:text-neutral-200">
+                            Active users
+                        </div>
+                        <div class="shrink-0 flex justify-center items-center size-[46px] bg-blue-600 text-white rounded-full dark:bg-blue-900 dark:text-blue-200">
+                            <UserRoundCheck class="shrink-0 size-5" />
+                        </div>
+                    </div>
+                </Link>
                 <!-- End Card -->
             </div>
             <!-- End Grid -->
