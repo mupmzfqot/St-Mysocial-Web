@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\UserCount;
 use App\Models\Comment;
+use App\Models\Message;
 use App\Models\Post;
 use App\Models\PostLiked;
 use App\Models\User;
@@ -22,7 +23,7 @@ class DashboardController extends Controller
         $totalComments = (int) Comment::whereHas('post')->count();
         $totalLikes = (int) PostLiked::whereHas('post')->count();
         $totalPhotos = (int) Media::count();
-        $totalMessages = (int) 0;
+        $totalMessages = (int) Message::count();
         $totalAccounts = (int) User::query()->count();
         $totalActiveAccounts = (int) User::query()->whereNull('deleted_at')->where('is_active', 1)->count();
         $totalBlockedAccounts = (int) User::query()->where('is_active', 0)->count();
