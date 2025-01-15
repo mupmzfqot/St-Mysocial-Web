@@ -64,21 +64,23 @@ class UserController extends Controller
     public function getMedia(Request $request)
     {
         $user = $request->user()->id;
+        $postMedia = Post::where('user_id', $user)->with('media')->get();
 
-        $userMedia = User::find($user)->getMedia('*')?->toArray();
-        $postMedia = Post::find($user)->getMedia('*')?->toArray();
+        $media = $postMedia?->map(function ($post) {
+            $medias = [];
+             foreach ($post->media as $item) {
+                 $medias[] = [
+                     'id' => $item['id'],
+                     'name' => $item['name'],
+                     'file_name' => $item['file_name'],
+                     'mime_type' => $item['mime_type'],
+                     'size' => $item['size'],
+                     'collection_name' => $item['collection_name'],
+                     'url' => $item['original_url'],
+                 ];
+             }
 
-        $mergedArray = array_merge($userMedia, $postMedia);
-        $media = collect($mergedArray)->map(function ($item) {
-             return [
-                 'id' => $item['id'],
-                 'name' => $item['name'],
-                 'file_name' => $item['file_name'],
-                 'mime_type' => $item['mime_type'],
-                 'size' => $item['size'],
-                 'collection_name' => $item['collection_name'],
-                 'url' => $item['original_url'],
-             ];
+             return $medias;
         });
 
         return response()->json([
