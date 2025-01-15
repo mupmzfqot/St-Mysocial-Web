@@ -5,7 +5,7 @@ import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import StrongPassword from "@/Components/StrongPassword.vue";
 import TogglePassword from "@/Components/TogglePassword.vue";
-import {useReCaptcha} from "vue-recaptcha-v3";
+import {useRecaptchaProvider, Checkbox as RecaptchaCheckbox} from "vue-recaptcha";
 
 const form = useForm({
     name: '',
@@ -16,13 +16,7 @@ const form = useForm({
     recaptcha: ''
 });
 
-const { executeRecaptcha, recaptchaLoaded } = useReCaptcha()
-
-const recaptcha = async () => {
-    await recaptchaLoaded()
-    form.recaptcha = await executeRecaptcha('register')
-    submit()
-}
+useRecaptchaProvider();
 
 const submit = () => {
     form.post(route('register'), {
@@ -53,7 +47,7 @@ const submit = () => {
 
 
                     <!-- Form -->
-                    <form @submit.prevent="recaptcha">
+                    <form @submit.prevent="submit">
                         <div class="grid gap-y-4">
                             <!-- Form Group -->
                             <div>
@@ -125,6 +119,9 @@ const submit = () => {
                             </div>
                             <!-- End Form Group -->
 
+                            <div>
+                                <RecaptchaCheckbox v-model="form.recaptcha" theme="light" size="normal" />
+                            </div>
                             <div v-if="form.errors.recaptcha">
                                 <p class="text-sm text-red-600 mt-2">{{ form.errors.recaptcha }}</p>
                             </div>

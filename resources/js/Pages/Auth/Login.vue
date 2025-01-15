@@ -5,9 +5,9 @@ import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import {Head, Link, useForm} from '@inertiajs/vue3';
 import TogglePassword from "@/Components/TogglePassword.vue";
-import { useReCaptcha } from "vue-recaptcha-v3";
+import {useRecaptchaProvider, Checkbox as RecaptchaCheckbox} from "vue-recaptcha";
 
 defineProps({
     canResetPassword: {
@@ -26,20 +26,13 @@ const form = useForm({
     recaptcha: '',
 });
 
-const { executeRecaptcha, recaptchaLoaded } = useReCaptcha()
-
-const recaptcha = async () => {
-    await recaptchaLoaded()
-    form.recaptcha = await executeRecaptcha('login')
-    submit()
-}
+useRecaptchaProvider()
 
 const submit = () => {
     form.post(route('login'), {
         onFinish: () => form.reset('password'),
     });
 };
-
 
 </script>
 
@@ -61,7 +54,7 @@ const submit = () => {
                         Login
                     </h3>
                     <div class="mt-16">
-                        <form @submit.prevent="recaptcha">
+                        <form @submit.prevent="submit">
                             <div>
                                 <InputLabel for="email" value="Email" />
 
@@ -87,7 +80,7 @@ const submit = () => {
                             </div>
 
                             <div class="block mt-4">
-
+                                <RecaptchaCheckbox v-model="form.recaptcha" theme="light" size="normal" />
                                 <InputError class="mt-2" :message="form.errors.recaptcha" />
                             </div>
 
