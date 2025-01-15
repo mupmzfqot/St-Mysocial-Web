@@ -35,7 +35,7 @@ class CreatePost
             ]);
 
             $published = (bool) Auth::user()->hasAnyRole(['admin', 'user']);
-            if($request->post('type') == 'public') {
+            if($request->post('type') == 'public' && !Auth::user()->hasRole('admin')) {
                 $published = false;
             }
 

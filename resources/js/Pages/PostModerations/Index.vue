@@ -97,7 +97,7 @@ const changeStatus = (post, status) => {
                                     </div>
                                 </th>
 
-                                <th scope="col" class="px-6 py-3 text-start">
+                                <th scope="col" class="px-6 py-3 text-center">
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                           Posted Media
@@ -121,7 +121,7 @@ const changeStatus = (post, status) => {
                                     </div>
                                 </th>
 
-                                <th scope="col" class="px-6 py-3 text-start">
+                                <th scope="col" class="px-6 py-3 text-center">
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                             Action
@@ -141,7 +141,7 @@ const changeStatus = (post, status) => {
                                 <td class="size-px whitespace-nowrap align-top">
                                     <span class="text-sm text-gray-600 dark:text-neutral-400 text-wrap" v-html="post.post"></span>
                                 </td>
-                                <td class="size-px whitespace-nowrap align-top">
+                                <td class="size-px whitespace-nowrap align-top text-center">
                                     <div v-if="post.media && post.media.length > 0" class="flex -space-x-2">
                                         <template v-for="(media, index) in post.media.filter(m => m.mime_type.startsWith('image/')).slice(0, 3)" :key="media.id">
                                             <img
@@ -156,7 +156,9 @@ const changeStatus = (post, status) => {
                                             </button>
                                         </div>
                                     </div>
-                                    <div v-else class="text-sm text-gray-500">No media</div>
+                                    <div v-else class="text-sm text-gray-500 p-6">
+                                        <span class="text-sm text-gray-600 dark:text-neutral-400">No Media</span>
+                                    </div>
                                 </td>
                                 <td class="size-px whitespace-nowrap align-top">
                                     <a class="block p-6" href="#">
@@ -164,7 +166,7 @@ const changeStatus = (post, status) => {
                                     </a>
                                 </td>
 
-                                <td class="h-px w-72 min-w-72 text-start">
+                                <td class="h-px w-72 min-w-72 text-start align-top">
                                     <a class="block p-6" href="#">
                                         <span v-if="post.published === 1" class="py-1 px-3 inline-flex items-center gap-x-1 text-xs font-medium bg-teal-100 text-teal-800 rounded-full dark:bg-teal-500/10 dark:text-teal-500">
                                           <CheckCircle class="size-3" /> Approved
@@ -175,7 +177,7 @@ const changeStatus = (post, status) => {
                                     </a>
                                 </td>
 
-                                <td class="size-px whitespace-nowrap align-top">
+                                <td class="size-px whitespace-nowrap align-top text-center">
                                     <div class="p-6">
                                         <div class="hs-dropdown [--placement:bottom-right] relative inline-block">
                                             <button id="hs-table-dropdown-1" type="button" class="hs-dropdown-toggle py-1.5 px-2 inline-flex justify-center items-center gap-2 rounded-lg text-gray-700 align-middle disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-blue-600 transition-all text-sm dark:text-neutral-400 dark:hover:text-white dark:focus:ring-offset-gray-800" aria-haspopup="menu" aria-expanded="false" aria-label="Dropdown">
