@@ -81,64 +81,18 @@ const unlikeComment = (id) => {
     router.post(route('user-post.unlike-comment'), { comment_id: id }, { preserveScroll: true });
 };
 
-const triggerFileInput = () => {
-    fileInput.value.click();
-};
+const likedByUsers = ref([]);
+const showLikedByModal = ref(false);
 
-const handleFiles = (event) => {
-    const files = event.target?.files;
-    if (files) {
-        Array.from(files).forEach((file) => {
-            const fileReader = new FileReader();
-            fileReader.onload = (e) => {
-                previews.value.push({
-                    url: e.target.result,
-                    type: file.type,
-                    name: file.name
-                });
-            };
-            form.files.push(file);
-            fileReader.readAsDataURL(file);
-        });
-    }
-    if (event.target) {
-        event.target.value = '';
-    }
-};
-
-const removeMedia = (index) => {
-    previews.value.splice(index, 1);
-    form.files.splice(index, 1);
-};
-
-const openLinkDialog = () => {
-    selectedRange.value = quillEditor.value.getQuill().getSelection();
-    if (selectedRange.value && selectedRange.value.length > 0) {
-        linkText.value = quillEditor.value.getQuill().getText(selectedRange.value.index, selectedRange.value.length);
-    }
-    showLinkModal.value = true;
-};
-
-const insertLink = () => {
-    if (linkUrl.value) {
-        const displayText = linkText.value || linkUrl.value;
-        const quill = quillEditor.value.getQuill();
-
-        if (selectedRange.value) {
-            if (selectedRange.value.length > 0) {
-                quill.deleteText(selectedRange.value.index, selectedRange.value.length);
-            }
-            quill.insertText(selectedRange.value.index, displayText, { 'link': linkUrl.value });
-        } else {
-            quill.insertText(quill.getLength() - 1, displayText, { 'link': linkUrl.value });
-        }
-    }
-
-    // Reset the form
-    linkUrl.value = '';
-    linkText.value = '';
-    showLinkModal.value = false;
-    selectedRange.value = null;
+const showLikedBy = (id) => {
+    axios.get(route('user-post.liked-by', id))
+        .then(response => {
+            likedByUsers.value = response.data;
+            showLikedByModal.value = true;
+        })
+        .catch(error => {
+            console.error('Error fetching liked by users:', error);
+        })
 };
 </script>
 
@@ -174,7 +128,12 @@ const insertLink = () => {
                     <a href="" @click.prevent="sendLike" v-else>
                         <Heart class="shrink-0 size-4 text-gray-500" />
                     </a>
-                    {{ post.like_count }} Likes
+                    <a href="#" @click.prevent="showLikedBy(post.id)" class="hover:underline" v-if="post.like_count !== 0">
+                        {{ post.like_count }} Likes
+                    </a>
+                    <span v-else>
+                        {{ post.like_count }} Likes
+                    </span>
                 </div>
 
                 <a href="#" @click.prevent="openDeletePostConfirm(post.id)" v-if="$page.props.auth.user.id === post.user_id" class="mt-3 inline-flex items-center gap-x-1 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-red-900 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600">
@@ -477,7 +436,78 @@ const insertLink = () => {
             </Dialog>
         </TransitionRoot>
 
+        <!-- Liked By Modal -->
+        <TransitionRoot appear :show="showLikedByModal" as="template">
+            <Dialog as="div" @close="showLikedByModal = false" class="relative z-10">
+                <TransitionChild
+                    as="template"
+                    enter="duration-300 ease-out"
+                    enter-from="opacity-0"
+                    enter-to="opacity-100"
+                    leave="duration-200 ease-in"
+                    leave-from="opacity-100"
+                    leave-to="opacity-0"
+                >
+                    <div class="fixed inset-0 bg-black/25" />
+                </TransitionChild>
 
+                <div class="fixed inset-0 overflow-y-auto">
+                    <div class="flex min-h-full items-center justify-center p-4 text-center">
+                        <TransitionChild
+                            as="template"
+                            enter="duration-300 ease-out"
+                            enter-from="opacity-0 scale-95"
+                            enter-to="opacity-100 scale-100"
+                            leave="duration-200 ease-in"
+                            leave-from="opacity-100 scale-100"
+                            leave-to="opacity-0 scale-95"
+                        >
+                            <DialogPanel class="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all dark:bg-neutral-800">
+                                <DialogTitle as="h3" class="text-md font-medium leading-6 text-gray-900 dark:text-white mb-4">
+                                    People who like this
+                                </DialogTitle>
+                                <div class="mt-4 max-h-[400px] overflow-y-auto">
+                                    <div v-if="likedByUsers.length === 0" class="text-center text-gray-500 dark:text-neutral-400">
+                                        No likes yet
+                                    </div>
+                                    <div v-else class="grid grid-cols-2 gap-3">
+                                        <Link
+                                            v-for="user in likedByUsers"
+                                            :key="user.id"
+                                            :href="route('profile.show', user.id)"
+                                            class="flex items-center hover:bg-gray-100 dark:hover:bg-neutral-700 px-2 py-1 rounded-lg"
+                                        >
+                                            <img
+                                                :src="user.avatar"
+                                                :alt="user.name"
+                                                class="w-10 h-10 rounded-full mr-3"
+                                            />
+                                            <div>
+                                                <div class="text-sm font-semibold text-gray-800 dark:text-neutral-300">
+                                                    {{ user.name }}
+                                                </div>
+                                                <div class="text-xs text-gray-500 dark:text-neutral-500">
+                                                    {{ user.email }}
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <button
+                                        type="button"
+                                        class="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                                        @click="showLikedByModal = false"
+                                    >
+                                        Close
+                                    </button>
+                                </div>
+                            </DialogPanel>
+                        </TransitionChild>
+                    </div>
+                </div>
+            </Dialog>
+        </TransitionRoot>
 
     </HomeLayout>
 </template>
