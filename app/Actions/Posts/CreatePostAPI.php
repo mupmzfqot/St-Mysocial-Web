@@ -26,11 +26,12 @@ class CreatePostAPI
                 'images.*' => [
                     'file',
                     'mimetypes:image/jpeg,image/png,image/gif',
-                    'max:20480' // 20MB
+                    'max:3072' // 3MB
                 ],
                 'videos.*' => [
                     'file',
-                    'mimetypes:video/mp4,video/quicktime,video/mpeg'
+                    'mimetypes:video/mp4,video/quicktime,video/mpeg',
+                    'max:10240' // 10MB
                 ],
                 'type' => 'required|in:st,public',
                 'link' => 'nullable',

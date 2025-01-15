@@ -26,7 +26,7 @@ class CreatePost
                 'files.*' => [
                     'file',
                     'mimetypes:image/jpeg,image/png,image/gif,video/mp4,video/quicktime',
-                    'max:20480' // 20MB
+                    'max:10240' // 10MB
                 ],
                 'type' => 'required|in:st,public'
             ], [
