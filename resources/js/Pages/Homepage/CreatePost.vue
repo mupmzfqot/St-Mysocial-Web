@@ -1,11 +1,11 @@
 <script setup>
 import {Head, useForm} from "@inertiajs/vue3";
 import {AlertCircle, ChevronDown, ImagePlus, Loader2, X} from "lucide-vue-next";
-import {computed, ref} from "vue";
+import {computed, onMounted, ref} from "vue";
 import HomeLayout from "@/Layouts/HomeLayout.vue";
 import PostContent from "@/Components/PostContent.vue";
 import MultiSelect from "@/Components/MultiSelect.vue";
-import { QuillEditor } from '@vueup/vue-quill'
+import {Delta, QuillEditor} from '@vueup/vue-quill'
 import '@vueup/vue-quill/dist/vue-quill.snow.css'
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
 
@@ -158,7 +158,7 @@ const insertLink = () => {
     if (linkUrl.value) {
         const displayText = linkText.value || linkUrl.value;
         const quill = quillEditor.value.getQuill();
-        
+
         if (selectedRange.value) {
             if (selectedRange.value.length > 0) {
                 quill.deleteText(selectedRange.value.index, selectedRange.value.length);
@@ -168,13 +168,35 @@ const insertLink = () => {
             quill.insertText(quill.getLength() - 1, displayText, { 'link': linkUrl.value });
         }
     }
-    
+
     // Reset the form
     linkUrl.value = '';
     linkText.value = '';
     showLinkModal.value = false;
     selectedRange.value = null;
 };
+
+onMounted(() => {
+    if (quillEditor.value) {
+        const q = quillEditor.value.getQuill();
+        q.on('text-change', (d, _, source) => {
+            if (source !== 'api') {
+                const sel = q.getSelection();
+                if (!sel) return;
+
+                const [line, ] = q.getLine(sel.index);
+                if (!line.children) { return }
+
+                const val = line.children.head.value();
+                if (val.length && val[0] === val[0].toLowerCase()) {
+                    q.updateContents(
+                        new Delta().retain(q.getIndex(line.children.head)).delete(1).insert(val[0].toUpperCase())
+                        , 'api')
+                }
+            }
+        });
+    }
+})
 </script>
 
 <template>
