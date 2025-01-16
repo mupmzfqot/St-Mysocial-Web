@@ -33,6 +33,9 @@ const form = useForm({
 const submitComment = () => {
     form.post(route('user-post.store-comment'), {
         onSuccess: () => {
+            if (quillEditor.value) {
+                quillEditor.value.getQuill().setText('');
+            }
             form.reset();
             previews.value = [];
         }
@@ -94,6 +97,66 @@ const showLikedBy = (id) => {
             console.error('Error fetching liked by users:', error);
         })
 };
+const triggerFileInput = () => {
+    fileInput.value.click();
+};
+
+const handleFiles = (event) => {
+    const files = event.target?.files;
+    if (files) {
+        Array.from(files).forEach((file) => {
+            const fileReader = new FileReader();
+            fileReader.onload = (e) => {
+                previews.value.push({
+                    url: e.target.result,
+                    type: file.type,
+                    name: file.name
+                });
+            };
+            form.files.push(file);
+            fileReader.readAsDataURL(file);
+        });
+    }
+    if (event.target) {
+        event.target.value = '';
+    }
+};
+
+const removeMedia = (index) => {
+    previews.value.splice(index, 1);
+    form.files.splice(index, 1);
+};
+
+const openLinkDialog = () => {
+    selectedRange.value = quillEditor.value.getQuill().getSelection();
+    if (selectedRange.value && selectedRange.value.length > 0) {
+        linkText.value = quillEditor.value.getQuill().getText(selectedRange.value.index, selectedRange.value.length);
+    }
+    showLinkModal.value = true;
+};
+
+const insertLink = () => {
+    if (linkUrl.value) {
+        const displayText = linkText.value || linkUrl.value;
+        const quill = quillEditor.value.getQuill();
+
+        if (selectedRange.value) {
+            if (selectedRange.value.length > 0) {
+                quill.deleteText(selectedRange.value.index, selectedRange.value.length);
+            }
+            quill.insertText(selectedRange.value.index, displayText, { 'link': linkUrl.value });
+        } else {
+            quill.insertText(quill.getLength() - 1, displayText, { 'link': linkUrl.value });
+        }
+    }
+
+    // Reset the form
+    linkUrl.value = '';
+    linkText.value = '';
+    showLinkModal.value = false;
+    selectedRange.value = null;
+};
+
 </script>
 
 <template>
