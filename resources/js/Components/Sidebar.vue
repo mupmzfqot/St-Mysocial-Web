@@ -94,7 +94,7 @@ onMounted(fetchPendingApprovals)
                         </li>
 
                         <li>
-                            <Link :href="route('post.index')" type="button" :class="['flex items-center gap-x-3.5 py-2 px-2.5 text-sm font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:bg-gray-100', isActiveNav('/post') || isActiveNav('/post/create') ? 'bg-blue-100 text-gray-800': 'text-white']">
+                            <Link :href="route('post.index')" type="button" :class="['flex items-center gap-x-3.5 py-2 px-2.5 text-sm font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:bg-gray-100', isActiveNav('/post/index') || isActiveNav('/post/create') ? 'bg-blue-100 text-gray-800': 'text-white']">
                                 <MessageSquareMore class="shrink-0 size-4" /> Post Creation
                             </Link>
                         </li>
