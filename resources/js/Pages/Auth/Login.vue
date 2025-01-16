@@ -7,7 +7,7 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import {Head, Link, useForm} from '@inertiajs/vue3';
 import TogglePassword from "@/Components/TogglePassword.vue";
-import {useRecaptchaProvider, Checkbox as RecaptchaCheckbox} from "vue-recaptcha";
+// import {useRecaptchaProvider, Checkbox as RecaptchaCheckbox} from "vue-recaptcha";
 
 defineProps({
     canResetPassword: {
@@ -26,7 +26,7 @@ const form = useForm({
     recaptcha: '',
 });
 
-useRecaptchaProvider()
+// useRecaptchaProvider()
 
 const submit = () => {
     form.post(route('login'), {
@@ -80,7 +80,7 @@ const submit = () => {
                             </div>
 
                             <div class="block mt-4">
-                                <RecaptchaCheckbox v-model="form.recaptcha" theme="light" size="normal" />
+<!--                                <RecaptchaCheckbox v-model="form.recaptcha" theme="light" size="normal" />-->
                                 <InputError class="mt-2" :message="form.errors.recaptcha" />
                             </div>
 
