@@ -5,7 +5,7 @@ import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import StrongPassword from "@/Components/StrongPassword.vue";
 import TogglePassword from "@/Components/TogglePassword.vue";
-// import {useRecaptchaProvider, Checkbox as RecaptchaCheckbox} from "vue-recaptcha";
+import {useRecaptchaProvider, Checkbox as RecaptchaCheckbox} from "vue-recaptcha";
 
 const form = useForm({
     name: '',
@@ -16,7 +16,7 @@ const form = useForm({
     recaptcha: ''
 });
 
-// useRecaptchaProvider();
+useRecaptchaProvider();
 
 const submit = () => {
     form.post(route('register'), {
@@ -119,12 +119,12 @@ const submit = () => {
                             </div>
                             <!-- End Form Group -->
 
-<!--                            <div>-->
-<!--                                <RecaptchaCheckbox v-model="form.recaptcha" theme="light" size="normal" />-->
-<!--                            </div>-->
-<!--                            <div v-if="form.errors.recaptcha">-->
-<!--                                <p class="text-sm text-red-600 mt-2">{{ form.errors.recaptcha }}</p>-->
-<!--                            </div>-->
+                            <div>
+                                <RecaptchaCheckbox v-model="form.recaptcha" theme="light" size="normal" />
+                            </div>
+                            <div v-if="form.errors.recaptcha">
+                                <p class="text-sm text-red-600 mt-2">{{ form.errors.recaptcha }}</p>
+                            </div>
 
                             <button type="submit" class="w-full py-3 mt-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
                                 Register

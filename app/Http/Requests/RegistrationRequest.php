@@ -31,7 +31,7 @@ class RegistrationRequest extends FormRequest
                 'required', Password::min(8)->mixedCase()->numbers()->symbols()->letters(),
                 'confirmed'
             ],
-//            'recaptcha' => ['required', new ReCaptcha]
+            'recaptcha' => ['required', new ReCaptcha]
         ];
     }
 }
