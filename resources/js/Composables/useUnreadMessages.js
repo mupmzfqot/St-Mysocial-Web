@@ -4,19 +4,19 @@ import { usePage, router } from '@inertiajs/vue3';
 export function useUnreadMessages() {
     const page = usePage();
 
-    const unreadMessageCount = computed(() => 
+    const unreadMessageCount = computed(() =>
         page.props.unreadCount?.total || 0
     );
 
-    const unreadConversations = computed(() => 
+    const unreadConversations = computed(() =>
         page.props.unreadCount?.conversations || []
     );
 
     const fetchUnreadMessageCount = () => {
         // Manually trigger a refresh of unread messages
-        router.reload({ 
+        router.reload({
             only: ['unreadCount'],
-            preserveState: true 
+            preserveState: true
         });
     };
 

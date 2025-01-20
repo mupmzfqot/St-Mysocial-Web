@@ -33,7 +33,7 @@ class ShareUnreadMessages
 
             Inertia::share('unreadCount', [
                 'conversations' => $unreadCount,
-                'total' => array_sum(array_column($unreadCount->toArray(), 'messages_count')),
+                'total' => count($unreadCount),
             ]);
         }
 

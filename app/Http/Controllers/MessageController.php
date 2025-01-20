@@ -40,6 +40,7 @@ class MessageController extends Controller
                 'name' => $conversation->users->first()->name,
                 'avatar' => $conversation->users->first()->avatar,
                 'latest_message' => $conversation->messages,
+                'unread_messages_count' => $conversation->messages->where('read', false)->where('sender_id', '!=', auth()->id())->count(),
             ];
         });
 
@@ -140,7 +141,7 @@ class MessageController extends Controller
 
         return response()->json([
             'conversations' => $unreadCount,
-            'total' => array_sum(array_column($unreadCount->toArray(), 'messages_count')),
+            'total' => $unreadCount->count(),
         ]);
     }
 }

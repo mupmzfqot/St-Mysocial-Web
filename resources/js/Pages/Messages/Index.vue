@@ -37,14 +37,18 @@ const truncatedText = (originalText) => {
                     <div class="ms-3 flex-grow">
                         <div class="flex justify-between items-center">
                             <h3 class="font-semibold text-sm text-gray-800 dark:text-white">{{ user.name }}</h3>
-                            <span v-if="getUnreadCountForConversation(user.user_id) > 0" 
+                            <span v-if="getUnreadCountForConversation(user.user_id) > 0"
                                   class="inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium bg-red-500 text-white">
                                 {{ getUnreadCountForConversation(user.user_id) }}
                             </span>
                         </div>
-                        <p v-if="user.latest_message.length > 0"
-                           class="text-sm font-medium text-gray-400 dark:text-neutral-500"
-                           v-html="truncatedText(user.latest_message[0].content)"></p>
+                        <div v-if="user.latest_message.length > 0"
+                           :class="['text-sm dark:text-neutral-500 font-medium', user.latest_message[0].is_read === false ? 'flex justify-between text-gray-700' : 'text-gray-400']">
+                            <p v-html="truncatedText(user.latest_message[0].content)"></p>
+                            <span v-if="user.latest_message[0].is_read === false" class="inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium bg-red-500 text-white ms-auto">
+                                {{ user.unread_messages_count }}
+                            </span>
+                        </div>
                         <p v-else class="text-sm font-medium text-gray-400 dark:text-neutral-500">No message</p>
                     </div>
                 </div>
