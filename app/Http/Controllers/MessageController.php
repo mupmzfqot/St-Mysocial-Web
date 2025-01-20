@@ -28,9 +28,11 @@ class MessageController extends Controller
                         ->select('users.id', 'name');
                 },
                 'messages' => function ($query) {
-                    $query->latest();
+                    $query->latest()->take(1);
                 }
             ])
+            ->withMax('messages', 'created_at')
+            ->orderByDesc('messages_max_created_at')
             ->get();
 
         $conversations = $results->map(function ($conversation) {
