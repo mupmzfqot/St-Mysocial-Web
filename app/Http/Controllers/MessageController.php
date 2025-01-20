@@ -28,7 +28,7 @@ class MessageController extends Controller
                         ->select('users.id', 'name');
                 },
                 'messages' => function ($query) {
-                    $query->latest()->first();
+                    $query->latest();
                 }
             ])
             ->get();
@@ -40,7 +40,7 @@ class MessageController extends Controller
                 'name' => $conversation->users->first()->name,
                 'avatar' => $conversation->users->first()->avatar,
                 'latest_message' => $conversation->messages,
-                'unread_messages_count' => $conversation->messages->where('read', false)->where('sender_id', '!=', auth()->id())->count(),
+                'unread_messages_count' => $conversation->messages->where('is_read', false)->where('sender_id', '!=', auth()->id())->count(),
             ];
         });
 

@@ -43,9 +43,9 @@ const truncatedText = (originalText) => {
                             </span>
                         </div>
                         <div v-if="user.latest_message.length > 0"
-                           :class="['text-sm dark:text-neutral-500 font-medium', user.latest_message[0].is_read === false ? 'flex justify-between text-gray-700' : 'text-gray-400']">
+                           :class="['text-sm dark:text-neutral-500 font-medium text-gray-400', user.unread_messages_count > 0 ? 'flex justify-between' : '']">
                             <p v-html="truncatedText(user.latest_message[0].content)"></p>
-                            <span v-if="user.latest_message[0].is_read === false" class="inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium bg-red-500 text-white ms-auto">
+                            <span v-if="user.unread_messages_count > 0" class="inline-flex items-center py-0.5 px-1.5 rounded-full text-xs bg-red-500 text-white">
                                 {{ user.unread_messages_count }}
                             </span>
                         </div>
