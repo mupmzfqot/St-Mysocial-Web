@@ -22,17 +22,17 @@ class HomeController extends Controller
     public function index()
     {
         $posts = Post::query()
-            ->with('author', 'media', 'comments.user', 'tags')
+            ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media')
             ->orderBy('created_at', 'desc')
             ->published()
             ->where('type', 'st')
             ->paginate(30)
             ->through(function ($post) {
-                // Ensure we have all necessary data loaded
                 $post->load('likes');
                 return $post;
             })
             ->withQueryString();
+
 
         $title = 'ST Post';
         $description = 'Post from ST Team';
@@ -88,7 +88,7 @@ class HomeController extends Controller
     public function showPost($id)
     {
         $post = Post::query()
-            ->with('author', 'media', 'comments.user', 'comments.media')
+            ->with('author', 'media', 'comments.user', 'comments.media', 'repost.author', 'repost.media')
             ->orderBy('created_at', 'desc')
             ->published()
             ->where('id', $id)

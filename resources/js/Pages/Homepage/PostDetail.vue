@@ -7,6 +7,7 @@ import { QuillEditor } from '@vueup/vue-quill'
 import '@vueup/vue-quill/dist/vue-quill.snow.css'
 import { ref } from 'vue'
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
+import Post from "@/Components/Post.vue";
 
 const props = defineProps({
     post: Object
@@ -27,7 +28,7 @@ const deleteContentName = ref(null);
 const form = useForm({
     message: '',
     post_id: props.post ? props.post.id : null,
-    files: []
+    files: [],
 });
 
 const submitComment = () => {
@@ -163,46 +164,32 @@ const insertLink = () => {
     <Head title="Post Detail" />
     <HomeLayout>
         <div v-if="post" class="flex flex-col bg-white border shadow-sm rounded-xl pt-3 px-4 mb-3 dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-700/70">
-            <Link :href="route('profile.show', post.author.id)" class="flex items-center">
-                <div class="shrink-0">
-                    <img class="size-10 rounded-full" :src="post.author.avatar" alt="Avatar">
-                </div>
-                <div class="ms-4">
-                    <div class="text-base font-semibold text-gray-800 dark:text-neutral-400 hover:text-blue-700">{{ post.author.name }}</div>
-                    <div class="text-xs text-gray-500 dark:text-neutral-500">{{ post.created_at }}</div>
-                </div>
-            </Link>
-            <div class="mt-2 text-gray-800 dark:text-neutral-400" v-html="post.post"></div>
+            <Post :content="post" :status="false" v-if="post" />
 
-            <!-- Image Grid -->
-            <PostMedia :medias="post.media" v-if="post.media.length > 0" />
-            <!-- End Image Grid -->
+<!--            <div class="inline-flex gap-x-3">-->
+<!--                <Link :href="route('user-post.show-post', post.id)" class="mt-3 inline-flex items-center gap-x-1 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600" href="#">-->
+<!--                    <MessageSquareText class="shrink-0 size-4 text-blue-600" />-->
+<!--                    {{ post.comment_count }} Comments-->
+<!--                </Link>-->
+<!--                <div class="mt-3 inline-flex items-center gap-x-1 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600" href="#">-->
+<!--                    <a href="" @click.prevent="unlike" v-if="post.is_liked" >-->
+<!--                        <Heart class="shrink-0 size-4 fill-red-500 text-transparent" />-->
+<!--                    </a>-->
+<!--                    <a href="" @click.prevent="sendLike" v-else>-->
+<!--                        <Heart class="shrink-0 size-4 text-gray-500" />-->
+<!--                    </a>-->
+<!--                    <a href="#" @click.prevent="showLikedBy(post.id)" class="hover:underline" v-if="post.like_count !== 0">-->
+<!--                        {{ post.like_count }} Likes-->
+<!--                    </a>-->
+<!--                    <span v-else>-->
+<!--                        {{ post.like_count }} Likes-->
+<!--                    </span>-->
+<!--                </div>-->
 
-            <div class="inline-flex gap-x-3">
-                <Link :href="route('user-post.show-post', post.id)" class="mt-3 inline-flex items-center gap-x-1 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600" href="#">
-                    <MessageSquareText class="shrink-0 size-4 text-blue-600" />
-                    {{ post.comment_count }} Comments
-
-                </Link>
-                <div class="mt-3 inline-flex items-center gap-x-1 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600" href="#">
-                    <a href="" @click.prevent="unlike" v-if="post.is_liked" >
-                        <Heart class="shrink-0 size-4 fill-red-500 text-transparent" />
-                    </a>
-                    <a href="" @click.prevent="sendLike" v-else>
-                        <Heart class="shrink-0 size-4 text-gray-500" />
-                    </a>
-                    <a href="#" @click.prevent="showLikedBy(post.id)" class="hover:underline" v-if="post.like_count !== 0">
-                        {{ post.like_count }} Likes
-                    </a>
-                    <span v-else>
-                        {{ post.like_count }} Likes
-                    </span>
-                </div>
-
-                <a href="#" @click.prevent="openDeletePostConfirm(post.id)" v-if="$page.props.auth.user.id === post.user_id" class="mt-3 inline-flex items-center gap-x-1 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-red-900 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600">
-                    <XCircle class="shrink-0 size-4 text-red-700" />Delete post
-                </a>
-            </div>
+<!--                <a href="#" @click.prevent="openDeletePostConfirm(post.id)" v-if="$page.props.auth.user.id === post.user_id" class="mt-3 inline-flex items-center gap-x-1 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-red-900 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600">-->
+<!--                    <XCircle class="shrink-0 size-4 text-red-700" />Delete post-->
+<!--                </a>-->
+<!--            </div>-->
 
             <hr class="mt-3">
 

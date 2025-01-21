@@ -10,6 +10,33 @@ use Inertia\Inertia;
 
 class PostController extends Controller
 {
+    public function get(Request $request)
+    {
+        try {
+            $posts = Post::query()
+                ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media')
+                ->orderBy('created_at', 'desc')
+                ->published()
+                ->where('type', 'st')
+                ->paginate(30)
+                ->through(function ($post) {
+                    $post->load('likes');
+                    return $post;
+                })
+                ->withQueryString();
+
+            return response()->json($posts);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => true,
+                'message' => config('app.debug')
+                    ? $e->getMessage()
+                    : 'An unexpected error occurred while retrieving posts.',
+                'status' => 500
+            ], 500);
+        }
+    }
+
     public function index(Request $request)
     {
         $searchTerm = $request->query('search');

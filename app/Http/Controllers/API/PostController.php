@@ -31,11 +31,12 @@ class PostController extends Controller
             })
             ->where('type', $request->query('type'))
             ->published()
+            ->orderBy('created_at', 'desc')
             ->with(['author', 'media'])
             ->paginate($perPage)
             ->withQueryString();
 
-        return PostResource::collection($posts);
+        return PostResource::collection($posts->load('repost'));
     }
 
     public function show($id)
@@ -194,5 +195,30 @@ class PostController extends Controller
             'error'     => 0,
             'message'   => 'Comment has been unliked',
         ], 201);
+    }
+
+    public function repost(Request $request)
+    {
+        try {
+            $parentPost = Post::query()->find($request->post_id);
+
+            $repost = Post::query()->firstOrCreate(['repost_id' => $parentPost->id, 'user_id' => $request->user()->id], [
+                'post'  => $request->post,
+                'type'  => $parentPost->type,
+                'published' => $parentPost->published,
+            ]);
+
+            return response()->json([
+                'error'     => 0,
+                'data'      => new PostResource($repost->load('repost'))
+            ]);
+
+        } catch (\Exception $e) {
+            logger($e);
+            return response()->json([
+                'error'     => 1,
+                'message' => $e->getMessage(),
+            ]);
+        }
     }
 }

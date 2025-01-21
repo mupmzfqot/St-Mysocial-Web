@@ -30,7 +30,7 @@ class PostResource extends JsonResource
                 'id'            => $this->author->id,
                 'name'          => $this->author->name,
                 'email'         => $this->author->email,
-                'profile_img'   => null,
+                'profile_img'   => $this->author->avatar,
             ],
             'media'         => $this->getMedia('*')->map(fn ($item) => [
                     'id'            => $item->id,
@@ -56,6 +56,7 @@ class PostResource extends JsonResource
                 })->values(),
             'link'          => $this->link,
             'comments'      => CommentResource::collection($this->whenLoaded('comments')),
+            'repost'        => new PostResource($this->whenLoaded('repost')),
             'liked'         => (bool) $this->is_liked,
             'commented'     => (bool) $this->commented,
         ];

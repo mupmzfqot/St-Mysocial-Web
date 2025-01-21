@@ -30,7 +30,7 @@ class CreatePostAPI
                 ],
                 'videos.*' => [
                     'file',
-                    'mimetypes:video/mp4,video/quicktime,video/mpeg',
+                    'mimetypes:video/mp4,video/quicktime,video/mpeg,video/ogg,video/webm,video/avi',
                     'max:10240' // 10MB
                 ],
                 'type' => 'required|in:st,public',

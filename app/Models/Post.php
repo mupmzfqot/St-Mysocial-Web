@@ -82,4 +82,14 @@ class Post extends Model implements HasMedia
         return $this->hasMany(PostTag::class);
     }
 
+    public function repost(): BelongsTo
+    {
+        return $this->belongsTo(Post::class, 'repost_id');
+    }
+
+    public function reposts(): HasMany
+    {
+        return $this->hasMany(Post::class, 'repost_id');
+    }
+
 }
