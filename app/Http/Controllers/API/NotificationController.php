@@ -11,15 +11,17 @@ class NotificationController extends Controller
     public function index(Request $request)
     {
 
-        if($request->query('is_read') == 0) {
-            return $this->formatResult($request->user()->unreadNotifications);
+        if(isset($request->is_read)) {
+            if($request->query('is_read') == 0) {
+                return $this->formatResult($request->user()->unreadNotifications);
+            }
+
+            if($request->query('is_read') == 1) {
+                return $this->formatResult($request->user()->readNotifications);
+            }
         }
 
-        if($request->query('is_read') == 1) {
-            return $this->formatResult($request->user()->readNotifications);
-        }
-
-        return $this->formatResult($request->user()->unreadNotifications);
+        return $this->formatResult($request->user()->notifications);
 
     }
 
@@ -28,7 +30,7 @@ class NotificationController extends Controller
         try {
             $notifications = $request->user()->unreadNotifications;
 
-            if($request->notification_id) {
+            if(isset($request->notification_id) && !is_null($request->notification_id)) {
                 $notifications->where('id', $request->notification_id)->first()?->markAsRead();
             } else {
                 $notifications->markAsRead();
@@ -48,7 +50,7 @@ class NotificationController extends Controller
                 'id' => $result->id,
                 'message' => $result->data['message'],
                 'notifiable_url' => $result->data['url'] ?? null,
-                'read_at' => $result->read_t,
+                'read_at' => $result->read_at,
                 'created_at' => $result->created_at,
                 'updated_at' => $result->updated_at,
             ];

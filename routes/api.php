@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Route;
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+Route::post('/forgot-password', [AuthController::class, 'sendResetPasswordLink']);
 
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -24,6 +25,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('posts/like-comment', [PostController::class, 'storeCommentLike']);
     Route::post('posts/unlike', [PostController::class, 'unlikePost']);
     Route::post('posts/unlike-comment', [PostController::class, 'unlikeComment']);
+    Route::post('posts/repost', [PostController::class, 'repost']);
 
     Route::post('update-profile-image', [UserController::class, 'updateProfileImage']);
     Route::post('update-profile-cover', [UserController::class, 'updateProfileCover']);

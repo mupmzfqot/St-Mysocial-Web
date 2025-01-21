@@ -4,11 +4,13 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\APILoginRequest;
-use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 
@@ -111,5 +113,83 @@ class AuthController extends Controller
             'error' => 0,
             'message' => 'You have been logged out.',
         ], 200);
+    }
+
+    public function sendResetPasswordLink(Request $request)
+    {
+        try {
+            $request->validate([
+                'email' => 'required|email|exists:users,email',
+            ]);
+
+
+//            $email = $request->email;
+//            $token = Str::random(64);
+//            ResetPassword::createUrlUsing(function () use($email, $token) {
+//                \DB::table('password_reset_tokens')->updateOrInsert(
+//                    ['email' => $email],
+//                    [
+//                        'email' => $email,
+//                        'token' => $token,
+//                        'created_at' => now()
+//                    ]
+//                );
+//
+//                return config('app.url').'api/reset-password?token='.$token;
+//
+//            });
+
+            $status = \Illuminate\Support\Facades\Password::sendResetLink(
+                $request->only('email')
+            );
+
+            if ($status == \Illuminate\Support\Facades\Password::RESET_LINK_SENT) {
+                return response()->json([
+                    'error' => 0,
+                    'message' => 'Check your email for password reset link.',
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error'     => 1,
+                'message'   => $e->getMessage(),
+            ]);
+        }
+    }
+
+    public function resetPassword(Request $request)
+    {
+        try {
+            $request->validate([
+                'token' => 'required',
+                'email' => 'required|email',
+                'password' => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()->letters()],
+            ]);
+
+            $status = \Illuminate\Support\Facades\Password::reset(
+                $request->only('email', 'password', 'password_confirmation', 'token'),
+                function ($user) use ($request) {
+                    $user->forceFill([
+                        'password' => Hash::make($request->password),
+                        'remember_token' => Str::random(60),
+                    ])->save();
+
+                    event(new PasswordReset($user));
+                }
+            );
+
+            if ($status == \Illuminate\Support\Facades\Password::PASSWORD_RESET) {
+                return response()->json([
+                    'error' => 0,
+                    'message' => 'Your password has been reset.',
+                ]);
+            }
+        } Catch (ValidationException $e) {
+            return response()->json([
+                'error'     => 1,
+                'message'   => $e->getMessage(),
+            ]);
+        }
     }
 }
