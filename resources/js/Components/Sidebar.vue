@@ -40,9 +40,9 @@ onMounted(fetchPendingApprovals)
         <div class="relative flex flex-col h-full max-h-full">
             <div class="px-6 pt-4">
                 <!-- Logo -->
-                <a class="flex-none rounded-xl text-xl inline-block font-semibold focus:outline-none focus:opacity-80" href="#" aria-label="Preline">
-                    <img src="../../images/logo.png" alt="">
-                </a>
+                <Link :href="route('dashboard')" class="flex-none rounded-xl text-xl inline-block font-semibold focus:outline-none focus:opacity-80" aria-label="TeamST">
+                    <img src="../../images/logo.png" class="h-10 -mt-1.5" alt="">
+                </Link>
                 <!-- End Logo -->
             </div>
 
@@ -81,17 +81,17 @@ onMounted(fetchPendingApprovals)
                             </span>
                         </li>
 
-                        <li>
-                            <Link :href="route('profile-photos')" :class="['flex items-center gap-x-3.5 py-2 px-2.5 text-sm font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:bg-gray-100', isActiveNav('/profile-photos') ? 'bg-blue-100 text-gray-800': 'text-white']">
-                                <CircleUser class="shrink-0 size-4" /> Profile Photos
-                            </Link>
-                        </li>
+<!--                        <li>-->
+<!--                            <Link :href="route('profile-photos')" :class="['flex items-center gap-x-3.5 py-2 px-2.5 text-sm font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:bg-gray-100', isActiveNav('/profile-photos') ? 'bg-blue-100 text-gray-800': 'text-white']">-->
+<!--                                <CircleUser class="shrink-0 size-4" /> Profile Photos-->
+<!--                            </Link>-->
+<!--                        </li>-->
 
-                        <li>
-                            <Link :href="route('profile-covers')" :class="['flex items-center gap-x-3.5 py-2 px-2.5 text-sm font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:bg-gray-100', isActiveNav('/profile-covers') ? 'bg-blue-100 text-gray-800': 'text-white']">
-                                <CircleUser class="shrink-0 size-4" /> Profile Covers
-                            </Link>
-                        </li>
+<!--                        <li>-->
+<!--                            <Link :href="route('profile-covers')" :class="['flex items-center gap-x-3.5 py-2 px-2.5 text-sm font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:bg-gray-100', isActiveNav('/profile-covers') ? 'bg-blue-100 text-gray-800': 'text-white']">-->
+<!--                                <CircleUser class="shrink-0 size-4" /> Profile Covers-->
+<!--                            </Link>-->
+<!--                        </li>-->
 
                         <li>
                             <Link :href="route('post.index')" type="button" :class="['flex items-center gap-x-3.5 py-2 px-2.5 text-sm font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:bg-gray-100', isActiveNav('/post/index') || isActiveNav('/post/create') ? 'bg-blue-100 text-gray-800': 'text-white']">
@@ -129,17 +129,6 @@ onMounted(fetchPendingApprovals)
                             <Link :href="route('app-setting')" class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:bg-gray-100">
                                 <SlidersHorizontal class="shrink-0 size-4" /> App Settings
                             </Link>
-                        </li>
-                        <li>
-                            <button type="button" class="hs-accordion-toggle w-full text-start flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:bg-gray-100" aria-expanded="true" aria-controls="users-accordion-child">
-                                <CircleHelp class="shrink-0 size-4" /> Supports
-                            </button>
-                        </li>
-
-                        <li>
-                            <button type="button" class="hs-accordion-toggle w-full text-start flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:bg-gray-100" aria-expanded="true" aria-controls="users-accordion-child">
-                                <Settings class="shrink-0 size-4" /> Settings
-                            </button>
                         </li>
 
                       </ul>
