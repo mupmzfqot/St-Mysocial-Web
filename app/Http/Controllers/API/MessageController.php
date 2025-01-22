@@ -83,7 +83,7 @@ class MessageController extends Controller
                 'content' => $request->message,
             ]);
 
-            broadcast(new MessageSent($message));
+//            broadcast(new MessageSent($message));
 
             return response()->json([
                 'error' => 0,
