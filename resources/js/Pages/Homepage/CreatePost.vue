@@ -1,6 +1,6 @@
 <script setup>
 import {Head, useForm, Link} from "@inertiajs/vue3";
-import {AlertCircle, ChevronDown, ImagePlus, Loader2, X} from "lucide-vue-next";
+import {AlertCircle, ChevronDown, ImagePlus, Loader2, X, Paperclip, SmilePlus, SendHorizontal, LinkIcon, UserPlus} from "lucide-vue-next";
 import {computed, onMounted, ref} from "vue";
 import HomeLayout from "@/Layouts/HomeLayout.vue";
 import PostContent from "@/Components/PostContent.vue";
@@ -11,7 +11,7 @@ import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } fro
 
 const MAX_FILES = 10;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4', 'video/quicktime'];
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4', 'video/quicktime', 'application/pdf'];
 const MAX_CONTENT_LENGTH = 1000;
 
 const fileInput = ref(null);
@@ -204,14 +204,10 @@ onMounted(() => {
     <HomeLayout>
         <!-- Card Section -->
         <div class="w-full">
-            <!-- Card -->
-            <div class="bg-white rounded-xl shadow p-4 dark:bg-neutral-800">
-                <div class="mb-2 flex justify-between">
+            <div class="mx-auto p-4 bg-white border border-gray-300 rounded-lg shadow-sm">
+                <div class="mb-2">
                     <label class="font-semibold text-gray-800 dark:text-neutral-200">New Post</label>
-                    <Link :href="route('home')" type="button" class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 text-gray-800 hover:border-blue-600 hover:text-blue-600 focus:outline-none focus:border-blue-600 focus:text-blue-600 disabled:opacity-50">
-                        Cancel</Link>
                 </div>
-
                 <!-- Media Preview -->
                 <div class="mb-3" v-if="previews.length > 0">
                     <div class="flex justify-between items-center mb-2">
@@ -250,8 +246,9 @@ onMounted(() => {
                         </div>
                     </div>
                 </div>
-
                 <form @submit.prevent="submit" mt-2>
+                    <MultiSelect :stUsers="stUsers" v-model="form.userTags" v-if="!$page.props.auth.user.roles.includes('public_user')" />
+
                     <!-- Quill Editor with drag-drop zone -->
                     <div
                         class="mb-0 relative"
@@ -264,15 +261,15 @@ onMounted(() => {
                             v-model:content="form.content"
                             contentType="html"
                             :options="{
-                                placeholder: 'What\'s on your mind?',
-                                modules: {
-                                    toolbar: false
-                                }
-                            }"
+                                    placeholder: 'What\'s on your mind?',
+                                    modules: {
+                                        toolbar: false
+                                    }
+                                }"
                             :style="{
-                                height: '150px',
-                                marginBottom: '5px'
-                            }"
+                                    height: '150px',
+                                    marginBottom: '5px'
+                                }"
                             class="bg-white dark:bg-neutral-900 rounded-lg first-letter-cap"
                         />
                         <div
@@ -283,22 +280,14 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <MultiSelect :stUsers="stUsers" v-model="form.userTags" v-if="!$page.props.auth.user.roles.includes('public_user')" />
-
-                    <!-- Error messages -->
-                    <div v-if="Object.keys(errors).length > 0" class="mb-3 px-2 py-1">
-                        <p v-for="error in errors" :key="error" class="text-red-500 text-sm">
-                            {{ error }}
-                        </p>
-                    </div>
-
-                    <div class="mb-3 grid gap-3 md:flex md:justify-between md:items-center">
-                        <div class="inline-flex gap-x-3">
-                            <!-- Post type select -->
+                    <!-- Action Buttons -->
+                    <div class="flex items-center justify-between">
+                        <!-- Left Icons -->
+                        <div class="flex space-x-1 text-gray-00">
                             <div class="relative" v-if="defaultType === 'st'">
                                 <select
                                     v-model="form.type"
-                                    class="appearance-none h-[46px] pl-4 pr-10 min-w-[120px] rounded-lg border border-gray-200 text-sm dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 focus:border-blue-500 focus:ring-blue-500 bg-gray-50 dark:bg-neutral-700"
+                                    class="appearance-none h-[40px] pl-4 pr-10 min-w-[120px] rounded-lg border border-gray-200 text-sm dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 focus:border-blue-500 focus:ring-blue-500 bg-gray-50 dark:bg-neutral-700"
                                 >
                                     <option value="st">Team ST</option>
                                     <option value="public">Public</option>
@@ -308,48 +297,67 @@ onMounted(() => {
                                 </div>
                             </div>
 
-                            <!-- Media upload button -->
-                            <button
-                                type="button"
-                                class="inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent text-blue-600 hover:text-blue-800 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-400 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
-                                @click="triggerFileInput"
-                            >
-                                <ImagePlus class="w-4 h-4"/>
-                                Add media
-                            </button>
-                            <button
-                                type="button"
-                                class="inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent text-blue-600 hover:text-blue-800 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-400 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
-                                @click="openLinkDialog"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
-                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                                </svg>
-                                Add link
-                            </button>
-                            <input
-                                ref="fileInput"
-                                type="file"
-                                multiple
-                                class="hidden"
-                                accept="image/*,video/*"
-                                @change="handleFiles"
-                            />
+                            <div class="hs-tooltip [--placement:bottom] inline-block">
+                                <button @click="triggerFileInput" type="button" class="hs-tooltip-toggle size-10 inline-flex justify-center items-center gap-2 rounded-md bg-gray-50 border border-gray-200 text-gray-600 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 focus:outline-none focus:bg-blue-50 focus:border-blue-200 focus:text-blue-600 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-white/10 dark:hover:border-white/10 dark:hover:text-white dark:focus:bg-white/10 dark:focus:border-white/10 dark:focus:text-white">
+                                    <Paperclip class="shrink-0 size-4" />
+                                    <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible opacity-0 transition-opacity inline-block absolute invisible z-10 py-1 px-2 bg-gray-900 text-xs font-medium text-white rounded shadow-sm dark:bg-neutral-700" role="tooltip">
+                                        Insert Files
+                                    </span>
+                                </button>
+                            </div>
 
+                            <div class="hs-tooltip [--placement:bottom] inline-block">
+                                <button type="button" class="hs-tooltip-toggle size-10 inline-flex justify-center items-center gap-2 rounded-md bg-gray-50 border border-gray-200 text-gray-600 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 focus:outline-none focus:bg-blue-50 focus:border-blue-200 focus:text-blue-600 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-white/10 dark:hover:border-white/10 dark:hover:text-white dark:focus:bg-white/10 dark:focus:border-white/10 dark:focus:text-white">
+                                    <SmilePlus class="shrink-0 size-4" />
+                                    <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible opacity-0 transition-opacity inline-block absolute invisible z-10 py-1 px-2 bg-gray-900 text-xs font-medium text-white rounded shadow-sm dark:bg-neutral-700" role="tooltip">
+                                        Emoji
+                                    </span>
+                                </button>
+                            </div>
+
+                            <div class="hs-tooltip [--placement:bottom] inline-block">
+                                <button @click="openLinkDialog"  type="button" class="hs-tooltip-toggle size-10 inline-flex justify-center items-center gap-2 rounded-md bg-gray-50 border border-gray-200 text-gray-600 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 focus:outline-none focus:bg-blue-50 focus:border-blue-200 focus:text-blue-600 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-white/10 dark:hover:border-white/10 dark:hover:text-white dark:focus:bg-white/10 dark:focus:border-white/10 dark:focus:text-white">
+                                    <LinkIcon class="shrink-0 size-4" />
+                                    <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible opacity-0 transition-opacity inline-block absolute invisible z-10 py-1 px-2 bg-gray-900 text-xs font-medium text-white rounded shadow-sm dark:bg-neutral-700" role="tooltip">
+                                        Insert Link
+                                    </span>
+                                </button>
+                            </div>
                         </div>
 
-                        <!-- Submit button -->
-                        <button
-                            type="submit"
-                            :disabled="!isValid || isLoading"
-                            class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <Loader2 v-if="isLoading" class="animate-spin size-4" />
-                            <span>{{ isLoading ? 'Posting...' : 'Create Post' }}</span>
-                        </button>
+                        <input
+                            ref="fileInput"
+                            type="file"
+                            multiple
+                            class="hidden"
+                            accept="image/*,video/*,application/pdf"
+                            @change="handleFiles"
+                        />
+
+                        <div class="flex items-center justify-between gap-x-2">
+                            <Link :href="route('home')" type="button" class="py-2 px-4 inline-flex items-center  text-sm font-medium rounded-lg border border-gray-200 text-gray-800 hover:border-blue-600 hover:text-blue-600 focus:outline-none focus:border-blue-600 focus:text-blue-600 disabled:opacity-50">
+                                Cancel</Link>
+                            <button
+                                type="submit"
+                                :disabled="!isValid || isLoading"
+                                class="flex text-sm items-center space-x-2 bg-blue-600 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition"
+                            >
+                                <Loader2 v-if="isLoading" class="animate-spin size-4" />
+                                <SendHorizontal v-else class="shrink-0 size-4" />
+                                <span>{{ isLoading ? 'Posting...' : 'Create Post' }}</span>
+                            </button>
+                        </div>
                     </div>
+
+
                 </form>
+
+                <!-- Error messages -->
+                <div v-if="Object.keys(errors).length > 0" class="mb-3 px-2 py-1">
+                    <p v-for="error in errors" :key="error" class="text-red-500 text-sm">
+                        {{ error }}
+                    </p>
+                </div>
 
                 <div v-if="showSuccessMessage" class="mt-4 p-4 rounded-lg bg-green-50 dark:bg-green-900">
                     <p class="text-green-800 dark:text-green-200">{{ successMessage }}</p>
@@ -358,8 +366,10 @@ onMounted(() => {
                 <div v-if="showErrorMessage" class="w-full mt-4 px-3 py-2 rounded-lg bg-red-50 dark:bg-red-900 text-sm inline-flex items-center gap-x-2 text-red-800 dark:text-red-200">
                     <AlertCircle class="shrink-0 size-4" /><span>{{ errorMessage }}</span>
                 </div>
+
             </div>
         </div>
+
 
         <!-- My Posts -->
         <div>

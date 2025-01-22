@@ -1,5 +1,6 @@
-<script setup xmlns="http://www.w3.org/1999/html">
+<script setup>
 import {computed, ref, Teleport} from "vue";
+import {Download} from "lucide-vue-next";
 
 const props = defineProps({
     medias: {
@@ -8,6 +9,11 @@ const props = defineProps({
     },
     small: Boolean
 });
+
+let filteredMedia = props.medias.filter((media) => media.mime_type !== "application/pdf");
+let docFiles = props.medias.filter((media) => media.mime_type === "application/pdf");
+
+console.log(docFiles);
 
 const isModalOpen = ref(false);
 const carouselMedia = ref([]);
@@ -57,50 +63,49 @@ const handleKeydown = (e) => {
 }
 
 const usedIndex = ref(0);
-const newMedia = props.medias;
 const filteredImages = computed(() => {
-    if(isVideo(props.medias[0])) {
+    if(isVideo(filteredMedia[0])) {
         usedIndex.value = 1;
-        newMedia.push(props.medias.shift())
+        filteredMedia.push(filteredMedia.shift())
     }
     usedIndex.value = 0;
-    return newMedia;
+    return filteredMedia;
 
 });
 
 const otherMedia = computed(() => {
-    return newMedia.filter((media, index) => index !== usedIndex.value);
+    return filteredMedia.filter((media, index) => index !== usedIndex.value);
 });
 </script>
 
 <template>
-    <div :class="['rounded-lg overflow-hidden py-2', medias.length === 1 ? 'gallery full' : 'gallery grid']">
-        <template v-if="medias.length === 1" >
-            <div v-if="isVideo(medias[0])" class="video-container">
+    <div :class="['rounded-lg overflow-hidden py-2', filteredMedia.length === 1 ? 'gallery full' : 'gallery grid']">
+        <template v-if="filteredMedia.length === 1" >
+            <div v-if="isVideo(filteredMedia[0])" class="video-container">
                 <video
                     controls
-                    :src="medias[0].original_url"
+                    :src="filteredMedia[0].original_url"
                     class="w-full h-80"
-                    @click.stop="previewMedia(medias[0])"
+                    @click.stop="previewMedia(filteredMedia[0])"
                 ></video>
             </div>
 
             <img v-else
-                :src="medias[0].original_url"
-                :alt="medias[0].name"
+                :src="filteredMedia[0].original_url"
+                :alt="filteredMedia[0].name"
                 :class="['hover:opacity-90 cursor-pointer object-cover', small === true ? 'h-32' : 'w-full h-80']"
-                @click.stop="previewMedia(medias[0])"
+                @click.stop="previewMedia(filteredMedia[0])"
             />
         </template>
 
-        <template v-else-if="medias.length === 3" class="grid grid-cols-3 gap-y-0.5">
+        <template v-else-if="filteredMedia.length === 3" class="grid grid-cols-3 gap-y-0.5">
             <div class="col-span-1">
                 <div v-for="(media, index) in [filteredImages[0]]" :key="index">
                     <img
                         :src="media.preview_url"
                         alt="Media"
                         class="w-full h-80 object-cover"
-                        @click.stop="previewMedia(newMedia, index)"
+                        @click.stop="previewMedia(filteredMedia, index)"
                     />
                 </div>
             </div>
@@ -116,14 +121,14 @@ const otherMedia = computed(() => {
                             controls
                             :src="media.original_url"
                             class="w-full h-40 object-cover pb-0.5"
-                            @click.stop="previewMedia(newMedia, index+1)"
+                            @click.stop="previewMedia(filteredMedia, index+1)"
                         ></video>
                     </div>
                     <img v-else
                          :src="media.preview_url"
                          :alt="media.name"
                          :class="['hover:opacity-90 cursor-pointer object-cover', small === true ? 'h-32' : 'w-full h-40']"
-                         @click.stop="previewMedia(newMedia, index+1)"
+                         @click.stop="previewMedia(filteredMedia, index+1)"
                     />
                 </div>
             </div>
@@ -131,7 +136,7 @@ const otherMedia = computed(() => {
 
         <template v-else>
             <div
-                v-for="(media, index) in medias.slice(0, 4)"
+                v-for="(media, index) in filteredMedia.slice(0, 4)"
                 :key="media.id"
                 class="relative"
             >
@@ -140,26 +145,44 @@ const otherMedia = computed(() => {
                         controls
                         :src="media.original_url"
                         class="w-full h-40 object-cover"
-                        @click.stop="previewMedia(medias, index)"
+                        @click.stop="previewMedia(filteredMedia, index)"
                     ></video>
                 </div>
                 <img v-else
                     :src="media.preview_url"
                     :alt="media.name"
                      :class="['hover:opacity-90 cursor-pointer object-cover', small === true ? 'h-32' : 'w-full h-40']"
-                    @click.stop="previewMedia(medias, index)"
+                    @click.stop="previewMedia(filteredMedia, index)"
                 />
                 <!-- Overlay untuk gambar lebih dari 4 -->
                 <div
-                    v-if="index === 3 && medias.length > 4"
+                    v-if="index === 3 && filteredMedia.length > 4"
                     class="absolute inset-0 more-overlay hover:opacity-70 cursor-pointer bg-center bg-cover"
-                    @click.stop="previewMedia(medias)"
+                    @click.stop="previewMedia(filteredMedia)"
                 >
-                    +{{ medias.length - 4 }}
+                    +{{ filteredMedia.length - 4 }}
                 </div>
             </div>
         </template>
+
+
     </div>
+    <div v-if="docFiles.length > 1" class="mt-1 p-2 border border-gray-200 rounded-md" v-for="(file, index) in docFiles"
+         :key="index">
+        <div class="flex items-center gap-x-2">
+            <img src="../../images/pdf-icon.svg" class="shrink-0 size-6" alt="document" />
+            <a :href="file.original_url" @click.stop target="_blank" class="text-sm flex-wrap">
+                <span>{{ file.file_name }}</span>
+            </a>
+            <div class="ms-auto">
+                <a :href="file.original_url" @click.stop download type="button" class="button flex gap-x-1 text-sm hover:text-blue-600">
+                    <Download class="shrink-0 size-4"/> download
+                </a>
+            </div>
+
+        </div>
+    </div>
+
 
     <Teleport to="body">
         <div
@@ -235,77 +258,7 @@ const otherMedia = computed(() => {
     </div>
     </Teleport>
 
-    <div
-        v-if="isModalOpen"
-        class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
-        @click.stop="(e) => {
-            if (e.target === e.currentTarget) {
-                closeModal();
-            }
-        }"
-        @keydown.prevent="handleKeydown"
-        tabindex="0"
-    >
-        <div class="relative w-full max-w-4xl mx-4" @click.stop.prevent>
-            <!-- Close button -->
-            <button
-                class="absolute -top-10 right-0 text-white hover:text-gray-300 z-50"
-                @click.stop.prevent="closeModal"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M18 6L6 18"></path>
-                    <path d="M6 6l12 12"></path>
-                </svg>
-            </button>
 
-            <!-- Main carousel container -->
-            <div class="relative bg-gray-900 rounded-lg overflow-hidden">
-                <!-- Media display -->
-                <div class="flex items-center justify-center min-h-[200px] max-h-[80vh]">
-                    <template v-if="carouselMedia[currentIndex]">
-                        <div v-if="isVideo(carouselMedia[currentIndex])" class="w-full h-full">
-                            <video
-                                controls
-                                :src="carouselMedia[currentIndex].original_url"
-                                class="max-w-full max-h-[80vh] mx-auto"
-                            ></video>
-                        </div>
-                        <img
-                            v-else
-                            :src="carouselMedia[currentIndex].original_url"
-                            :alt="carouselMedia[currentIndex].name"
-                            class="max-w-full max-h-[80vh] object-contain"
-                        />
-                    </template>
-                </div>
-
-                <!-- Navigation arrows -->
-                <button
-                    v-if="currentIndex > 0"
-                    class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-75 text-white p-2 rounded-full transition-all"
-                    @click.stop.prevent="prevImage"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M15 18l-6-6 6-6"/>
-                    </svg>
-                </button>
-                <button
-                    v-if="currentIndex < carouselMedia.length - 1"
-                    class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-75 text-white p-2 rounded-full transition-all"
-                    @click.stop.prevent="nextImage"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M9 18l6-6-6-6"/>
-                    </svg>
-                </button>
-
-                <!-- Image counter -->
-                <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
-                    {{ currentIndex + 1 }} / {{ carouselMedia.length }}
-                </div>
-            </div>
-        </div>
-    </div>
 </template>
 
 <style scoped>

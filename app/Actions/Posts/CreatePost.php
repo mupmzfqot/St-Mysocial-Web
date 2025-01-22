@@ -25,7 +25,8 @@ class CreatePost
                 'files' => 'nullable|array',
                 'files.*' => [
                     'file',
-                    'mimetypes:image/jpeg,image/png,image/gif,video/mp4,video/quicktime,video/mpeg,video/ogg,video/webm,video/avi',
+                    'mimetypes:image/jpeg,image/png,image/gif,video/mp4,
+                        video/quicktime,video/mpeg,video/ogg,video/webm,video/avi,application/pdf',
                     'max:10240' // 10MB
                 ],
                 'type' => 'required|in:st,public'

@@ -33,6 +33,11 @@ class CreatePostAPI
                     'mimetypes:video/mp4,video/quicktime,video/mpeg,video/ogg,video/webm,video/avi',
                     'max:10240' // 10MB
                 ],
+                'document.*' => [
+                    'file',
+                    'mimetypes:application/pdf',
+                    'max:10240'
+                ],
                 'type' => 'required|in:st,public',
                 'link' => 'nullable',
             ], [
@@ -88,6 +93,10 @@ class CreatePostAPI
 
             if ($request->hasFile('videos')) {
                 $this->addMedias($request->file('videos'), $post);
+            }
+
+            if ($request->hasFile('document')) {
+                $this->addMedias($request->file('document'), $post);
             }
 
             DB::commit();

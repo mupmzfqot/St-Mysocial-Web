@@ -501,7 +501,7 @@ const formatTags = (tags) => {
                                 class="text-lg font-medium leading-6 text-gray-900 dark:text-white border-b pb-2 sticky top-0 bg-white dark:bg-neutral-800"
                             >
                                 <!-- Post Content -->
-                                <div v-if="postDetails" class="space-y-4">
+                                <div v-if="postDetails" class="space-y-2">
                                     <!-- Post Header -->
                                     <div class="flex items-center">
                                         <Link :href="route('profile.show', postDetails.author.id)" class="shrink-0">
@@ -520,7 +520,7 @@ const formatTags = (tags) => {
                                             <div class="text-xs text-gray-500 dark:text-neutral-500">{{ postDetails.created_at }}</div>
                                         </div>
                                     </div>
-                                    <div class="mt-2 text-gray-800 text-wrap text-sm dark:text-neutral-400" v-html="postDetails.post"></div>
+                                    <div class="text-gray-800 text-wrap text-sm dark:text-neutral-400" v-html="postDetails.post"></div>
 
                                     <!-- Post Media -->
                                     <PostMedia

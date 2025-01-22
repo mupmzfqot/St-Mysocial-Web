@@ -133,16 +133,11 @@ const reloadPosts = async () => {
         const response = await axios.get(`user-post/get?page=${page.value}`, {
             timeout: 10000
         });
-
         posts.value = response.data.data;
-
         hasMorePosts.value = !!response.data.next_page_url;
-
         loading.value = false;
     } catch (err) {
-        error.value = 'Failed to reload posts';
         loading.value = false;
-        console.error('Reload posts error:', err);
     }
 };
 </script>
