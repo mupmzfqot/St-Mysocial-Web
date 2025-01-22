@@ -15,7 +15,7 @@ class PostController extends Controller
     {
         try {
             $posts = Post::query()
-                ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media')
+                ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media', 'repost.tags')
                 ->orderBy('created_at', 'desc')
                 ->published()
                 ->where('type', 'st')
@@ -91,7 +91,13 @@ class PostController extends Controller
 
     public function share(Request $request, Repost $repost)
     {
-        $repostResult = $repost->handle(auth()->id(), $request);
-        return response()->json($repostResult);
+        try {
+            $repostResult = $repost->handle(auth()->id(), $request);
+            return response()->json($repostResult);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

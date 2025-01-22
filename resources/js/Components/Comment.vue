@@ -1,7 +1,7 @@
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue';
-import { router, useForm } from "@inertiajs/vue3";
-import { Heart, XCircle, ImagePlus, X, SmilePlus } from "lucide-vue-next";
+import { ref } from 'vue';
+import { useForm } from "@inertiajs/vue3";
+import { Heart, XCircle, X, SmilePlus, Paperclip } from "lucide-vue-next";
 import PostMedia from "@/Components/PostMedia.vue";
 
 // Props definition with comprehensive type checking
@@ -254,7 +254,7 @@ const formatCommentTime = (timestamp) => {
                             @click="triggerFileInput"
                             class="flex items-center text-gray-600 hover:text-blue-600"
                         >
-                            <ImagePlus class="w-5 h-5 mr-1" />
+                            <Paperclip class="w-5 h-5 mr-1" />
                         </button>
 
                         <!-- Submit Button -->

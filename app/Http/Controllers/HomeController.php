@@ -88,7 +88,7 @@ class HomeController extends Controller
     public function showPost($id)
     {
         $post = Post::query()
-            ->with('author', 'media', 'comments.user', 'comments.media', 'repost.author', 'repost.media')
+            ->with('author', 'media', 'tags', 'comments.user', 'comments.media', 'repost.author', 'repost.media')
             ->orderBy('created_at', 'desc')
             ->published()
             ->where('id', $id)

@@ -1,44 +1,8 @@
 <script setup>
-import {Link, router} from "@inertiajs/vue3";
-import {MessageSquareText, Heart, MinusCircle, CheckCircle, XCircle } from "lucide-vue-next";
-import PostMedia from "@/Components/PostMedia.vue";
 import { onMounted, onUnmounted, ref, computed, nextTick } from 'vue';
-import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from "@headlessui/vue";
 import Post from "@/Components/Post.vue";
 import axios from 'axios';
 import { throttle } from 'lodash-es';
-
-// Persistent cache using localStorage
-const PostCache = {
-    set(key, data) {
-        try {
-            localStorage.setItem(`post_cache_${key}`, JSON.stringify({
-                timestamp: Date.now(),
-                data: data
-            }));
-        } catch (e) {
-            console.warn('Cache storage failed', e);
-        }
-    },
-    get(key) {
-        try {
-            const cached = localStorage.getItem(`post_cache_${key}`);
-            if (!cached) return null;
-
-            const parsedCache = JSON.parse(cached);
-            // Cache valid for 1 hour
-            const isValid = (Date.now() - parsedCache.timestamp) < 3600000;
-
-            return isValid ? parsedCache.data : null;
-        } catch (e) {
-            console.warn('Cache retrieval failed', e);
-            return null;
-        }
-    },
-    clear(key) {
-        localStorage.removeItem(`post_cache_${key}`);
-    }
-};
 
 const props = defineProps({
     posts: {
@@ -60,7 +24,7 @@ const hasMorePosts = ref(!!props.posts.next_page_url);
 const retryCount = ref(0);
 const MAX_RETRIES = 3;
 
-// Computed property to check if we can load more posts
+// check if we can load more posts
 const canLoadMore = computed(() => !loading.value && hasMorePosts.value);
 
 const loadMore = async () => {
@@ -69,20 +33,9 @@ const loadMore = async () => {
     loading.value = true;
     error.value = null;
 
-    // Check cache first
-    const cachedPosts = PostCache.get(`page_${page.value + 1}`);
-    if (cachedPosts) {
-        posts.value = [...posts.value, ...cachedPosts];
-        page.value++;
-        loading.value = false;
-        return;
-    }
 
     try {
-        // Exponential backoff for retries
         const retryDelay = Math.pow(2, retryCount.value) * 1000;
-
-        // Use axios with retry and timeout
         const response = await axios.get(`user-post/get?page=${page.value + 1}`, {
             timeout: 10000,
             cancelToken: new axios.CancelToken(c => {
@@ -91,11 +44,7 @@ const loadMore = async () => {
         });
 
         const newPosts = response.data.data;
-
-        // Cache the new posts
-        PostCache.set(`page_${page.value + 1}`, newPosts);
-
-        // Smooth transition with animation
+        // transition with animation
         const postContainer = document.querySelector('.post-container');
         if (postContainer) {
             postContainer.classList.add('opacity-50', 'transition-opacity', 'duration-300');
@@ -155,7 +104,6 @@ const loadMore = async () => {
     }
 };
 
-// Throttled scroll handler to improve performance
 const handleScroll = throttle(() => {
     // More precise scroll detection
     const bottomOfWindow = document.documentElement.scrollTop + window.innerHeight >=
@@ -172,11 +120,31 @@ onMounted(() => {
 
 onUnmounted(() => {
     window.removeEventListener('scroll', handleScroll);
-    // Cancel any ongoing request
     if (window.cancelPostRequest) {
         window.cancelPostRequest();
     }
 });
+
+const reloadPosts = async () => {
+    loading.value = true;
+    error.value = null;
+
+    try {
+        const response = await axios.get(`user-post/get?page=${page.value}`, {
+            timeout: 10000
+        });
+
+        posts.value = response.data.data;
+
+        hasMorePosts.value = !!response.data.next_page_url;
+
+        loading.value = false;
+    } catch (err) {
+        error.value = 'Failed to reload posts';
+        loading.value = false;
+        console.error('Reload posts error:', err);
+    }
+};
 </script>
 
 <template>
@@ -202,7 +170,7 @@ onUnmounted(() => {
             class="flex flex-col text-wrap bg-white border shadow-sm rounded-xl py-3 px-4 mb-2 dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-700/70 transition-all duration-300 ease-in-out opacity-0 transform translate-y-10 animate-fade-in"
             :style="`animation-delay: ${index * 50}ms`"
         >
-            <Post :content="post" :status="postStatus"/>
+            <Post @reload-posts="reloadPosts" :content="post" :status="postStatus"/>
         </div>
 
         <!-- Retry and Error Handling -->

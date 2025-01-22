@@ -30,18 +30,21 @@ const showPost = (id) => {
         .then(response => {
             postDetails.value = response.data;
             showPostModal.value = true;
-        })
-        .catch(error => {
-            console.error('Error fetching post details:', error);
         });
 };
 
 const sendLike = (id) => {
-    router.post(route('user-post.send-like'), { post_id: id }, { preserveScroll: true });
+    axios.post(route('user-post.send-like'), { post_id: id })
+        .then(response => {
+            emit('reload-posts');
+        });
 };
 
 const unlike = (id) => {
-    router.post(route('user-post.unlike'), { post_id: id }, { preserveScroll: true });
+    axios.post(route('user-post.unlike'), { post_id: id })
+        .then(response => {
+            emit('reload-posts');
+        });
 };
 
 const showLikedBy = (id) => {
@@ -62,7 +65,10 @@ const openDeleteConfirm = (id) => {
 
 const deletePost = () => {
     if (postToDelete.value) {
-        router.post(route('user-post.delete'), { content_id: postToDelete.value }, { preserveScroll: true });
+        axios.post(route('user-post.delete'), { content_id: postToDelete.value })
+            .then(response => {
+                emit('reload-posts');
+            });
         showDeleteConfirmModal.value = false;
         postToDelete.value = null;
     }
@@ -77,31 +83,26 @@ const openShareModal = (postId) => {
     showShareModal.value = true;
 };
 
+const emit = defineEmits(['reload-posts']);
 const submitShare = () => {
-    router.post(route('user-post.share'), {
+    axios.post(route('user-post.share'), {
         post_id: sharePostId.value,
         post: shareContent.value
-    }, {
-        onSuccess: () => {
-            showShareModal.value = false;
-            shareContent.value = '';
-            alert('Post shared successfully!');
-        }
-    });
+    }).then(() => {
+        showShareModal.value = false;
+        shareContent.value = '';
+        emit('reload-posts');
+    })
 };
 
 const refreshComments = () => {
-    // If postDetails is already loaded, refresh its comments
     if (postDetails.value) {
         axios.get(route('user-post.show-post', postDetails.value.id))
             .then(response => {
                 postDetails.value = response.data;
+                emit('reload-posts');
             })
-            .catch(error => {
-                console.error('Error refreshing comments:', error);
-            });
     } else {
-        // If postDetails is not loaded, you might want to reload the entire post
         showPost(content.id);
     }
 };
@@ -110,7 +111,6 @@ const sendCommentLike = (commentId) => {
     router.post(route('user-post.send-comment-like'), { comment_id: commentId }, {
         preserveScroll: true,
         onSuccess: () => {
-            // Optionally refresh comments after liking
             refreshComments();
         }
     });
@@ -120,33 +120,48 @@ const unlikeComment = (commentId) => {
     router.post(route('user-post.unlike-comment'), { comment_id: commentId }, {
         preserveScroll: true,
         onSuccess: () => {
-            // Optionally refresh comments after unliking
             refreshComments();
         }
     });
 };
 
 const openDeleteCommentConfirm = (commentId) => {
-    // You might want to implement a specific delete comment confirmation modal
     router.post(route('user-post.delete-comment'), { content_id: commentId }, {
         preserveScroll: true,
         onSuccess: () => {
-            // Refresh comments after deletion
             refreshComments();
         }
     });
 };
 
+const formatTags = (tags) => {
+    if (!tags || tags.length === 0) return '';
+    if (tags.length <= 2) return tags.join(', ');
+
+    const firstTwoTags = tags.slice(0, 2);
+    const remainingCount = tags.length - 2;
+
+    return `${firstTwoTags.join(', ')}, and ${remainingCount} other${remainingCount > 1 ? 's' : ''}`;
+}
+
 </script>
 
 <template>
     <div class="cursor-pointer" @click="showPost(content.id)" v-if="content.repost">
-        <Link :href="route('profile.show', content.author.id)" class="flex items-center">
-            <div class="shrink-0">
+        <div class="flex items-center">
+            <Link :href="route('profile.show', content.author.id)" class="shrink-0">
                 <img class="size-10 rounded-full" :src="content.author.avatar" alt="Avatar">
-            </div>
+            </Link>
             <div class="ms-4">
-                <div class="text-base font-semibold text-gray-800 dark:text-neutral-400 hover:text-blue-700">{{ content.author.name }}</div>
+                <div class="flex items-center">
+                    <Link :href="route('profile.show', content.author.id)" class="text-base font-semibold text-gray-800 dark:text-neutral-400 hover:text-blue-700 me-1">{{ content.author.name }}</Link>
+                    <div class="flex flex-wrap gap-x-1" v-if="content.tags && content.tags.length > 0">
+                        <p class="text-sm text-gray-800 dark:text-gray-200">with </p>
+                        <p class="text-sm text-blue-700 dark:text-gray-200">
+                            {{ formatTags(content.tags.map(tag => tag.name)) }}
+                        </p>
+                    </div>
+                </div>
                 <div class="text-xs text-gray-500 dark:text-neutral-500">{{ content.created_at }}</div>
             </div>
             <span v-if="!content.published && status" class="py-1 px-3 inline-flex items-center gap-x-1 ms-auto text-xs font-medium bg-red-100 text-red-800 rounded-full dark:bg-red-500/10 dark:text-red-500">
@@ -155,42 +170,52 @@ const openDeleteCommentConfirm = (commentId) => {
             <span v-if="content.published && status" class="py-1 px-3 inline-flex items-center gap-x-1 ms-auto text-xs font-medium bg-teal-100 text-teal-800 rounded-full dark:bg-teal-500/10 dark:text-teal-500">
                       <CheckCircle class="size-3" />Published
                     </span>
-        </Link>
+        </div>
 
         <div class="mt-2 text-gray-800 text-wrap text-sm dark:text-neutral-400" v-html="content.post"></div>
 
         <div class="my-3 border border-gray-200 px-3 pb-2 rounded-xl">
-            <Link :href="route('profile.show', content.repost.author.id)" class="flex items-center mt-2">
-                <div class="shrink-0">
+            <div class="flex items-center mt-2">
+                <Link :href="route('profile.show', content.repost.author.id)" class="shrink-0">
                     <img class="size-10 rounded-full" :src="content.repost.author.avatar" alt="Avatar">
-                </div>
+                </Link>
                 <div class="ms-4">
-                    <div class="text-base font-semibold text-gray-800 dark:text-neutral-400 hover:text-blue-700">{{ content.repost.author.name }}</div>
+                    <div class="flex items-center">
+                        <Link :href="route('profile.show', content.author.id)" class="text-base font-semibold text-gray-800 dark:text-neutral-400 hover:text-blue-700 me-1">{{ content.author.name }}</Link>
+                        <div class="flex flex-wrap gap-x-1" v-if="content.repost.tags && content.repost.tags.length > 0">
+                            <p class="text-sm text-gray-800 dark:text-gray-200">with </p>
+                            <p class="text-sm text-blue-700 dark:text-gray-200">
+                                {{ formatTags(content.repost.tags.map(tag => tag.name)) }}
+                            </p>
+                        </div>
+                    </div>
                     <div class="text-xs text-gray-500 dark:text-neutral-500">{{ content.repost.created_at }}</div>
                 </div>
-            </Link>
+            </div>
             <div class="mt-2 text-gray-800 text-wrap text-sm dark:text-neutral-400" v-html="content.repost.post"></div>
 
             <!-- Image Grid -->
             <PostMedia :medias="content.repost.media" v-if="content.repost.media.length > 0" />
             <!-- End Image Grid -->
-
-            <div class="flex flex-wrap mt-2 gap-x-1" v-if="content.repost.tags && content.repost.tags.length > 0">
-                <p class="text-xs text-gray-800 dark:text-gray-200">Tags: </p>
-                <p class="text-xs text-blue-700 italic dark:text-gray-200" v-for="tag in content.repost.tags" :key="tag.id">
-                    {{ tag.name }},
-                </p>
-            </div>
         </div>
     </div>
 
+    <!-- if repost empty -->
     <div class="cursor-pointer" @click="showPost(content.id)" v-else>
-        <Link :href="route('profile.show', content.author.id)" class="flex items-center">
-            <div class="shrink-0">
+        <div class="flex items-center">
+            <Link :href="route('profile.show', content.author.id)" class="shrink-0">
                 <img class="size-10 rounded-full" :src="content.author.avatar" alt="Avatar">
-            </div>
+            </Link>
             <div class="ms-4">
-                <div class="text-base font-semibold text-gray-800 dark:text-neutral-400 hover:text-blue-700">{{ content.author.name }}</div>
+                <div class="flex items-center">
+                    <Link :href="route('profile.show', content.author.id)" class="text-base font-semibold text-gray-800 dark:text-neutral-400 hover:text-blue-700 me-1">{{ content.author.name }}</Link>
+                    <div class="flex flex-wrap gap-x-1" v-if="content.tags && content.tags.length > 0">
+                        <p class="text-sm text-gray-800 dark:text-gray-200">with </p>
+                        <p class="text-sm text-blue-700 dark:text-gray-200">
+                            {{ formatTags(content.tags.map(tag => tag.name)) }}
+                        </p>
+                    </div>
+                </div>
                 <div class="text-xs text-gray-500 dark:text-neutral-500">{{ content.created_at }}</div>
             </div>
             <span v-if="!content.published && status" class="py-1 px-3 inline-flex items-center gap-x-1 ms-auto text-xs font-medium bg-red-100 text-red-800 rounded-full dark:bg-red-500/10 dark:text-red-500">
@@ -199,19 +224,13 @@ const openDeleteCommentConfirm = (commentId) => {
             <span v-if="content.published && status" class="py-1 px-3 inline-flex items-center gap-x-1 ms-auto text-xs font-medium bg-teal-100 text-teal-800 rounded-full dark:bg-teal-500/10 dark:text-teal-500">
                       <CheckCircle class="size-3" />Published
                     </span>
-        </Link>
+        </div>
         <div class="mt-2 text-gray-800 text-wrap text-sm dark:text-neutral-400" v-html="content.post"></div>
 
         <!-- Image Grid -->
         <PostMedia :medias="content.media" v-if="content.media.length > 0" />
         <!-- End Image Grid -->
 
-        <div class="flex flex-wrap mt-2 gap-x-1" v-if="content.tags && content.tags.length > 0">
-            <p class="text-xs text-gray-800 dark:text-gray-200">Tags: </p>
-            <p class="text-xs text-blue-700 italic dark:text-gray-200" v-for="tag in content.tags" :key="tag.id">
-                {{ tag.name }},
-            </p>
-        </div>
     </div>
 
     <div class="inline-flex gap-x-3">
@@ -484,27 +503,24 @@ const openDeleteCommentConfirm = (commentId) => {
                                 <!-- Post Content -->
                                 <div v-if="postDetails" class="space-y-4">
                                     <!-- Post Header -->
-                                    <div class="flex items-center space-x-3">
-                                        <img
-                                            :src="postDetails.author.avatar"
-                                            :alt="`${postDetails.author.name}'s avatar`"
-                                            class="w-12 h-12 rounded-full"
-                                        />
-                                        <div>
-                                            <h4 class="font-semibold text-gray-800 dark:text-white">
-                                                {{ postDetails.author.name }}
-                                            </h4>
-                                            <p class="text-xs text-gray-500 dark:text-neutral-400">
-                                                {{ postDetails.created_at }}
-                                            </p>
+                                    <div class="flex items-center">
+                                        <Link :href="route('profile.show', postDetails.author.id)" class="shrink-0">
+                                            <img class="size-10 rounded-full" :src="postDetails.author.avatar" alt="Avatar">
+                                        </Link>
+                                        <div class="ms-4">
+                                            <div class="flex items-center">
+                                                <Link :href="route('profile.show', postDetails.author.id)" class="text-base font-semibold text-gray-800 dark:text-neutral-400 hover:text-blue-700 me-1">{{ content.author.name }}</Link>
+                                                <div class="flex flex-wrap gap-x-1" v-if="postDetails.tags && postDetails.tags.length > 0">
+                                                    <p class="text-sm text-gray-800 dark:text-gray-200">with </p>
+                                                    <p class="text-sm text-blue-700 dark:text-gray-200">
+                                                        {{ formatTags(postDetails.tags.map(tag => tag.name)) }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="text-xs text-gray-500 dark:text-neutral-500">{{ postDetails.created_at }}</div>
                                         </div>
                                     </div>
-
-                                    <!-- Post Text -->
-                                    <div
-                                        class="text-sm text-gray-700 dark:text-neutral-300"
-                                        v-html="postDetails.post"
-                                    ></div>
+                                    <div class="mt-2 text-gray-800 text-wrap text-sm dark:text-neutral-400" v-html="postDetails.post"></div>
 
                                     <!-- Post Media -->
                                     <PostMedia
@@ -528,26 +544,6 @@ const openDeleteCommentConfirm = (commentId) => {
                                         <PostMedia :medias="postDetails.repost.media" v-if="postDetails.repost.media.length > 0" />
                                         <!-- End Image Grid -->
 
-                                        <div class="flex flex-wrap mt-2 gap-x-1" v-if="postDetails.repost.tags && postDetails.repost.tags.length > 0">
-                                            <p class="text-xs text-gray-800 dark:text-gray-200">Tags: </p>
-                                            <p class="text-xs text-blue-700 italic dark:text-gray-200" v-for="tag in postDetails.repost.tags" :key="tag.id">
-                                                {{ tag.name }},
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <!-- Post Tags -->
-                                    <div
-                                        v-if="postDetails.tags && postDetails.tags.length > 0"
-                                        class="flex flex-wrap gap-2"
-                                    >
-                                    <span
-                                        v-for="tag in postDetails.tags"
-                                        :key="tag.id"
-                                        class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
-                                    >
-                                        {{ tag.name }}
-                                    </span>
                                     </div>
 
                                     <div class="inline-flex gap-x-3">
