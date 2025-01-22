@@ -30,7 +30,9 @@ class CreateComment
             }
 
             $postUser = Post::find($request->post_id)?->author;
-            Notification::send($postUser, new NewComment($comment, User::find(auth()->id())));
+            if(auth()->id() !== $postUser->id) {
+                Notification::send($postUser, new NewComment($comment, User::find(auth()->id())));
+            }
 
             DB::commit();
             return true;

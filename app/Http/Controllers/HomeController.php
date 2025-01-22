@@ -94,7 +94,8 @@ class HomeController extends Controller
             ->where('id', $id)
             ->first();
 
-        return Inertia::render('Homepage/PostDetail', compact('post'));
+        return response()->json($post);
+//        return Inertia::render('Homepage/PostDetail', compact('post'));
     }
 
     public function createPost()

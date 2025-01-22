@@ -1,5 +1,5 @@
 <script setup>
-import {Head, useForm} from "@inertiajs/vue3";
+import {Head, useForm, Link} from "@inertiajs/vue3";
 import {AlertCircle, ChevronDown, ImagePlus, Loader2, X} from "lucide-vue-next";
 import {computed, onMounted, ref} from "vue";
 import HomeLayout from "@/Layouts/HomeLayout.vue";
@@ -206,8 +206,10 @@ onMounted(() => {
         <div class="w-full">
             <!-- Card -->
             <div class="bg-white rounded-xl shadow p-4 dark:bg-neutral-800">
-                <div class="mb-2">
+                <div class="mb-2 flex justify-between">
                     <label class="font-semibold text-gray-800 dark:text-neutral-200">New Post</label>
+                    <Link :href="route('home')" type="button" class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 text-gray-800 hover:border-blue-600 hover:text-blue-600 focus:outline-none focus:border-blue-600 focus:text-blue-600 disabled:opacity-50">
+                        Cancel</Link>
                 </div>
 
                 <!-- Media Preview -->

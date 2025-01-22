@@ -164,7 +164,7 @@ const otherMedia = computed(() => {
     <Teleport to="body">
         <div
         v-if="isModalOpen"
-        class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+        class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center" style="position: absolute; z-index: 9999"
         @click.stop="(e) => {
             if (e.target === e.currentTarget) {
                 closeModal();
