@@ -12,6 +12,7 @@ const props = defineProps({
 const isModalOpen = ref(false);
 const carouselMedia = ref([]);
 const currentIndex = ref(0);
+const filteredIndex = ref(0);
 
 const previewMedia = (media) => {
     if (Array.isArray(media)) {
@@ -61,7 +62,11 @@ const filteredImages = computed(() => {
 });
 
 const otherMedia = computed(() => {
-    return props.medias.filter((media, index) => index !== 0);
+    let i = 0;
+    if (props.medias[0].mime_type.startsWith('video/')) {
+        i = 1;
+    }
+    return props.medias.filter((media, index) => index !== i);
 });
 </script>
 
@@ -96,7 +101,6 @@ const otherMedia = computed(() => {
                 </div>
             </div>
 
-            <!-- Kolom Kedua & Ketiga: Semua Media -->
             <div class="col-span-1 grid grid-rows-2 gap-y-0.5">
                 <div
                     v-for="(media, index) in otherMedia"
@@ -114,7 +118,7 @@ const otherMedia = computed(() => {
                     <img v-else
                          :src="media.preview_url"
                          :alt="media.name"
-                         :class="['hover:opacity-90 cursor-pointer bg-center bg-cover', small === true ? 'h-32' : 'w-full h-40']"
+                         :class="['hover:opacity-90 cursor-pointer object-cover', small === true ? 'h-32' : 'w-full h-40']"
                          @click.stop="previewMedia(medias)"
                     />
                 </div>
