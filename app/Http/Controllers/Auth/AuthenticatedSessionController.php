@@ -59,7 +59,7 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
-        $request->user()->update(['is_login' => 0, 'last_login_at' => now()]);
+        $request->user()->update(['is_login' => 0, 'last_login' => now()]);
         Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
