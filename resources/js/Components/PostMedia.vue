@@ -12,15 +12,14 @@ const props = defineProps({
 const isModalOpen = ref(false);
 const carouselMedia = ref([]);
 const currentIndex = ref(0);
-const filteredIndex = ref(0);
 
-const previewMedia = (media) => {
+const previewMedia = (media, initialIndex = 0) => {
     if (Array.isArray(media)) {
         carouselMedia.value = media;
     } else {
         carouselMedia.value = [media];
     }
-    currentIndex.value = 0;
+    currentIndex.value = initialIndex;
     isModalOpen.value = true;
 }
 
@@ -57,16 +56,20 @@ const handleKeydown = (e) => {
     }
 }
 
+const usedIndex = ref(0);
+const newMedia = props.medias;
 const filteredImages = computed(() => {
-    return props.medias.filter((media) => media.mime_type.startsWith('image/'))
+    if(isVideo(props.medias[0])) {
+        usedIndex.value = 1;
+        newMedia.push(props.medias.shift())
+    }
+    usedIndex.value = 0;
+    return newMedia;
+
 });
 
 const otherMedia = computed(() => {
-    let i = 0;
-    if (props.medias[0].mime_type.startsWith('video/')) {
-        i = 1;
-    }
-    return props.medias.filter((media, index) => index !== i);
+    return newMedia.filter((media, index) => index !== usedIndex.value);
 });
 </script>
 
@@ -78,7 +81,7 @@ const otherMedia = computed(() => {
                     controls
                     :src="medias[0].original_url"
                     class="w-full h-80"
-                    @click.stop="previewMedia(medias)"
+                    @click.stop="previewMedia(medias[0])"
                 ></video>
             </div>
 
@@ -97,6 +100,7 @@ const otherMedia = computed(() => {
                         :src="media.preview_url"
                         alt="Media"
                         class="w-full h-80 object-cover"
+                        @click.stop="previewMedia(newMedia, index)"
                     />
                 </div>
             </div>
@@ -112,14 +116,14 @@ const otherMedia = computed(() => {
                             controls
                             :src="media.original_url"
                             class="w-full h-40 object-cover pb-0.5"
-                            @click.stop="previewMedia(medias)"
+                            @click.stop="previewMedia(newMedia, index+1)"
                         ></video>
                     </div>
                     <img v-else
                          :src="media.preview_url"
                          :alt="media.name"
                          :class="['hover:opacity-90 cursor-pointer object-cover', small === true ? 'h-32' : 'w-full h-40']"
-                         @click.stop="previewMedia(medias)"
+                         @click.stop="previewMedia(newMedia, index+1)"
                     />
                 </div>
             </div>
@@ -136,14 +140,14 @@ const otherMedia = computed(() => {
                         controls
                         :src="media.original_url"
                         class="w-full h-40 object-cover"
-                        @click.stop="previewMedia(medias)"
+                        @click.stop="previewMedia(medias, index)"
                     ></video>
                 </div>
                 <img v-else
                     :src="media.preview_url"
                     :alt="media.name"
                      :class="['hover:opacity-90 cursor-pointer object-cover', small === true ? 'h-32' : 'w-full h-40']"
-                    @click.stop="previewMedia(medias)"
+                    @click.stop="previewMedia(medias, index)"
                 />
                 <!-- Overlay untuk gambar lebih dari 4 -->
                 <div
