@@ -24,6 +24,7 @@ Route::middleware(['auth', 'verified', 'role:user|public_user'])->group(function
     Route::prefix('user-post')->name('user-post.')->group(function () {
         Route::get('get', [PostController::class, 'get'])->name('get');
         Route::post('store', [PostController::class, 'store'])->name('store');
+        Route::post('share', [PostController::class, 'share'])->name('share');
         Route::post('store', [PostController::class, 'store'])->name('store');
         Route::get('show/{id}', [HomeController::class, 'showPost'])->name('show-post');
         Route::get('liked-by/{id}', [HomeController::class, 'postLikedBy'])->name('liked-by');
