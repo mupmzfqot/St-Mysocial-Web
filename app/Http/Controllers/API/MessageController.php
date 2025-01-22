@@ -52,14 +52,23 @@ class MessageController extends Controller
 
     public function getConversation(Request $request, OpenConversation $openConversation)
     {
-        $authUserId = $request->user()->id;
-        $recipientId = $request->recipient_id;
+        try {
+            $authUserId = $request->user()->id;
+            $recipientId = $request->recipient_id;
 
-        $results = $openConversation->handle($recipientId, $authUserId);
+            $results = $openConversation->handle($recipientId, $authUserId);
 
-        return response()->json([
-            'data' => $results['messages']
-        ]);
+            return response()->json([
+                'error' => 0,
+                'conversation_id' => $results['conversation']->id,
+                'data' => $results['messages']
+            ]);
+        } Catch (\Exception $e) {
+            return response()->json([
+                'error' => 1,
+                'message' => $e->getMessage()
+            ]);
+        }
 
     }
 
