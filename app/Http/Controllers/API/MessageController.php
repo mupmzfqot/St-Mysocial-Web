@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Actions\Messages\OpenConversation;
 use App\Events\MessageSent;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
@@ -49,52 +50,42 @@ class MessageController extends Controller
         ]);
     }
 
-    public function getConversation(Request $request)
+    public function getConversation(Request $request, OpenConversation $openConversation)
     {
         $authUserId = $request->user()->id;
         $recipientId = $request->recipient_id;
 
-        $conversation = Conversation::query()
-            ->where('type', 'private')
-            ->whereHas('users', function ($query) use ($authUserId, $recipientId) {
-                $query->whereIn('user_id', [$authUserId, $recipientId]);
-            }, '=', 2)
-            ->first();
-
-        if (!$conversation) {
-            $conversation = Conversation::query()->create(['type' => 'private']);
-            $conversation->users()->attach([$authUserId, $recipientId], ['joined_at' => now()]);
-        }
-
-        $messages = $conversation->messages()
-            ->with('sender')
-            ->orderBy('created_at')
-            ->get()
-            ->map(function ($message) use($recipientId) {
-                return $this->formatResult($message, $recipientId);
-            });
+        $results = $openConversation->handle($recipientId, $authUserId);
 
         return response()->json([
-            'data' => $messages
+            'data' => $results['messages']
         ]);
 
     }
 
     public function sendMessage(Request $request)
     {
-        $conversation = Conversation::query()->find($request->conversation_id);
-        Gate::authorize('send', $conversation);
+        try {
+            $conversation = Conversation::query()->find($request->conversation_id);
+            Gate::authorize('send', $conversation);
 
-        $message = $conversation->messages()->create([
-            'sender_id' => auth()->id(),
-            'content' => $request->message,
-        ]);
+            $message = $conversation->messages()->create([
+                'sender_id' => auth()->id(),
+                'content' => $request->message,
+            ]);
 
-        broadcast(new MessageSent($message));
+            broadcast(new MessageSent($message));
 
-        return response()->json([
-            'data' => $this->formatResult($message, $request->recipient_id),
-        ]);
+            return response()->json([
+                'error' => 0,
+                'data' => $this->formatResult($message, $request->recipient_id),
+            ]);
+        } Catch (\Exception $exception) {
+            return response()->json([
+                'error' => 1,
+                'message' => $exception->getMessage(),
+            ]);
+        }
 
     }
 

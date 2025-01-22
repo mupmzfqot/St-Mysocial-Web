@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\PostResource;
 use App\Http\Resources\UserResource;
 use App\Models\Post;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class ProfileController extends Controller
 {
@@ -15,6 +17,26 @@ class ProfileController extends Controller
         return response()->json([
             'data' => new UserResource($request->user())
         ]);
+    }
+
+    public function get(Request $request)
+    {
+        try {
+            $request->validate([
+                'user_id' => 'required|exists:users,id'
+            ]);
+
+            $user = User::find($request->user_id);
+            return response()->json([
+                'error' => 0,
+                'data' => new UserResource($user)
+            ]);
+        } Catch (ValidationException $e) {
+            return response()->json([
+                'error' => 1,
+                'message' => $e->getMessage()
+            ]);
+        }
     }
 
     public function update(Request $request)

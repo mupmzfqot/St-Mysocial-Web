@@ -17,6 +17,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::resource('user-profile', ProfileController::class)->only(['index', 'update']);
     Route::resource('posts', PostController::class);
+    Route::get('profile', [ProfileController::class, 'get']);
 
     Route::get('top-posts', [PostController::class, 'topPosts']);
     Route::post('posts/comment', [PostController::class, 'storeComments']);
@@ -37,6 +38,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('conversation-list', [MessageController::class, 'conversationList']);
         Route::get('get', [MessageController::class, 'getConversation']);
         Route::post('send', [MessageController::class, 'sendMessage']);
+        Route::post('conversation', [MessageController::class, 'openConversation']);
     });
 
     Route::get('search-user', [UserController::class, 'searchUser']);

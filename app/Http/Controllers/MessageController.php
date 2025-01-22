@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Messages\OpenConversation;
 use App\Events\MessageSent;
 use App\Models\Conversation;
 use App\Models\User;
@@ -49,39 +50,14 @@ class MessageController extends Controller
         return Inertia::render('Messages/Index', compact('conversations'));
     }
 
-    public function openConversation(Request $request, $user_id)
+    public function openConversation(Request $request, $user_id, OpenConversation $openConversation)
     {
         $authUserId = auth()->id();
         $user = User::find($user_id);
 
-        $conversation = Conversation::query()
-            ->where('type', 'private')
-            ->whereHas('users', function ($query) use ($authUserId, $user_id) {
-                $query->whereIn('user_id', [$authUserId, $user_id]);
-            }, '=', 2)
-            ->first();
-
-        if (!$conversation) {
-            $conversation = Conversation::query()->create(['type' => 'private']);
-            $conversation->users()->attach([$authUserId, $user_id], ['joined_at' => now()]);
-        }
-
-        $messages = $conversation->messages()
-            ->with('sender')
-            ->orderBy('created_at')
-            ->get()
-            ->map(function ($message) {
-                return [
-                    'id' => $message->id,
-                    'conversation_id' => $message->conversation_id,
-                    'content' => $message->content,
-                    'sender_id' => $message->sender_id,
-                    'sender_name' => $message->sender->name,
-
-                ];
-            });
-
-        Gate::authorize('view', $conversation);
+        $results = $openConversation->handle($user_id, $authUserId);
+        $conversation = $results['conversation'];
+        $messages = $results['messages'];
 
         return inertia('Messages/Show', compact('conversation', 'messages', 'user'));
     }
