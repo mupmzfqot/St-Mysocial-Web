@@ -32,6 +32,7 @@ class UserController extends Controller
                     ->orWhere('username', 'like', '%' . $searchTerm . '%');
             })
             ->whereNot('id', $request->user()->id)
+            ->where('is_active', true)
             ->orderBy('name', 'asc')
             ->paginate(20);
 

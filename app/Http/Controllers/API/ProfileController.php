@@ -26,7 +26,9 @@ class ProfileController extends Controller
                 'user_id' => 'required|exists:users,id'
             ]);
 
-            $user = User::find($request->user_id);
+            $user = User::query()->where('id', $request->user_id)
+                ->where('is_active', true)
+                ->first();
             return response()->json([
                 'error' => 0,
                 'data' => new UserResource($user)

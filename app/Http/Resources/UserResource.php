@@ -25,6 +25,7 @@ class UserResource extends JsonResource
             'created_at'        => $this->created_at->toDateTimeString(),
             'updated_at'        => $this->updated_at->toDateTimeString(),
             'roles'             => $roles,
+            'gender'            => $this->gender,
             'profile_img'       => $this->avatar,
             'cover_img'         => $this->cover_image,
             'user_type'         => in_array('user', array_column($roles, 'name')) ? 'st' : 'public',
