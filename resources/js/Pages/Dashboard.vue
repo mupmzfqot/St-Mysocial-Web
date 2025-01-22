@@ -121,19 +121,6 @@ const props = defineProps({
                 <!-- End Card -->
 
                 <!-- Card -->
-                <Link :href="route('user-posts')" class="flex flex-col bg-white border shadow-sm rounded-xl dark:bg-neutral-900 dark:border-neutral-800">
-                    <div class="p-4 md:p-5 flex justify-between gap-x-3">
-                        <div class="flex items-center text-xl font-medium text-gray-800 dark:text-neutral-200">
-                            Individual do postings
-                        </div>
-                        <div class="shrink-0 flex justify-center items-center size-[46px] bg-blue-600 text-white rounded-full dark:bg-blue-900 dark:text-blue-200">
-                            <File class="shrink-0 size-5" />
-                        </div>
-                    </div>
-                </Link>
-                <!-- End Card -->
-
-                <!-- Card -->
                 <Link :href="route('most-user-posts')" class="flex flex-col bg-white border shadow-sm rounded-xl dark:bg-neutral-900 dark:border-neutral-800">
                     <div class="p-4 md:p-5 flex justify-between gap-x-3">
                         <div class="flex items-center gap-x-2 text-wrap text-xl font-medium text-gray-800 dark:text-neutral-200">

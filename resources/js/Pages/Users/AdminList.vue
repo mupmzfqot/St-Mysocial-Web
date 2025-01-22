@@ -66,14 +66,6 @@ const updateStatus = (id, status) => {
                                 </div>
                             </div>
                             <!-- End Input -->
-
-<!--                            <div class="sm:col-span-2 md:grow">-->
-<!--                                <div class="flex justify-end gap-x-2">-->
-<!--                                    <Link :href="route('admin.form')" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none" aria-haspopup="menu" aria-expanded="false" aria-label="Dropdown">-->
-<!--                                        <Plus class="shrink-0 size-4" />Create Admin-->
-<!--                                    </Link>-->
-<!--                                </div>-->
-<!--                            </div>-->
                         </div>
                         <!-- End Header -->
 
@@ -101,6 +93,14 @@ const updateStatus = (id, status) => {
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                           Joined Date
+                                        </span>
+                                    </div>
+                                </th>
+
+                                <th scope="col" class="px-6 py-3 text-start">
+                                    <div class="flex items-center gap-x-2">
+                                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
+                                          Last Login
                                         </span>
                                     </div>
                                 </th>
@@ -142,6 +142,13 @@ const updateStatus = (id, status) => {
                                     <a class="block p-6" href="#">
                                         <span class="text-sm text-gray-600 dark:text-neutral-400">
                                             {{ user.created_date }}
+                                        </span>
+                                    </a>
+                                </td>
+                                <td class="size-px whitespace-nowrap">
+                                    <a class="block p-6" href="#">
+                                        <span class="text-sm text-gray-600 dark:text-neutral-400">
+                                            {{ user.last_login }}
                                         </span>
                                     </a>
                                 </td>

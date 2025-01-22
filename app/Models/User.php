@@ -53,7 +53,8 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'updated_at' => 'datetime:d F Y H:i A'
+            'updated_at' => 'datetime:d F Y H:i A',
+            'last_login' => 'datetime:d F Y H:i A'
         ];
     }
 

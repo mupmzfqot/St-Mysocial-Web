@@ -181,6 +181,14 @@ const setAdmin = (user) => {
                                 <th scope="col" class="px-6 py-3 text-start">
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
+                                          Last Login
+                                        </span>
+                                    </div>
+                                </th>
+
+                                <th scope="col" class="px-6 py-3 text-start">
+                                    <div class="flex items-center gap-x-2">
+                                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                             User Category
                                         </span>
                                     </div>
@@ -222,6 +230,11 @@ const setAdmin = (user) => {
                                 <td class="size-px whitespace-nowrap align-top">
                                     <a class="block p-6" href="#">
                                         <span class="text-sm text-gray-600 dark:text-neutral-400">{{ user.created_date }}</span>
+                                    </a>
+                                </td>
+                                <td class="size-px whitespace-nowrap align-top">
+                                    <a class="block p-6" href="#">
+                                        <span class="text-sm text-gray-600 dark:text-neutral-400">{{ user.last_login }}</span>
                                     </a>
                                 </td>
                                 <td class="size-px whitespace-nowrap align-top">
