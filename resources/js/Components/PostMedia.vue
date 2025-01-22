@@ -131,18 +131,18 @@ const otherMedia = computed(() => {
                 :key="media.id"
                 class="relative"
             >
-                <div v-if="isVideo(media)" class="video-container">
+                <div v-if="isVideo(media)" class="">
                     <video
                         controls
                         :src="media.original_url"
-                        class="w-full h-full object-cover"
+                        class="w-full h-40 object-cover"
                         @click.stop="previewMedia(medias)"
                     ></video>
                 </div>
                 <img v-else
                     :src="media.preview_url"
                     :alt="media.name"
-                     :class="['hover:opacity-90 cursor-pointer bg-center bg-cover', small === true ? 'h-32' : 'w-full h-40']"
+                     :class="['hover:opacity-90 cursor-pointer object-cover', small === true ? 'h-32' : 'w-full h-40']"
                     @click.stop="previewMedia(medias)"
                 />
                 <!-- Overlay untuk gambar lebih dari 4 -->
