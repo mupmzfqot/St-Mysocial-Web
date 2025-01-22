@@ -13,4 +13,9 @@ class PostTag extends Model
     {
         return $this->belongsTo(User::class)->select(['id', 'name']);
     }
+
+    public function post(): BelongsTo
+    {
+        return $this->belongsTo(Post::class);
+    }
 }
