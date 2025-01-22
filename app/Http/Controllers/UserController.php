@@ -172,6 +172,10 @@ class UserController extends Controller
 
     public function resetPassword(Request $request, $id)
     {
+        $request->validate([
+            'password' => 'required|string|confirmed',
+            'password_confirmation' => 'required|string|same:password',
+        ]);
         $user = User::query()->find($id);
         $user->password = Hash::make($request->password);
         $user->save();

@@ -3,11 +3,16 @@
 import {Head, Link, router, useForm} from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import Breadcrumbs from "@/Components/Breadcrumbs.vue";
-import {CheckCircle, ChevronRight, MinusCircle, Search, UserCircle} from "lucide-vue-next";
+import {CheckCircle, ChevronRight, MinusCircle} from "lucide-vue-next";
 import TextInput from "@/Components/TextInput.vue";
-import Pagination from "@/Components/Pagination.vue";
-import {reactive} from "vue";
+import {reactive, ref} from "vue";
 import ConfirmDialog from "@/Components/ConfirmDialog.vue";
+import Modal from "@/Components/Modal.vue";
+import PrimaryButton from "@/Components/PrimaryButton.vue";
+import InputError from "@/Components/InputError.vue";
+import InputLabel from "@/Components/InputLabel.vue";
+import StrongPassword from "@/Components/StrongPassword.vue";
+import TogglePassword from "@/Components/TogglePassword.vue";
 
 const props = defineProps({
     user: Object,
@@ -19,9 +24,6 @@ const form = useForm({
     name: props.user.name,
     username: props.user.username,
     email: props.user.email,
-    // address: props.user.address || '',
-    // instagram: props.user.instagram || '',
-    // facebook: props.user.facebook || '',
 });
 
 const updateProfile = () => {
@@ -79,12 +81,29 @@ const updateStatus = () => {
     confirmData.data = { is_active : props.user.is_active !== 1 };
 }
 
-const resetPassword = () => {
-    confirmData.id = props.user.id;
-    confirmData.message = `Do you want to reset user password to : <b>${randomPassword}</b>?`;
-    confirmData.url = route('user.reset-password', props.user.id);
-    confirmData.data = { password : randomPassword };
-}
+const passwordResetForm = useForm({
+    password: '',
+    password_confirmation: ''
+});
+
+const isPasswordResetModalOpen = ref(false);
+
+const openPasswordResetModal = () => {
+    isPasswordResetModalOpen.value = true;
+};
+
+const closePasswordResetModal = () => {
+    isPasswordResetModalOpen.value = false;
+    passwordResetForm.reset();
+};
+
+const submitPasswordReset = () => {
+    passwordResetForm.post(route('user.reset-password', props.user.id), {
+        onSuccess: () => {
+            closePasswordResetModal();
+        }
+    });
+};
 
 const verifyAccount = () => {
     let status = props.user.is_active ? 'Unverified' : 'Verified';
@@ -198,31 +217,11 @@ const verifyAccount = () => {
                                             </div>
                                         </td>
                                         <td class="h-px w-72 min-w-72">
-                                            <div class="px-6 py-2">
-                                                <p class="block text-sm text-gray-800 dark:text-neutral-200">
-                                                    This password will reset to : {{ randomPassword }}
-                                                </p>
-                                            </div>
                                         </td>
                                         <td class="h-px w-72 min-w-72">
-                                            <a href="#" @click="resetPassword" class="text-sm text-gray-800 dark:text-neutral-200"  aria-haspopup="dialog" aria-expanded="false" aria-controls="hs-scale-animation-modal" data-hs-overlay="#confirm-dialog">
+                                            <a href="#" @click="openPasswordResetModal" class="text-sm text-gray-800 dark:text-neutral-200">
                                                 Reset Password
                                             </a>
-                                        </td>
-                                    </tr>
-
-                                    <tr class="bg-white hover:bg-gray-50 dark:bg-neutral-900 dark:hover:bg-neutral-800">
-                                        <td class="size-px whitespace-nowrap">
-                                            <div class="px-6 py-2">
-                                                <p class="block text-sm text-gray-800 dark:text-neutral-200">SignUp IP Address</p>
-                                            </div>
-                                        </td>
-                                        <td class="h-px w-72 min-w-72">
-                                            <div class="px-6 py-2">
-                                                <p class="block text-sm text-gray-800 dark:text-neutral-200"></p>
-                                            </div>
-                                        </td>
-                                        <td class="h-px w-72 min-w-72">
                                         </td>
                                     </tr>
 
@@ -410,69 +409,6 @@ const verifyAccount = () => {
                                             </td>
                                         </tr>
 
-<!--                                        <tr>-->
-<!--                                            <td class="size-px whitespace-nowrap">-->
-<!--                                                <div class="px-6 py-3">-->
-<!--                                                    <span class="text-sm text-gray-600 dark:text-neutral-400">Location</span>-->
-<!--                                                </div>-->
-<!--                                            </td>-->
-<!--                                            <td class="size-px whitespace-nowrap">-->
-<!--                                                <div class="px-6 py-3">-->
-<!--                                                    <TextInput-->
-<!--                                                        id="address"-->
-<!--                                                        type="text"-->
-<!--                                                        class="mt-1 block w-full"-->
-<!--                                                        v-model="form.address"-->
-<!--                                                        required-->
-<!--                                                        autofocus-->
-<!--                                                        autocomplete="address"-->
-<!--                                                    />-->
-<!--                                                </div>-->
-<!--                                            </td>-->
-<!--                                        </tr>-->
-
-<!--                                        <tr>-->
-<!--                                            <td class="size-px whitespace-nowrap">-->
-<!--                                                <div class="px-6 py-3">-->
-<!--                                                    <span class="text-sm text-gray-600 dark:text-neutral-400">Facebook Page</span>-->
-<!--                                                </div>-->
-<!--                                            </td>-->
-<!--                                            <td class="size-px whitespace-nowrap">-->
-<!--                                                <div class="px-6 py-3">-->
-<!--                                                    <TextInput-->
-<!--                                                        id="facebook"-->
-<!--                                                        type="text"-->
-<!--                                                        class="mt-1 block w-full"-->
-<!--                                                        v-model="form.facebook"-->
-<!--                                                        required-->
-<!--                                                        autofocus-->
-<!--                                                        autocomplete="facebook"-->
-<!--                                                    />-->
-<!--                                                </div>-->
-<!--                                            </td>-->
-<!--                                        </tr>-->
-
-<!--                                        <tr>-->
-<!--                                            <td class="size-px whitespace-nowrap">-->
-<!--                                                <div class="px-6 py-3">-->
-<!--                                                    <span class="text-sm text-gray-600 dark:text-neutral-400">Instagram Page</span>-->
-<!--                                                </div>-->
-<!--                                            </td>-->
-<!--                                            <td class="size-px whitespace-nowrap">-->
-<!--                                                <div class="px-6 py-3">-->
-<!--                                                    <TextInput-->
-<!--                                                        id="instagram"-->
-<!--                                                        type="text"-->
-<!--                                                        class="mt-1 block w-full"-->
-<!--                                                        v-model="form.instagram"-->
-<!--                                                        required-->
-<!--                                                        autofocus-->
-<!--                                                        autocomplete="instagram"-->
-<!--                                                    />-->
-<!--                                                </div>-->
-<!--                                            </td>-->
-<!--                                        </tr>-->
-
                                         <tr>
                                             <td class="size-px whitespace-nowrap">
                                                 <div class="px-6 py-3">
@@ -541,6 +477,38 @@ const verifyAccount = () => {
                 </div>
             </div>
         </div>
+
+        <Modal :show="isPasswordResetModalOpen" @close="closePasswordResetModal">
+        <div class="p-6">
+            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+                Reset Password
+            </h2>
+
+            <form @submit.prevent="submitPasswordReset" class="mt-6 space-y-6">
+                <div>
+                    <label for="password" class="block text-sm mb-2 dark:text-white">Password</label>
+                    <div class="relative">
+                        <StrongPassword required v-model="passwordResetForm.password" />
+                    </div>
+                    <p class="text-sm text-red-600 mt-2" v-if="passwordResetForm.errors.password">{{ passwordResetForm.errors.password }}</p>
+                </div>
+
+                <div>
+                    <label for="confirm-password" class="block text-sm mb-2 dark:text-white">Confirm Password</label>
+                    <TogglePassword v-model="passwordResetForm.password_confirmation" placeholder="Confirm Password" />
+                </div>
+
+                <div class="mt-6 flex justify-end">
+                    <PrimaryButton
+                        :class="{ 'opacity-25': passwordResetForm.processing }"
+                        :disabled="passwordResetForm.processing"
+                    >
+                        Reset Password
+                    </PrimaryButton>
+                </div>
+            </form>
+        </div>
+    </Modal>
 
         <ConfirmDialog :data="confirmData" />
     </AuthenticatedLayout>
