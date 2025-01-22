@@ -235,6 +235,17 @@ onMounted(() => {
                                 Your browser does not support the video tag.
                             </video>
 
+                            <div
+                                v-else-if="file.type === 'application/pdf'"
+                                class="w-full h-full flex items-center justify-center bg-gray-100"
+                            >
+                                <img
+                                    src="../../../images/pdf-icon.svg"
+                                    alt="PDF Icon"
+                                    class="w-1/2 h-1/2 object-contain"
+                                />
+                            </div>
+
                             <!-- Remove button -->
                             <button
                                 @click="removeMedia(index)"
