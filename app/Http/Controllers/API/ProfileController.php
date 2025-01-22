@@ -27,7 +27,7 @@ class ProfileController extends Controller
             ]);
 
             $user = User::query()->where('id', $request->user_id)
-                ->where('is_active', true)
+                ->isActive()
                 ->first();
             return response()->json([
                 'error' => 0,

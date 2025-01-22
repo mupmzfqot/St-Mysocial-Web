@@ -32,7 +32,7 @@ class UserController extends Controller
                     ->orWhere('username', 'like', '%' . $searchTerm . '%');
             })
             ->whereNot('id', $request->user()->id)
-            ->where('is_active', true)
+            ->isActive()
             ->orderBy('name', 'asc')
             ->paginate(20);
 
@@ -54,11 +54,14 @@ class UserController extends Controller
                     $query->where('name', 'user');
                 })
                 ->whereNotNull('email_verified_at')
-                ->where('is_active', true);
+                ->isActive();
 
             $query->where('id', '!=', $authId);
 
-            return UserResource::collection($query->get());
+            return response()->json([
+                'error' => 0,
+                'data' => UserResource::collection($query->get())
+            ]);
         });
     }
 
