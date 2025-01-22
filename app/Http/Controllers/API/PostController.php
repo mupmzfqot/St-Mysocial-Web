@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Actions\Posts\CreateComment;
 use App\Actions\Posts\CreatePostAPI;
+use App\Actions\Posts\Repost;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CommentResource;
 use App\Http\Resources\PostResource;
@@ -197,24 +198,16 @@ class PostController extends Controller
         ], 201);
     }
 
-    public function repost(Request $request)
+    public function repost(Request $request, Repost $repost)
     {
         try {
-            $parentPost = Post::query()->find($request->post_id);
-
-            $repost = Post::query()->firstOrCreate(['repost_id' => $parentPost->id, 'user_id' => $request->user()->id], [
-                'post'  => $request->post,
-                'type'  => $parentPost->type,
-                'published' => $parentPost->published,
-            ]);
-
+            $repostResult = $repost->handle($request->user()->id, $request);
             return response()->json([
                 'error'     => 0,
-                'data'      => new PostResource($repost->load('repost'))
+                'data'      => $repostResult,
             ]);
 
         } catch (\Exception $e) {
-            logger($e);
             return response()->json([
                 'error'     => 1,
                 'message' => $e->getMessage(),

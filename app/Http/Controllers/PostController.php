@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Posts\CreatePost;
+use App\Actions\Posts\Repost;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -86,5 +87,11 @@ class PostController extends Controller
         } catch (\Exception $e) {
             return back()->withErrors(['error' => $e->getMessage()]);
         }
+    }
+
+    public function share(Request $request, Repost $repost)
+    {
+        $repostResult = $repost->handle(auth()->id(), $request);
+        return response()->json($repostResult);
     }
 }
