@@ -233,37 +233,36 @@ const formatTags = (tags) => {
 
     </div>
 
-    <div class="inline-flex gap-x-3">
-        <div class="mt-3 inline-flex items-center gap-x-1 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600">
+    <hr class="my-3 border-1 -mx-4">
+    <div class="inline-flex items-center justify-between">
+
+        <div class="inline-flex items-center gap-x-2 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600">
             <a href="#" v-if="content.is_liked" @click.prevent="unlike(content.id)">
-                <Heart class="shrink-0 size-4 fill-red-500 text-transparent" v-if="content.is_liked" />
+                <Heart class="shrink-0 size-5 fill-red-500 text-transparent" v-if="content.is_liked" />
             </a>
-            <a href="#" @click.prevent="sendLike(content.id)" v-else>
-                <Heart class="shrink-0 size-4 text-gray-500" />
+            <a href="#" class="inline-flex gap-x-2" @click.prevent="sendLike(content.id)" v-else>
+                <Heart class="shrink-0 size-5 text-gray-500" /> {{ content.like_count }} Likes
             </a>
 
             <a href="#" @click.prevent="showLikedBy(content.id)" class="hover:underline" v-if="content.like_count !== 0">
                 {{ content.like_count }} Likes
             </a>
-            <span v-else>
-                {{ content.like_count }} Likes
-            </span>
         </div>
 
-        <a @click.prevent="showPost(content.id)" class="mt-3 inline-flex items-center gap-x-1 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600" href="#">
-            <MessageSquareText class="shrink-0 size-4 text-blue-600" />
+        <a @click.prevent="showPost(content.id)" class="inline-flex items-center gap-x-2 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600" href="#">
+            <MessageSquareText class="shrink-0 size-5 text-blue-600" />
             {{ content.comment_count }} Comments
 
         </a>
 
 
-        <a @click.prevent="openShareModal(content.id)" class="mt-3 inline-flex items-center gap-x-1 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600" href="#">
-            <Repeat2 class="shrink-0 size-4 text-gray-800" />
+        <a @click.prevent="openShareModal(content.id)" class="inline-flex items-center gap-x-2 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600" href="#">
+            <Repeat2 class="shrink-0 size-5 text-gray-800" />
             Share
         </a>
 
-        <a href="#" @click.prevent="openDeleteConfirm(content.id)" v-if="$page.props.auth.user.id === content.user_id" class="mt-3 inline-flex items-center gap-x-1 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-red-900 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600">
-            <XCircle class="shrink-0 size-4 text-red-700" />Delete post
+        <a href="#" @click.prevent="openDeleteConfirm(content.id)" v-if="$page.props.auth.user.id === content.user_id" class="inline-flex items-center gap-x-1 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-red-900 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600">
+            <XCircle class="shrink-0 size-5 text-red-700" />Delete post
         </a>
     </div>
 
@@ -498,7 +497,7 @@ const formatTags = (tags) => {
                             <!-- Modal Header -->
                             <DialogTitle
                                 as="h3"
-                                class="text-lg font-medium leading-6 text-gray-900 dark:text-white border-b pb-2 sticky top-0 bg-white dark:bg-neutral-800"
+                                class="text-lg font-medium leading-6 text-gray-900 dark:text-white pb-2 sticky top-0 bg-white dark:bg-neutral-800"
                             >
                                 <!-- Post Content -->
                                 <div v-if="postDetails" class="space-y-2">
@@ -546,39 +545,38 @@ const formatTags = (tags) => {
 
                                     </div>
 
-                                    <div class="inline-flex gap-x-3">
-                                        <div class="mt-3 inline-flex items-center gap-x-1 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600">
+                                    <hr class="border-1 -mx-6">
+                                    <div class="flex items-center justify-between">
+                                        <div class="inline-flex items-center gap-x-1 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600">
                                             <a href="#" v-if="content.is_liked" @click.prevent="unlike(content.id)">
-                                                <Heart class="shrink-0 size-4 fill-red-500 text-transparent" v-if="content.is_liked" />
+                                                <Heart class="shrink-0 size-5 fill-red-500 text-transparent" v-if="content.is_liked" />
                                             </a>
-                                            <a href="#" @click.prevent="sendLike(content.id)" v-else>
-                                                <Heart class="shrink-0 size-4 text-gray-500" />
+                                            <a href="#" class="inline-flex gap-x-2" @click.prevent="sendLike(content.id)" v-else>
+                                                <Heart class="shrink-0 size-5 text-gray-500" /> {{ content.like_count }} Likes
                                             </a>
 
                                             <a href="#" @click.prevent="showLikedBy(content.id)" class="hover:underline" v-if="content.like_count !== 0">
                                                 {{ content.like_count }} Likes
                                             </a>
-                                            <span v-else>
-                                                {{ content.like_count }} Likes
-                                            </span>
                                         </div>
 
-                                        <a @click.prevent="showPost(content.id)" class="mt-3 inline-flex items-center gap-x-1 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600" href="#">
-                                            <MessageSquareText class="shrink-0 size-4 text-blue-600" />
+                                        <a @click.prevent="showPost(content.id)" class="inline-flex items-center gap-x-2 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600" href="#">
+                                            <MessageSquareText class="shrink-0 size-5 text-blue-600" />
                                             {{ content.comment_count }} Comments
 
                                         </a>
 
 
-                                        <a @click.prevent="openShareModal(content.id)" class="mt-3 inline-flex items-center gap-x-1 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600" href="#">
-                                            <Repeat2 class="shrink-0 size-4 text-gray-800" />
+                                        <a @click.prevent="openShareModal(content.id)" class="inline-flex items-center gap-x-2 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600" href="#">
+                                            <Repeat2 class="shrink-0 size-5 text-gray-800" />
                                             Share
                                         </a>
 
-                                        <a href="#" @click.prevent="openDeleteConfirm(content.id)" v-if="$page.props.auth.user.id === content.user_id" class="mt-3 inline-flex items-center gap-x-1 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-red-900 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600">
-                                            <XCircle class="shrink-0 size-4 text-red-700" />Delete post
+                                        <a href="#" @click.prevent="openDeleteConfirm(content.id)" v-if="$page.props.auth.user.id === content.user_id" class="inline-flex items-center gap-x-2 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-red-900 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600">
+                                            <XCircle class="shrink-0 size-5 text-red-700" />Delete post
                                         </a>
                                     </div>
+                                    <hr class="border-1 -mx-6">
                                 </div>
                             </DialogTitle>
 
