@@ -42,7 +42,7 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
         $request->session()->regenerate();
 
-        auth()->user()->update(['is_login' => 1]);
+        auth()->user()->update(['is_login' => 1, 'last_login' => now()]);
         $role = auth()->user()->getRoleNames()->first();
 
         $redirectRoutes = [
@@ -59,7 +59,7 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
-        $request->user()->update(['is_login' => 0]);
+        $request->user()->update(['is_login' => 0, 'last_login_at' => now()]);
         Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

@@ -39,7 +39,7 @@ class AuthController extends Controller
             ], 403);
         }
 
-        $user->update(['is_login' => 1]);
+        $user->update(['is_login' => 1, 'last_login_at' => now()]);
         $token = $user->createToken($user->name)->plainTextToken;
 
         return response()->json([
@@ -106,7 +106,7 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $request->user()->update(['is_login' => 0]);
+        $request->user()->update(['is_login' => 0, 'last_login_at' => now()]);
         $request->user()->tokens()->delete();
 
         return response()->json([
