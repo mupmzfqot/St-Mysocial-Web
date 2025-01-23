@@ -148,8 +148,8 @@ class PostController extends Controller
         $defaultType = 'st';
         $title = 'Edit Post';
         $stUsers = User::query()->whereHas('roles', function ($query) {
-            $query->where('name', 'user');
-        })
+                $query->where('name', 'user');
+            })
             ->where('is_active', true)
             ->whereNotNull('email_verified_at')
             ->get();

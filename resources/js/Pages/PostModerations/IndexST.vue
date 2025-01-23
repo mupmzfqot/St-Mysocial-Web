@@ -135,10 +135,10 @@ const styledTag = (value) => {
                                         <span class="text-sm text-gray-600 dark:text-neutral-400">{{ post.author.name }}</span>
                                     </a>
                                 </td>
-                                <td class="size-px whitespace-nowrap align-top">
+                                <td class="size-px whitespace-nowrap w-96 py-2">
                                     <span class="text-sm text-gray-600 dark:text-neutral-400 text-wrap" v-html="styledTag(post.post)"></span>
                                 </td>
-                                <td class="size-px whitespace-nowrap align-top text-center">
+                                <td class="size-px whitespace-nowrap text-center">
                                     <div v-if="post.media && post.media.length > 0" class="flex -space-x-2">
                                         <template v-for="(media, index) in post.media.filter(m => m.mime_type.startsWith('image/')).slice(0, 3)" :key="media.id">
                                             <img
