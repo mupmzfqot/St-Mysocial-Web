@@ -303,7 +303,7 @@ onMounted(() => {
                 </div>
                 <form @submit.prevent="submit" mt-2>
                     <MultiSelect :stUsers="stUsers" v-model="form.userTags"
-                                 v-if="!$page.props.auth.user.roles.includes('public_user') && !post.id"/>
+                                 v-if="!$page.props.auth.user.roles.includes('public_user') && !post?.id"/>
 
                     <!-- Quill Editor-->
                     <div

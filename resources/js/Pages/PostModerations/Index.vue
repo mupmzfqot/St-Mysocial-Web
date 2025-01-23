@@ -32,6 +32,12 @@ const changeStatus = (post, status) => {
     confirmData.url = route('post-moderation.update-status', post.id);
     confirmData.data = { is_active: status };
 }
+const styledTag = (value) => {
+    return value.replace(
+        /<a /g,
+        '<a class="text-blue-500 underline hover:text-red-500 hover:no-underline" '
+    );
+}
 
 
 </script>
@@ -89,7 +95,7 @@ const changeStatus = (post, status) => {
                                     </div>
                                 </th>
 
-                                <th scope="col" class="px-6 py-3 text-start">
+                                <th scope="col" class="px-6 py-3 text-start w-96">
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                           Posted Item
@@ -139,7 +145,7 @@ const changeStatus = (post, status) => {
                                     </a>
                                 </td>
                                 <td class="size-px whitespace-nowrap align-top">
-                                    <span class="text-sm text-gray-600 dark:text-neutral-400 text-wrap" v-html="post.post"></span>
+                                    <span class="text-sm text-gray-600 dark:text-neutral-400 text-wrap" v-html="styledTag(post.post)"></span>
                                 </td>
                                 <td class="size-px whitespace-nowrap align-top text-center">
                                     <div v-if="post.media && post.media.length > 0" class="flex -space-x-2">

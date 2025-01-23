@@ -22,6 +22,13 @@ watch(
         }), 500
     )
 );
+
+const styledTag = (value) => {
+    return value.replace(
+        /<a /g,
+        '<a class="text-blue-500 underline hover:text-red-500 hover:no-underline" '
+    );
+}
 </script>
 
 <template>
@@ -122,14 +129,14 @@ watch(
                                         <span class="text-sm text-gray-600 dark:text-neutral-400">{{ post.author.name }}</span>
                                     </a>
                                 </td>
-                                <td class="size-px whitespace-nowrap align-top">
-                                    <span class="text-sm text-gray-600 dark:text-neutral-400 text-wrap" v-html="post.post"></span>
+                                <td class="size-px whitespace-nowrap py-2 w-96">
+                                    <span class="text-sm text-gray-600 dark:text-neutral-400 text-wrap" v-html="styledTag(post.post)"></span>
                                 </td>
                                 <td class="size-px whitespace-nowrap align-top">
                                     <div v-if="post.media && post.media.length > 0" class="flex -space-x-2">
                                         <template v-for="(media, index) in post.media.filter(m => m.mime_type.startsWith('image/')).slice(0, 3)" :key="media.id">
                                             <img
-                                                :src="media.preview_url"
+                                                :src="media.original_url"
                                                 :alt="media.name"
                                                 class="inline-block size-[46px]"
                                             />

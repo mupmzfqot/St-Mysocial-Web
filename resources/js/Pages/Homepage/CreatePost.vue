@@ -1,5 +1,5 @@
 <script setup>
-import {Head, useForm, Link} from "@inertiajs/vue3";
+import {Head, useForm, Link, router} from "@inertiajs/vue3";
 import {AlertCircle, ChevronDown, ImagePlus, Loader2, X, Paperclip, SmilePlus, SendHorizontal, LinkIcon, UserPlus} from "lucide-vue-next";
 import {computed, onMounted, ref} from "vue";
 import HomeLayout from "@/Layouts/HomeLayout.vue";
@@ -136,6 +136,7 @@ const submit = () => {
             form.reset();
             previews.value = [];
             isLoading.value = false;
+            router.visit(route('home'))
         },
         onError: (error) => {
             errorMessage.value = Object.values(error)[0];

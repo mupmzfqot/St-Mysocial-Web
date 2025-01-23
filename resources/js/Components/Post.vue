@@ -143,6 +143,13 @@ const formatTags = (tags) => {
 
     return `${firstTwoTags.join(', ')}, and ${remainingCount} other${remainingCount > 1 ? 's' : ''}`;
 }
+const styledTag = (value) => {
+    return value.replace(
+        /<a /g,
+        '<a class="text-blue-500 underline hover:text-blue-800 hover:no-underline" '
+    );
+}
+
 
 </script>
 
@@ -172,7 +179,7 @@ const formatTags = (tags) => {
                     </span>
         </div>
 
-        <div class="mt-2 text-gray-800 text-wrap text-sm dark:text-neutral-400" v-html="content.post"></div>
+        <div class="mt-2 text-gray-800 text-wrap text-sm dark:text-neutral-400" v-html="styledTag(content.post)"></div>
 
         <div class="my-3 border border-gray-200 px-3 pb-2 rounded-xl">
             <div class="flex items-center mt-2">
@@ -192,7 +199,7 @@ const formatTags = (tags) => {
                     <div class="text-xs text-gray-500 dark:text-neutral-500">{{ content.repost.created_at }}</div>
                 </div>
             </div>
-            <div class="mt-2 text-gray-800 text-wrap text-sm dark:text-neutral-400" v-html="content.repost.post"></div>
+            <div class="mt-2 text-gray-800 text-wrap text-sm dark:text-neutral-400" v-html="styledTag(content.repost.post)"></div>
 
             <!-- Image Grid -->
             <PostMedia :medias="content.repost.media" v-if="content.repost.media.length > 0" />
@@ -225,7 +232,7 @@ const formatTags = (tags) => {
                       <CheckCircle class="size-3" />Published
                     </span>
         </div>
-        <div class="mt-2 text-gray-800 text-wrap text-sm dark:text-neutral-400" v-html="content.post"></div>
+        <div class="mt-2 text-gray-800 text-wrap text-sm dark:text-neutral-400" v-html="styledTag(content.post)"></div>
 
         <!-- Image Grid -->
         <PostMedia :medias="content.media" v-if="content.media.length > 0" />
@@ -519,7 +526,7 @@ const formatTags = (tags) => {
                                             <div class="text-xs text-gray-500 dark:text-neutral-500">{{ postDetails.created_at }}</div>
                                         </div>
                                     </div>
-                                    <div class="text-gray-800 text-wrap text-sm dark:text-neutral-400" v-html="postDetails.post"></div>
+                                    <div class="text-gray-800 text-wrap text-sm dark:text-neutral-400" v-html="styledTag(postDetails.post)"></div>
 
                                     <!-- Post Media -->
                                     <PostMedia
@@ -537,7 +544,7 @@ const formatTags = (tags) => {
                                                 <div class="text-xs text-gray-500 dark:text-neutral-500">{{ postDetails.repost.created_at }}</div>
                                             </div>
                                         </Link>
-                                        <div class="mt-2 text-gray-800 text-wrap text-sm dark:text-neutral-400" v-html="postDetails.repost.post"></div>
+                                        <div class="mt-2 text-gray-800 text-wrap text-sm dark:text-neutral-400" v-html="styledTag(postDetails.repost.post)"></div>
 
                                         <!-- Image Grid -->
                                         <PostMedia :medias="postDetails.repost.media" v-if="postDetails.repost.media.length > 0" />
