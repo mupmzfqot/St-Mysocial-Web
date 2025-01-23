@@ -29,7 +29,7 @@ const submit = () => {
     <GuestLayout>
         <Head title="Registration" />
 
-        <div class="lg:w-[calc(27%-2rem)] md:w-[calc(40%-2rem)] container sm:mx-4 lg:mx-auto mt-7 bg-white border border-gray-200 rounded-xl shadow-sm dark:bg-neutral-900 dark:border-neutral-700">
+        <div class="w-[470px] container sm:mx-4 lg:mx-auto mt-7 bg-white border border-gray-200 rounded-xl shadow-sm dark:bg-neutral-900 dark:border-neutral-700">
             <div class="p-4 sm:p-7">
                 <div class="text-center">
                     <h1 class="block text-2xl font-bold text-gray-800 dark:text-white">Registration</h1>

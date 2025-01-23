@@ -5,14 +5,13 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import Breadcrumbs from "@/Components/Breadcrumbs.vue";
 import {CheckCircle, ChevronRight, MinusCircle} from "lucide-vue-next";
 import TextInput from "@/Components/TextInput.vue";
-import {reactive, ref} from "vue";
+import {onMounted, reactive, ref} from "vue";
 import ConfirmDialog from "@/Components/ConfirmDialog.vue";
 import Modal from "@/Components/Modal.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
-import InputError from "@/Components/InputError.vue";
-import InputLabel from "@/Components/InputLabel.vue";
 import StrongPassword from "@/Components/StrongPassword.vue";
 import TogglePassword from "@/Components/TogglePassword.vue";
+import {HSStaticMethods} from "preline";
 
 const props = defineProps({
     user: Object,
@@ -113,6 +112,11 @@ const verifyAccount = () => {
     confirmData.data = { verified_account : props.user.verified_account !== 1 };
 }
 
+onMounted(() => {
+    HSStaticMethods.autoInit();
+});
+
+
 </script>
 
 <template>
@@ -207,21 +211,6 @@ const verifyAccount = () => {
                                             </div>
                                         </td>
                                         <td class="h-px w-72 min-w-72">
-                                        </td>
-                                    </tr>
-
-                                    <tr class="bg-white hover:bg-gray-50 dark:bg-neutral-900 dark:hover:bg-neutral-800">
-                                        <td class="size-px whitespace-nowrap">
-                                            <div class="px-6 py-2">
-                                                <p class="block text-sm text-gray-800 dark:text-neutral-200">Reset Password</p>
-                                            </div>
-                                        </td>
-                                        <td class="h-px w-72 min-w-72">
-                                        </td>
-                                        <td class="h-px w-72 min-w-72">
-                                            <a href="#" @click="openPasswordResetModal" class="text-sm text-gray-800 dark:text-neutral-200">
-                                                Reset Password
-                                            </a>
                                         </td>
                                     </tr>
 
@@ -429,7 +418,6 @@ const verifyAccount = () => {
                                                 </div>
                                             </td>
                                         </tr>
-
                                         </tbody>
                                     </table>
                                     <!-- End Table -->
@@ -438,6 +426,79 @@ const verifyAccount = () => {
                                     <div class="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-t border-gray-200 dark:border-neutral-700">
                                         <button type="submit" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
                                             Save changes
+                                        </button>
+
+                                    </div>
+                                    <!-- End Footer -->
+                                </form>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Card -->
+
+                <!-- Card -->
+                <div class="flex flex-col mt-2">
+                    <div class="-m-1.5 overflow-x-auto">
+                        <div class="p-1.5 min-w-full inline-block align-middle">
+                            <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden dark:bg-neutral-900 dark:border-neutral-700">
+                                <!-- Header -->
+                                <div class="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-b border-gray-200 dark:border-neutral-700">
+                                    <div>
+                                        <h2 class="text-xl font-semibold text-gray-800 dark:text-neutral-200">
+                                            Reset Password
+                                        </h2>
+                                    </div>
+                                </div>
+                                <!-- End Header -->
+
+                                <form @submit.prevent="submitPasswordReset">
+                                    <!-- Table -->
+                                    <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
+                                        <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
+                                        <tr>
+
+                                            <td class="size-px whitespace-nowrap">
+                                                <div class="px-6 py-3">
+                                                    <span class="text-sm text-gray-600 dark:text-neutral-400">Password</span>
+                                                </div>
+                                            </td>
+                                            <td class="size-px whitespace-nowrap w-3/4">
+                                                <div class="px-6 py-3">
+                                                    <StrongPassword v-model="passwordResetForm.password" />
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+
+                                            <td class="size-px whitespace-nowrap">
+                                                <div class="px-6 py-3">
+                                                    <span class="text-sm text-gray-600 dark:text-neutral-400">Confirm Password</span>
+                                                </div>
+                                            </td>
+                                            <td class="size-px whitespace-nowrap">
+                                                <div class="px-6 py-3">
+                                                    <TogglePassword v-model="passwordResetForm.password_confirmation" />
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                                        <tr  v-if="passwordResetForm.errors.password">
+                                            <td class="col-span-2">
+                                                <div class="px-6 py-3">
+                                                    <p class="text-sm text-red-600 mt-2">{{ passwordResetForm.errors.password }}</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                    <!-- End Table -->
+
+                                    <!-- Footer -->
+                                    <div class="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-t border-gray-200 dark:border-neutral-700">
+                                        <button type="submit" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
+                                            Reset Password
                                         </button>
 
                                     </div>

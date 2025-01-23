@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Notification;
 
 class CreatePostAPI
 {
-    public function handle($request, $id = null)
+    public function handle($request)
     {
         DB::beginTransaction();
 
@@ -61,11 +61,8 @@ class CreatePostAPI
             ];
 
 
-            if($id) {
-                $post = Post::find($id)->update($data);
-            } else {
-                $post = Post::query()->create($data);
-            }
+
+            $post = Post::query()->create($data);
 
             if(!empty($request->userTags) && !auth()->user()->hasRole('admin')) {
                 PostTag::query()->where('post_id', $post->id)->delete();

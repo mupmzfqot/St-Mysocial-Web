@@ -19,15 +19,14 @@ defineExpose({ focus: () => input.value.focus() });
 
 <template>
     <!-- Strong Password -->
-    <div class="flex">
+    <div class="flex" style="z-index: 9999">
         <div class="relative flex-1">
             <input type="password" :minlength="8" id="hs-strong-password-with-indicator-and-hint-in-popover"
                    class="py-3 ps-4 pe-10 block w-full border-gray-200 shadow-sm rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
-                   placeholder="Enter password"
                    v-model="model"
                    ref="input"
             >
-            <div id="hs-strong-password-popover" class="hidden absolute z-10 w-full bg-white shadow-md rounded-lg p-4 dark:bg-neutral-800 dark:border dark:border-neutral-700 dark:divide-neutral-700">
+            <div id="hs-strong-password-popover" class="hidden w-full bg-white shadow-md rounded-lg p-4 dark:bg-neutral-800 dark:border dark:border-neutral-700 dark:divide-neutral-700">
                 <div id="hs-strong-password-in-popover" data-hs-strong-password='{
                     "target": "#hs-strong-password-with-indicator-and-hint-in-popover",
                     "hints": "#hs-strong-password-popover",
