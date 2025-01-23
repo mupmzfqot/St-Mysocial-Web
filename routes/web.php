@@ -104,6 +104,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         Route::get('/index', [PostController::class, 'index'])->name('index');
         Route::get('create', [PostController::class, 'create'])->name('create');
         Route::get('edit/{id}', [PostController::class, 'edit'])->name('edit');
+        Route::get('show/{id}', [PostController::class, 'show'])->name('show');
         Route::post('store', [PostController::class, 'store'])->name('store');
         Route::post('update/{id}', [PostController::class, 'update'])->name('update');
         Route::post('delete/{id}', [PostController::class, 'destroy'])->name('delete');
@@ -111,6 +112,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 
     Route::name('post-moderation.')->prefix('post-moderation')->group(function () {
         Route::get('/', [PostModerationController::class, 'index'])->name('index');
+        Route::get('/st', [PostModerationController::class, 'indexST'])->name('index-st');
         Route::post('update-status/{id}', [PostModerationController::class, 'updateStatus'])->name('update-status');
     });
 

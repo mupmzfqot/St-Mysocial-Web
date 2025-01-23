@@ -13,8 +13,6 @@ const props = defineProps({
 let filteredMedia = props.medias.filter((media) => media.mime_type !== "application/pdf");
 let docFiles = props.medias.filter((media) => media.mime_type === "application/pdf");
 
-console.log(docFiles);
-
 const isModalOpen = ref(false);
 const carouselMedia = ref([]);
 const currentIndex = ref(0);

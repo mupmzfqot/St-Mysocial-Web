@@ -3,9 +3,10 @@ import {Head, Link, router} from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import {CheckCircle, ChevronRight, MinusCircle, Search, UserCircle} from "lucide-vue-next";
 import Breadcrumbs from "@/Components/Breadcrumbs.vue";
-import {ref, watch} from "vue";
+import {reactive, ref, watch} from "vue";
 import {debounce} from "lodash";
 import Pagination from "@/Components/Pagination.vue";
+import ConfirmDialog from "@/Components/ConfirmDialog.vue";
 
 const props = defineProps({
     posts: Object,
@@ -14,18 +15,29 @@ const props = defineProps({
 
 const search = ref(props.searchTerm);
 
+
 watch(
     search, debounce(
-        (q) => router.get(route('post.index'), { search: q }, {
-            preserveState: true,
-            preserveScroll: true,
-        }), 500
+        (q) => router.get(route('post-moderation.index'), { search: q }, { preserveState: true }), 500
     )
 );
+
+const confirmData = reactive({
+    confirmId: ''
+})
+
+const changeStatus = (post, status) => {
+    confirmData.id = post.id;
+    confirmData.message = `Do you want to publish/unpublish this post?`;
+    confirmData.url = route('post-moderation.update-status', post.id);
+    confirmData.data = { is_active: status };
+}
+
+
 </script>
 
 <template>
-    <Head title="Posts" />
+    <Head title="Post Moderation's" />
     <AuthenticatedLayout>
         <Breadcrumbs>
             <li class="inline-flex items-center">
@@ -36,7 +48,7 @@ watch(
             </li>
 
             <li class="inline-flex items-center text-sm font-semibold text-gray-800 truncate" aria-current="page">
-                Posts
+                Post Moderation's
             </li>
         </Breadcrumbs>
 
@@ -62,10 +74,6 @@ watch(
                                 </div>
                             </div>
                             <!-- End Input -->
-
-                            <Link :href="route('post.create')" type="button" class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 text-blue-500 hover:border-blue-700 hover:text-blue-600 focus:outline-none focus:border-blue-600 focus:text-blue-600 disabled:opacity-50 disabled:pointer-events-none dark:border-neutral-700 dark:text-neutral-400 dark:hover:text-blue-500 dark:hover:border-blue-600 dark:focus:text-blue-500 dark:focus:border-blue-600">
-                                Create new post
-                            </Link>
                         </div>
                         <!-- End Header -->
 
@@ -76,7 +84,7 @@ watch(
                                 <th scope="col" class="px-6 py-3 text-start">
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
-                                          Posted By
+                                            User
                                         </span>
                                     </div>
                                 </th>
@@ -89,7 +97,7 @@ watch(
                                     </div>
                                 </th>
 
-                                <th scope="col" class="px-6 py-3 text-start">
+                                <th scope="col" class="px-6 py-3 text-center">
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                           Posted Media
@@ -100,12 +108,12 @@ watch(
                                 <th scope="col" class="px-6 py-3 text-start">
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
-                                          Posted On
+                                          Date
                                         </span>
                                     </div>
                                 </th>
 
-                                <th scope="col" class="px-6 py-3 text-start">
+                                <th scope="col" class="px-6 py-3 text-center">
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                             Action
@@ -125,7 +133,7 @@ watch(
                                 <td class="size-px whitespace-nowrap align-top">
                                     <span class="text-sm text-gray-600 dark:text-neutral-400 text-wrap" v-html="post.post"></span>
                                 </td>
-                                <td class="size-px whitespace-nowrap align-top">
+                                <td class="size-px whitespace-nowrap align-top text-center">
                                     <div v-if="post.media && post.media.length > 0" class="flex -space-x-2">
                                         <template v-for="(media, index) in post.media.filter(m => m.mime_type.startsWith('image/')).slice(0, 3)" :key="media.id">
                                             <img
@@ -140,7 +148,9 @@ watch(
                                             </button>
                                         </div>
                                     </div>
-                                    <div v-else class="text-sm text-gray-500">No media</div>
+                                    <div v-else class="text-sm text-gray-500 p-6">
+                                        <span class="text-sm text-gray-600 dark:text-neutral-400">No Media</span>
+                                    </div>
                                 </td>
                                 <td class="size-px whitespace-nowrap align-top">
                                     <a class="block p-6" href="#">
@@ -148,7 +158,8 @@ watch(
                                     </a>
                                 </td>
 
-                                <td class="size-px whitespace-nowrap align-top">
+
+                                <td class="size-px whitespace-nowrap align-top text-center">
                                     <div class="p-6">
                                         <div class="hs-dropdown [--placement:bottom-right] relative inline-block">
                                             <button id="hs-table-dropdown-1" type="button" class="hs-dropdown-toggle py-1.5 px-2 inline-flex justify-center items-center gap-2 rounded-lg text-gray-700 align-middle disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-blue-600 transition-all text-sm dark:text-neutral-400 dark:hover:text-white dark:focus:ring-offset-gray-800" aria-haspopup="menu" aria-expanded="false" aria-label="Dropdown">
@@ -159,16 +170,9 @@ watch(
                                                     <Link :href="route('post.edit', post.id)" class="flex items-center gap-x-3 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700 dark:focus:text-neutral-300" href="#">
                                                         Edit
                                                     </Link>
-                                                </div>
-                                               <div class="py-2 first:pt-0 last:pb-0">
-                                                   <Link :href="route('post.show', post.id)" class="flex items-center gap-x-3 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700 dark:focus:text-neutral-300" href="#" >
-                                                       View
-                                                   </Link>
-                                               </div>
-                                                <div class="py-2 first:pt-0 last:pb-0">
-                                                    <a href="#" class="flex items-center gap-x-3 py-2 px-3 rounded-lg text-sm text-red-600 hover:bg-gray-100 focus:ring-2 focus:ring-blue-500 dark:text-red-500 dark:hover:bg-neutral-700 dark:hover:text-neutral-300" aria-haspopup="dialog" aria-expanded="false" aria-controls="hs-scale-animation-modal" data-hs-overlay="#confirm-dialog">
-                                                        Remove
-                                                    </a>
+                                                    <Link :href="route('post.show', post.id)" class="flex items-center gap-x-3 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700 dark:focus:text-neutral-300" href="#" >
+                                                        View
+                                                    </Link>
                                                 </div>
                                             </div>
                                         </div>
@@ -193,6 +197,8 @@ watch(
             </div>
         </div>
         <!-- End Card -->
+
+        <ConfirmDialog :data="confirmData"/>
     </AuthenticatedLayout>
 </template>
 

@@ -8,6 +8,7 @@ use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class PostController extends Controller
 {
@@ -89,6 +90,37 @@ class PostController extends Controller
         }
     }
 
+    public function update(Request $request, $id)
+    {
+        try {
+            $post = Post::query()->find($id);
+            if($request->post('files')) {
+                $requestMediaId = collect($request->post('files'))->map(function ($file) { return $file['id']; })->toArray();
+                $existingMediaId = $post->getMedia('post_media')->pluck('id')->toArray();
+                if (count($existingMediaId) > count($requestMediaId)) {
+                    Media::whereIn('id', array_diff($existingMediaId, $requestMediaId))->delete();
+                }
+            }
+
+            $post->post = $request->post('content');
+            $post->type = $request->type;
+            $post->update();
+
+            if($request->hasFile('files')) {
+                foreach ($request->file('files') as $file) {
+                    $post->addMedia($file)->toMediaCollection('post_media');
+                }
+            }
+
+            return redirect()->back()->with('success', 'Post successfully updated.');
+
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
+        }
+
+
+    }
+
     public function share(Request $request, Repost $repost)
     {
         try {
@@ -99,5 +131,33 @@ class PostController extends Controller
                 'error' => $e->getMessage(),
             ]);
         }
+    }
+
+    public function show($id)
+    {
+        $post = Post::query()
+            ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media', 'repost.tags')
+            ->where('id', $id)
+            ->first();
+
+        return Inertia::render('Posts/Show', compact('post'));
+    }
+
+    public function edit($id)
+    {
+        $defaultType = 'st';
+        $title = 'Edit Post';
+        $stUsers = User::query()->whereHas('roles', function ($query) {
+            $query->where('name', 'user');
+        })
+            ->where('is_active', true)
+            ->whereNotNull('email_verified_at')
+            ->get();
+        $post = Post::query()
+            ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media', 'repost.tags')
+            ->where('id', $id)
+            ->first();
+
+        return Inertia::render('Posts/Form', compact('post', 'defaultType', 'stUsers', 'title'));
     }
 }

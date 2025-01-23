@@ -23,6 +23,22 @@ class PostModerationController extends Controller
 
         return Inertia::render('PostModerations/Index', compact('posts', 'searchTerm'));
     }
+    public function indexST(Request $request)
+    {
+        $searchTerm = $request->search;
+        $posts = Post::query()
+            ->when($searchTerm, function ($query, $search) {
+                $query->where('post', 'like', '%' . $search . '%');
+            })
+            ->with(['author', 'media'])
+            ->where('type', 'st')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->withQueryString();
+
+        return Inertia::render('PostModerations/IndexST', compact('posts', 'searchTerm'));
+    }
+
 
     public function updateStatus(Request $request, $id)
     {
