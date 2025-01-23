@@ -188,7 +188,7 @@ const styledTag = (value) => {
                 </Link>
                 <div class="ms-4">
                     <div class="flex items-center">
-                        <Link :href="route('profile.show', content.author.id)" class="text-base font-semibold text-gray-800 dark:text-neutral-400 hover:text-blue-700 me-1">{{ content.author.name }}</Link>
+                        <Link :href="route('profile.show', content.repost.author.id)" class="text-base font-semibold text-gray-800 dark:text-neutral-400 hover:text-blue-700 me-1">{{ content.repost.author.name }}</Link>
                         <div class="flex flex-wrap gap-x-1" v-if="content.repost.tags && content.repost.tags.length > 0">
                             <p class="text-sm text-gray-800 dark:text-gray-200">with </p>
                             <p class="text-sm text-blue-700 dark:text-gray-200">

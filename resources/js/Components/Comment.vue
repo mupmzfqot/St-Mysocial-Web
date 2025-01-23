@@ -210,10 +210,11 @@ const formatCommentTime = (timestamp) => {
         </div>
 
         <!-- Comment Input (Fixed at Bottom) -->
-        <div
-            v-if="currentUser"
-            class="comment-input-container bg-gray-100 fixed bottom-0 left-0 right-0 dark:bg-neutral-900 shadow-lg p-4 border-t"
-        >
+        <div style="z-index: 9999">
+            <div
+                v-if="currentUser"
+                class="comment-input-container bg-gray-100 fixed bottom-0 left-0 right-0 dark:bg-neutral-900 shadow-lg p-4 border-t"
+            >
                 <!-- Chat Input Area -->
                 <div class="flex items-center space-x-2">
 
@@ -288,6 +289,7 @@ const formatCommentTime = (timestamp) => {
                         </button>
                     </div>
                 </div>
+            </div>
         </div>
     </div>
 </template>
