@@ -20,9 +20,6 @@ class Repost
             'published' => $parentPost->published,
         ]);
 
-        return response()->json([
-            'error'     => 0,
-            'data'      => new PostResource($repost->load('repost'))
-        ]);
+        return new PostResource($repost->load('repost'));
     }
 }
