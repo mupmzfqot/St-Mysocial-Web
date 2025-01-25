@@ -143,25 +143,50 @@ class ProfileController extends Controller
 
     public function getPosts(Request $request)
     {
-        $posts = Post::query()
-            ->orderBy('created_at', 'desc')
-            ->where('user_id', $request->user()->id)
-            ->published()
-            ->paginate(30);
+        try {
+            $query = Post::query()
+                ->orderBy('created_at', 'desc')
+                ->where('user_id', $request->user()->id)
+                ->published();
 
-        return PostResource::collection($posts);
+            if($request->user()->hasRole('public_user')) {
+                $query->where('type', 'public');
+            }
+
+            $posts = $query->paginate(30);
+
+            return response()->json([
+                'error' => 0,
+                'data' => PostResource::collection($posts)
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 1,
+                'message' => $e->getMessage()
+            ]);
+        }
     }
 
     public function likedPosts(Request $request)
     {
-        $posts = Post::query()
-            ->orderBy('created_at', 'desc')
-            ->whereHas('likes', function ($query) use ($request) {
-                $query->where('user_id', $request->user()->id);
-            })
-            ->published()
-            ->paginate(30);
+        try {
+            $posts = Post::query()
+                ->orderBy('created_at', 'desc')
+                ->whereHas('likes', function ($query) use ($request) {
+                    $query->where('user_id', $request->user()->id);
+                })
+                ->published()
+                ->paginate(30);
 
-        return PostResource::collection($posts);
+            return response()->json([
+                'error' => 0,
+                'data' => PostResource::collection($posts)
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 1,
+                'message' => $e->getMessage()
+            ]);
+        }
     }
 }

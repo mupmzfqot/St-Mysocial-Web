@@ -24,13 +24,17 @@ class PostController extends Controller
 {
     public function index(Request $request)
     {
+        $type = $request->query('type');
+        if($request->user()->hasRole('public_user')) {
+            $type = 'public';
+        }
         $searchTerm = $request->query('search');
         $perPage = $request->query('per_page', 20);
         $posts = Post::query()
             ->when($searchTerm, function ($query, $search) {
                 $query->where('post', 'like', '%' . $search . '%');
             })
-            ->where('type', $request->query('type'))
+            ->where('type', $type)
             ->published()
             ->orderBy('created_at', 'desc')
             ->with(['author', 'media'])
