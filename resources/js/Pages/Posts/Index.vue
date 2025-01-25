@@ -1,7 +1,7 @@
 <script setup>
 import {Head, Link, router} from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import {CheckCircle, ChevronRight, MinusCircle, Search, UserCircle} from "lucide-vue-next";
+import {ChevronRight, Search} from "lucide-vue-next";
 import Breadcrumbs from "@/Components/Breadcrumbs.vue";
 import {ref, watch} from "vue";
 import {debounce} from "lodash";
@@ -132,18 +132,23 @@ const styledTag = (value) => {
                                 <td class="size-px whitespace-nowrap py-2 w-96">
                                     <span class="text-sm text-gray-600 dark:text-neutral-400 text-wrap" v-html="styledTag(post.post)"></span>
                                 </td>
-                                <td class="size-px whitespace-nowrap align-top">
+                                <td class="size-px whitespace-nowrap">
                                     <div v-if="post.media && post.media.length > 0" class="flex -space-x-2">
-                                        <template v-for="(media, index) in post.media.filter(m => m.mime_type.startsWith('image/')).slice(0, 3)" :key="media.id">
-                                            <img
+                                        <template v-for="(media, index) in post.media.filter(m => m.mime_type.startsWith('image/') || m.mime_type === 'application/pdf').slice(0, 3)" :key="media.id">
+                                            <img v-if="media.mime_type === 'application/pdf'"
+                                                src="../../../images/pdf-icon.svg"
+                                                :alt="media.name"
+                                                class="inline-block size-[46px]"
+                                            />
+                                            <img v-else
                                                 :src="media.original_url"
                                                 :alt="media.name"
                                                 class="inline-block size-[46px]"
                                             />
                                         </template>
-                                        <div v-if="post.media.filter(m => m.mime_type.startsWith('image/')).length > 3" class="hs-dropdown [--placement:top-left] relative inline-flex">
+                                        <div v-if="post.media.filter(m => m.mime_type.startsWith('image/') || m.mime_type === 'appication/pdf').length > 3" class="hs-dropdown [--placement:top-left] relative inline-flex">
                                             <button class="inline-flex items-center justify-center size-[46px] rounded-full bg-gray-100 border-2 border-white font-medium text-gray-700 shadow-sm align-middle hover:bg-gray-200 focus:outline-none focus:bg-gray-300 text-sm dark:bg-neutral-700 dark:text-white dark:hover:bg-neutral-600 dark:focus:bg-neutral-600 dark:border-neutral-800">
-                                                <span class="font-medium leading-none">+{{ post.media.filter(m => m.mime_type.startsWith('image/')).length - 3 }}</span>
+                                                <span class="font-medium leading-none">+{{ post.media.filter(m => m.mime_type.startsWith('image/') || m.mime_type === 'application/pdf').length - 3 }}</span>
                                             </button>
                                         </div>
                                     </div>

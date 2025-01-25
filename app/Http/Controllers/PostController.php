@@ -61,13 +61,14 @@ class PostController extends Controller
     public function create()
     {
         $defaultType = 'st';
+        $title = 'Create New Post';
         $stUsers = User::query()->whereHas('roles', function ($query) {
                     $query->where('name', 'user');
                 })
                 ->where('is_active', true)
                 ->whereNotNull('email_verified_at')
                 ->get();
-        return Inertia::render('Posts/Form', compact('defaultType', 'stUsers'));
+        return Inertia::render('Posts/Form', compact('defaultType', 'stUsers', 'title'));
     }
 
     public function store(Request $request, CreatePost $createPost)
