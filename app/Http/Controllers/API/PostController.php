@@ -214,4 +214,20 @@ class PostController extends Controller
             ]);
         }
     }
+
+    public function getUserPosts(Request $request, $id)
+    {
+        $perPage = $request->query('per_page', 20);
+        $posts = Post::query()
+            ->orderBy('created_at', 'desc')
+            ->where('user_id', $id)
+            ->with(['author', 'media'])
+            ->paginate($perPage)
+            ->withQueryString();
+
+        return response()->json([
+            'error' => 0,
+            'data'  => PostResource::collection($posts->load('repost'))
+        ]);
+    }
 }
