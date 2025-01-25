@@ -65,7 +65,7 @@ watch(
                         <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
                             <thead class="bg-gray-50 dark:bg-neutral-800">
                             <tr>
-                                <th scope="col" class="px-6 py-3 text-start">
+                                <th scope="col" class="px-6 py-3 text-start w-3/4">
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                           User
@@ -90,7 +90,7 @@ watch(
                                 <td class="size-px whitespace-nowrap align-top">
                                     <a class="block p-6" href="#">
                                         <div class="flex items-center gap-x-3">
-                                            <UserCircle class="shrink-0 size-10" />
+                                            <img :src="user.avatar" class="size-10 shrink-0 rounded-full" alt="avatar">
                                             <div class="grow">
                                                 <span class="block text-sm font-semibold text-gray-800 dark:text-neutral-200">{{ user.name }}</span>
                                                 <span class="block text-sm text-gray-500 dark:text-neutral-500">{{ user.email }}</span>
@@ -101,7 +101,7 @@ watch(
 
                                 <td class="size-px whitespace-nowrap align-top">
                                     <a class="block p-6" href="#">
-                                        <span class="text-sm text-gray-600 dark:text-neutral-400">{{ user.updated_at }}</span>
+                                        <span class="text-sm text-gray-600 dark:text-neutral-400">{{ user.last_login }}</span>
                                     </a>
                                 </td>
                             </tr>

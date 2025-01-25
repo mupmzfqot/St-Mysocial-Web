@@ -1,7 +1,7 @@
 <script setup>
-import {Head, Link, router, usePage} from "@inertiajs/vue3";
+import {Head, Link, router} from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import { ChevronRight, Search, UserCircle, CheckCircle, MinusCircle, UsersRound } from "lucide-vue-next";
+import { ChevronRight, Search, CheckCircle, MinusCircle, UsersRound } from "lucide-vue-next";
 import Breadcrumbs from "@/Components/Breadcrumbs.vue";
 import ConfirmDialog from "@/Components/ConfirmDialog.vue";
 import { reactive, ref, watch } from "vue";
@@ -209,7 +209,7 @@ const setAdmin = (user) => {
                                 <td class="size-px whitespace-nowrap align-top">
                                     <a class="block p-6" href="#">
                                         <div class="flex items-center gap-x-3">
-                                            <UserCircle class="shrink-0 size-10" />
+                                            <img :src="user.avatar" class="size-10 shrink-0 rounded-full" alt="avatar">
                                             <div class="grow">
                                                 <span class="block text-sm font-semibold text-gray-800 dark:text-neutral-200">{{ user.name }}</span>
                                                 <span class="block text-sm text-gray-500 dark:text-neutral-500">{{ user.email }}</span>

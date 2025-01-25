@@ -167,4 +167,29 @@ class DashboardController extends Controller
             ['path' => LengthAwarePaginator::resolveCurrentPath()]
         );
     }
+
+    public function getAccount(Request $request, $type)
+    {
+        $request->validate([
+            'search' => 'nullable|string'
+        ]);
+
+        $title = $request->type == 1 ? 'Active Account' : 'Blocked Account';
+        $type = in_array($type, [0,1]) ? $type : 0;
+
+        $searchTerm = $request->search;
+        $users = User::query()
+            ->where('is_active', $type)
+            ->when($searchTerm, function ($query, $search) {
+                $query->where('name', 'like', '%' . $search . '%')
+                ->orWhere('email', 'like', '%' . $search . '%')
+                ->orWhere('username', 'like', '%' . $search . '%');
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate('20')
+            ->withQueryString();
+
+
+        return Inertia::render('Dashboard/Account', compact('users', 'searchTerm', 'title', 'type'));
+    }
 }

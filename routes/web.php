@@ -79,6 +79,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/most-comment-posts', [DashboardController::class, 'showMostCommentPosts'])->name('most-comment-posts');
     Route::get('/most-user-posts', [DashboardController::class, 'showMostUserPost'])->name('most-user-posts');
     Route::get('/user-posts', [DashboardController::class, 'showUserPosts'])->name('user-posts');
+    Route::get('/account/{type}', [DashboardController::class, 'getAccount'])->name('account');
 
     Route::name('admin.')->prefix('admin')->group(function () {
         Route::get('/', [UserController::class, 'adminIndex'])->name('index');
