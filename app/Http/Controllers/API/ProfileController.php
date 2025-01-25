@@ -83,7 +83,9 @@ class ProfileController extends Controller
                 ->where('collection_name', 'avatar')
                 ->delete();
 
-            User::find($request->user()->id)->addMediaFromRequest('image')->toMediaCollection('avatar');
+            User::find($request->user()->id)->addMediaFromRequest('image')
+                ->toMediaCollection('avatar')
+                ->update(['is_verified' => 1]);
 
             DB::commit();
             return response()->json(['message' => 'Profile image updated successfully', 'error' => 0]);
@@ -104,7 +106,9 @@ class ProfileController extends Controller
                 ->where('collection_name', 'cover_image')
                 ->delete();
 
-            User::find($request->user()->id)->addMediaFromRequest('image')->toMediaCollection('cover_image');
+            User::find($request->user()->id)->addMediaFromRequest('image')
+                ->toMediaCollection('cover_image')
+                ->update(['is_verified' => 1]);
 
             DB::commit();
             return response()->json(['message' => 'Profile cover updated successfully', 'error' => 0]);
