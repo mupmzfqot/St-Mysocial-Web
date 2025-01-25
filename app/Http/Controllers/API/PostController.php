@@ -24,24 +24,34 @@ class PostController extends Controller
 {
     public function index(Request $request)
     {
-        $type = $request->query('type');
-        if($request->user()->hasRole('public_user')) {
-            $type = 'public';
-        }
-        $searchTerm = $request->query('search');
-        $perPage = $request->query('per_page', 20);
-        $posts = Post::query()
-            ->when($searchTerm, function ($query, $search) {
-                $query->where('post', 'like', '%' . $search . '%');
-            })
-            ->where('type', $type)
-            ->published()
-            ->orderBy('created_at', 'desc')
-            ->with(['author', 'media'])
-            ->paginate($perPage)
-            ->withQueryString();
+        try {
+            $type = $request->query('type');
+            if($request->user()->hasRole('public_user')) {
+                $type = 'public';
+            }
+            $searchTerm = $request->query('search');
+            $perPage = $request->query('per_page', 20);
+            $posts = Post::query()
+                ->when($searchTerm, function ($query, $search) {
+                    $query->where('post', 'like', '%' . $search . '%');
+                })
+                ->where('type', $type)
+                ->published()
+                ->orderBy('created_at', 'desc')
+                ->with(['author', 'media'])
+                ->paginate($perPage)
+                ->withQueryString();
 
-        return PostResource::collection($posts->load('repost'));
+            return response()->json([
+                'error' => 0,
+                'data' => PostResource::collection($posts->load('repost'))
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 1,
+                'message' => $e->getMessage()
+            ]);
+        }
     }
 
     public function show($id)
@@ -54,13 +64,19 @@ class PostController extends Controller
             ], 404);
         }
 
-        return new PostResource($post->load('comments'));
+        return response()->json([
+            'error' => 0,
+            'data' => new PostResource($post->load('comments'))
+        ]);
     }
 
     public function store(Request $request, CreatePostAPI $createPost)
     {
         $created = $createPost->handle($request);
-        return new PostResource($created);
+        return response()->json([
+            'error' => 0,
+            'data' => new PostResource($created)
+        ]);
     }
 
     public function update(Request $request, $id, CreatePostAPI $createPost)
@@ -69,9 +85,13 @@ class PostController extends Controller
             $post = Post::find($id);
             Gate::authorize('modify', $post);
             $updatedPost = $createPost->handle($request, $id);
-            return new PostResource($updatedPost);
+            return response()->json([
+                'error' => 0,
+                'data' => new PostResource($updatedPost->load('repost'))
+            ]);
         } catch (\Exception $e) {
             return response()->json([
+                'error' => 1,
                 'message' => $e->getMessage(),
             ], 403);
         }
@@ -104,7 +124,10 @@ class PostController extends Controller
             ->where('like_count', '>', 0)
             ->paginate(10);
 
-        return PostResource::collection($posts);
+        return response()->json([
+            'error' => 0,
+            'data' => PostResource::collection($posts->load('repost'))
+        ]);
     }
 
     public function storeComments(Request $request, CreateComment $createComment)
@@ -221,17 +244,29 @@ class PostController extends Controller
 
     public function getUserPosts(Request $request, $id)
     {
-        $perPage = $request->query('per_page', 20);
-        $posts = Post::query()
-            ->orderBy('created_at', 'desc')
-            ->where('user_id', $id)
-            ->with(['author', 'media'])
-            ->paginate($perPage)
-            ->withQueryString();
+        try {
+            $perPage = $request->query('per_page', 20);
+            $query = Post::query()
+                ->orderBy('created_at', 'desc')
+                ->where('user_id', $id)
+                ->with(['author', 'media']);
 
-        return response()->json([
-            'error' => 0,
-            'data'  => PostResource::collection($posts->load('repost'))
-        ]);
+            if($request->user()->hasRole('public_user')) {
+                $query->where('type', 'public');
+            }
+
+            $posts = $query->paginate($perPage)
+                ->withQueryString();
+
+            return response()->json([
+                'error' => 0,
+                'data'  => PostResource::collection($posts->load('repost'))
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 1,
+                'message' => $e->getMessage(),
+            ]);
+        }
     }
 }

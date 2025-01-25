@@ -15,12 +15,19 @@ class PostController extends Controller
     public function get(Request $request)
     {
         try {
-            $posts = Post::query()
+            $query = Post::query()
                 ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media', 'repost.tags')
                 ->orderBy('created_at', 'desc')
-                ->published()
-                ->where('type', 'st')
-                ->paginate(30)
+                ->published();
+
+
+            if (auth()->user()->hasRole('public_user')) {
+                $query->where('type', 'public');
+            } else {
+                $query->where('type', $request->type);
+            }
+
+            $posts = $query->paginate(30)
                 ->through(function ($post) {
                     $post->load('likes');
                     return $post;

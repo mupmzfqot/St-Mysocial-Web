@@ -248,10 +248,13 @@ const styledTag = (value) => {
                 <Heart class="shrink-0 size-5 fill-red-500 text-transparent" v-if="content.is_liked" />
             </a>
             <a href="#" class="inline-flex gap-x-2" @click.prevent="sendLike(content.id)" v-else>
-                <Heart class="shrink-0 size-5 text-gray-500" /> {{ content.like_count }} Likes
+                <Heart class="shrink-0 size-5 text-gray-500" />
             </a>
 
             <a href="#" @click.prevent="showLikedBy(content.id)" class="hover:underline" v-if="content.like_count !== 0">
+                {{ content.like_count }} Likes
+            </a>
+            <a href="#" v-else>
                 {{ content.like_count }} Likes
             </a>
         </div>
@@ -559,10 +562,13 @@ const styledTag = (value) => {
                                                 <Heart class="shrink-0 size-5 fill-red-500 text-transparent" v-if="content.is_liked" />
                                             </a>
                                             <a href="#" class="inline-flex gap-x-2" @click.prevent="sendLike(content.id)" v-else>
-                                                <Heart class="shrink-0 size-5 text-gray-500" /> {{ content.like_count }} Likes
+                                                <Heart class="shrink-0 size-5 text-gray-500" />
                                             </a>
 
                                             <a href="#" @click.prevent="showLikedBy(content.id)" class="hover:underline" v-if="content.like_count !== 0">
+                                                {{ content.like_count }} Likes
+                                            </a>
+                                            <a href="#" v-else>
                                                 {{ content.like_count }} Likes
                                             </a>
                                         </div>

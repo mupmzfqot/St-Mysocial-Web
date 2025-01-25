@@ -11,7 +11,8 @@ const props = defineProps({
     },
     title: String,
     description: String,
-    likedColor: String
+    likedColor: String,
+    type: String
 });
 
 </script>
@@ -30,7 +31,7 @@ const props = defineProps({
             </Link>
         </div>
 
-        <PostContent :posts="posts" />
+        <PostContent :posts="posts" :type="props.type" />
     </HomeLayout>
 </template>
 

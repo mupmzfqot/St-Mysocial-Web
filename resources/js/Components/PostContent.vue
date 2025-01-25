@@ -14,6 +14,7 @@ const props = defineProps({
         type: Boolean,
         default: false
     },
+    type: String
 });
 
 const posts = ref(props.posts.data || []);
@@ -24,6 +25,7 @@ const hasMorePosts = ref(!!props.posts.next_page_url);
 const retryCount = ref(0);
 const MAX_RETRIES = 3;
 
+console.log(props.type)
 // check if we can load more posts
 const canLoadMore = computed(() => !loading.value && hasMorePosts.value);
 
@@ -36,7 +38,7 @@ const loadMore = async () => {
 
     try {
         const retryDelay = Math.pow(2, retryCount.value) * 1000;
-        const response = await axios.get(`user-post/get?page=${page.value + 1}`, {
+        const response = await axios.get(`user-post/get?type=${props.type}&page=${page.value + 1}`, {
             timeout: 10000,
             cancelToken: new axios.CancelToken(c => {
                 window.cancelPostRequest = c;
@@ -130,7 +132,7 @@ const reloadPosts = async () => {
     error.value = null;
 
     try {
-        const response = await axios.get(`user-post/get?page=${page.value}`, {
+        const response = await axios.get(`user-post/get?type=${props.type}&page=${page.value}`, {
             timeout: 10000
         });
         posts.value = response.data.data;
