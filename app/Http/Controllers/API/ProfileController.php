@@ -158,8 +158,7 @@ class ProfileController extends Controller
         try {
             $query = Post::query()
                 ->orderBy('created_at', 'desc')
-                ->where('user_id', $request->user()->id)
-                ->published();
+                ->where('user_id', $request->user()->id);
 
             if($request->user()->hasRole('public_user')) {
                 $query->where('type', 'public');
@@ -169,7 +168,7 @@ class ProfileController extends Controller
 
             return response()->json([
                 'error' => 0,
-                'data' => PostResource::collection($posts)
+                'data' => PostResource::collection($posts->load('repost'))
             ]);
         } catch (\Exception $e) {
             return response()->json([
