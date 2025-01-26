@@ -92,7 +92,11 @@ class ProfileController extends Controller
                 ->update(['is_verified' => 1]);
 
             DB::commit();
-            return response()->json(['message' => 'Profile image updated successfully', 'error' => 0]);
+            return response()->json([
+                'message' => 'Profile image updated successfully',
+                'error' => 0,
+                'profile_img' => $request->user()->avatar
+            ]);
 
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage(), 'error' => 1]);
@@ -115,7 +119,11 @@ class ProfileController extends Controller
                 ->update(['is_verified' => 1]);
 
             DB::commit();
-            return response()->json(['message' => 'Profile cover updated successfully', 'error' => 0]);
+            return response()->json([
+                'message' => 'Profile cover updated successfully',
+                'error' => 0,
+                'cover_img' => $request->user()->cover_image
+            ]);
 
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage(), 'error' => 1]);
