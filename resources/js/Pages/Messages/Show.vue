@@ -178,11 +178,13 @@ const onSelectEmoji = (emoji) => {
                     <SmilePlus class="shrink-0 size-5" />
                 </button>
 
-                <EmojiPicker
-                    v-if="showEmojiPicker"
-                    @select="onSelectEmoji"
-                    class="absolute bottom-28 right-1/3"
-                />
+                <div class="relative">
+                    <EmojiPicker
+                        v-if="showEmojiPicker"
+                        @select="onSelectEmoji"
+                        class="z-50 absolute bottom-8 right-0"
+                    />
+                </div>
 
                 <button
                     @click="sendMessage(conversation.id)"
