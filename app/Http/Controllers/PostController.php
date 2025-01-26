@@ -30,7 +30,7 @@ class PostController extends Controller
                 $query->where('type', $type);
             }
 
-            $posts = $query->simplePaginate(50)
+            $posts = $query->simplePaginate(30)
                 ->withQueryString();
 
             return response()->json($posts);
@@ -40,7 +40,7 @@ class PostController extends Controller
                 'message' => config('app.debug')
                     ? $e->getMessage()
                     : 'An unexpected error occurred while retrieving posts.',
-            ], 500);
+            ], 300);
         }
     }
 
@@ -176,7 +176,7 @@ class PostController extends Controller
                     ->orderBy(DB::raw('comment_count + like_count'), 'desc')
                     ->published();
 
-                return $query->simplePaginate(50)->withQueryString();
+                return $query->simplePaginate(30)->withQueryString();
             });
 
             return response()->json($posts);
@@ -192,7 +192,7 @@ class PostController extends Controller
                 $query->where('user_id', auth()->id());
             })
             ->published()
-            ->simplePaginate(50);
+            ->simplePaginate(30);
 
         return response()->json($posts);
 
@@ -205,7 +205,7 @@ class PostController extends Controller
             ->orderBy('created_at', 'desc')
             ->where('user_id', auth()->id())
             ->published()
-            ->simplePaginate(50);
+            ->simplePaginate(30);
 
         return response()->json($posts);
 
@@ -221,7 +221,7 @@ class PostController extends Controller
             ->orWhereHas('tags', function ($query) use($user_id) {
                 $query->where('user_id', $user_id);
             })
-            ->simplePaginate(50);
+            ->simplePaginate(30);
 
         return response()->json($posts);
 

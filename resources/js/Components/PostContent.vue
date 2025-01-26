@@ -10,7 +10,10 @@ const props = defineProps({
         type: Boolean,
         default: false
     },
-    requestUrl: String
+    requestUrl: {
+        type: String,
+        required: true
+    }
 });
 
 const posts = ref([]);
@@ -20,6 +23,8 @@ const page = ref(1);
 const hasMorePosts = ref(true);
 const retryCount = ref(0);
 const MAX_RETRIES = 3;
+
+console.log(props.requestUrl)
 
 // check if we can load more posts
 const canLoadMore = computed(() => {
@@ -37,7 +42,7 @@ const loadMore = async () => {
         const url = new URL(props.requestUrl);
         url.searchParams.set('page', page.value + 1);
         const response = await axios.get(url.toString(), {
-            timeout: 1000,
+            timeout: 10000,
             cancelToken: new axios.CancelToken(c => {
                 window.cancelPostRequest = c;
             })
@@ -91,19 +96,6 @@ const loadMore = async () => {
 };
 
 const handleScroll = throttle(() => {
-    // Log all possible scroll-related properties
-    console.log('Comprehensive Scroll Debug:', {
-        windowPageYOffset: window.pageYOffset,
-        documentElementScrollTop: document.documentElement.scrollTop,
-        bodyScrollTop: document.body.scrollTop,
-        windowInnerHeight: window.innerHeight,
-        documentElementClientHeight: document.documentElement.clientHeight,
-        documentElementScrollHeight: document.documentElement.scrollHeight,
-        bodyScrollHeight: document.body.scrollHeight,
-        loading: loading.value,
-        canLoadMore: canLoadMore.value
-    });
-
     // Multiple scroll detection methods
     const scrollTop =
         window.pageYOffset ||
@@ -124,21 +116,9 @@ const handleScroll = throttle(() => {
             document.body.offsetHeight
         );
 
-    // Detailed near bottom logging
     const nearBottom = scrollTop + windowHeight >= documentHeight - 200;
 
-    console.log('Near Bottom Calculation:', {
-        scrollTop,
-        windowHeight,
-        documentHeight,
-        calculation: scrollTop + windowHeight,
-        threshold: documentHeight - 200,
-        isNearBottom: nearBottom
-    });
-
-    // Fallback scroll detection
     if (nearBottom && !loading.value && canLoadMore.value) {
-        console.log('Attempting to load more posts via scroll...');
         loadMore().catch(err => {
             console.error('Scroll-triggered load error:', err);
         });
@@ -188,7 +168,7 @@ const reloadPosts = async () => {
         const url = new URL(props.requestUrl);
         url.searchParams.set('page', page.value);
         const response = await axios.get(url.toString(), {
-            timeout: 1000,
+            timeout: 10000,
         });
         posts.value = response.data.data;
         page.value = response.data.current_page;
