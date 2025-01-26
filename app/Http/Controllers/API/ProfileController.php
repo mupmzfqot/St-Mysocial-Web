@@ -33,11 +33,15 @@ class ProfileController extends Controller
             $user = User::query()->where('id', $request->user_id)
                 ->isActive()
                 ->first();
+
+            if(!$user) {
+                Throw new \Exception('User not found');
+            }
             return response()->json([
                 'error' => 0,
                 'data' => new UserResource($user)
             ]);
-        } Catch (ValidationException $e) {
+        } Catch (\Exception $e) {
             return response()->json([
                 'error' => 1,
                 'message' => $e->getMessage()
