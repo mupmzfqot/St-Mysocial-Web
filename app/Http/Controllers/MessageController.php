@@ -77,23 +77,29 @@ class MessageController extends Controller
 
     public function sendMessage(Request $request, $conversation_id)
     {
-        $conversation = Conversation::query()->find($conversation_id);
-        Gate::authorize('send', $conversation);
+        try {
+            $conversation = Conversation::query()->find($conversation_id);
+            Gate::authorize('send', $conversation);
 
-        $message = $conversation->messages()->create([
-            'sender_id' => auth()->id(),
-            'content' => $request->message,
-        ]);
+            $message = $conversation->messages()->create([
+                'sender_id' => auth()->id(),
+                'content' => $request->message,
+            ]);
 
-        broadcast(new MessageSent($message));
+//            broadcast(new MessageSent($message));
 
-        return response()->json([
-            'id' => $message->id,
-            'conversation_id' => $message->conversation_id,
-            'content' => $message->content,
-            'sender_id' => $message->sender_id,
-            'sender_name' => $message->sender->name,
-        ]);
+            return response()->json([
+                'id' => $message->id,
+                'conversation_id' => $message->conversation_id,
+                'content' => $message->content,
+                'sender_id' => $message->sender_id,
+                'sender_name' => $message->sender->name,
+            ]);
+        } catch (\Exception $exception) {
+            return response()->json([
+                'message' => $exception->getMessage(),
+            ]);
+        }
 
     }
 
