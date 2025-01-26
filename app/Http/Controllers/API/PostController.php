@@ -242,13 +242,17 @@ class PostController extends Controller
         }
     }
 
-    public function getUserPosts(Request $request, $id)
+    public function getUserPosts(Request $request)
     {
         try {
+            $request->validate([
+                'user_id' => 'required|integer|exists:users,id'
+            ]);
+
             $perPage = $request->query('per_page', 20);
             $query = Post::query()
                 ->orderBy('created_at', 'desc')
-                ->where('user_id', $id)
+                ->where('user_id', $request->user_id)
                 ->with(['author', 'media']);
 
             if($request->user()->hasRole('public_user')) {
