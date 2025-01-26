@@ -59,7 +59,7 @@ class PostResource extends JsonResource
             'repost'        => new PostResource($this->whenLoaded('repost')),
             'liked'         => (bool) $this->is_liked,
             'commented'     => (bool) $this->commented,
-            'published'     => (bool) $this->is_published,
+            'published'     => (bool) $this->published,
         ];
     }
 }
