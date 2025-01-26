@@ -53,6 +53,12 @@ class MessageController extends Controller
     public function getConversation(Request $request, OpenConversation $openConversation)
     {
         try {
+            $request->validate([
+                'recipient_id' => 'required|integer|exists:users,id'
+            ], [
+                'recipient_id.exists' => 'User not exists'
+            ]);
+
             $authUserId = $request->user()->id;
             $recipientId = $request->recipient_id;
 

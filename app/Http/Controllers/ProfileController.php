@@ -34,10 +34,10 @@ class ProfileController extends Controller
         $totalPosts = $user->posts()->count();
         $totalLikes = $user->likes()->count();
         $totalComments = $user->comments()->count();
-        $type = 'user-post';
+        $requestUrl = route('user-post.tag-post', ['user_id' => $id]);
 
         return Inertia::render('Homepage/UserProfile',
-            compact('user', 'totalPosts', 'totalLikes', 'totalComments', 'type')
+            compact('user', 'totalPosts', 'totalLikes', 'totalComments', 'requestUrl')
         );
     }
 

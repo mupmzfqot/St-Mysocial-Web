@@ -24,7 +24,7 @@ class HomeController extends Controller
         return Inertia::render('Home', [
             'title' =>'ST Post',
             'description' => 'Post from Team ST',
-            'type'  => 'st'
+            'requestUrl' => route('user-post.get', ['type' => 'st']),
         ]);
     }
 
@@ -33,29 +33,15 @@ class HomeController extends Controller
         return Inertia::render('Home', [
             'title' =>'Public Post',
             'description' => 'Post for Public',
-            'type'  => 'public'
+            'type'  => 'public',
+            'requestUrl' => route('user-post.get', ['type' => 'public']),
         ]);
     }
 
     public function showLikedPosts()
     {
-        $posts = Post::query()
-            ->with('author', 'media', 'comments.user')
-            ->orderBy('created_at', 'desc')
-            ->whereHas('likes', function ($query) {
-                $query->where('user_id', auth()->id());
-            })
-            ->published()
-            ->paginate(30)
-            ->through(function ($post) {
-                // Ensure we have all necessary data loaded
-                $post->load('likes');
-                return $post;
-            })
-            ->withQueryString();
-
         return Inertia::render('Homepage/LikedPost', [
-            'posts' => $posts
+            'requestUrl' => route('user-post.liked-post')
         ]);
     }
 
@@ -74,18 +60,6 @@ class HomeController extends Controller
 
     public function createPost()
     {
-        $posts = Post::query()
-            ->with('author', 'media', 'comments.user')
-            ->orderBy('created_at', 'desc')
-            ->where('user_id', auth()->id())
-            ->paginate(30)
-            ->through(function ($post) {
-                // Ensure we have all necessary data loaded
-                $post->load('likes');
-                return $post;
-            })
-            ->withQueryString();
-
         $stUsers = User::query()->whereHas('roles', function ($query) {
                 $query->where('name', 'user');
             })
@@ -99,9 +73,9 @@ class HomeController extends Controller
         $defaultType = $isPrivilegedUser ? 'st' : 'public';
 
         return Inertia::render('Homepage/CreatePost', [
-            'posts' => $posts,
             'stUsers' => $stUsers,
-            'defaultType' => $defaultType
+            'defaultType' => $defaultType,
+            'requestUrl' => route('user-post.recent-post')
         ]);
     }
 
@@ -182,23 +156,8 @@ class HomeController extends Controller
 
     public function showTopPosts()
     {
-        $posts = Post::query()
-            ->with('author', 'media', 'comments.user')
-            ->orderBy(DB::raw('comment_count + like_count'), 'desc')
-            ->where('comment_count', '>', 0)
-            ->where('like_count', '>', 0)
-            ->published()
-            ->paginate(30)
-            ->through(function ($post) {
-                // Ensure we have all necessary data loaded
-                $post->load('likes');
-                return $post;
-            })
-            ->withQueryString();
-
-
         return Inertia::render('Homepage/TopPost', [
-            'posts' => $posts
+            'requestUrl' => route('user-post.get-top-post')
         ]);
     }
 

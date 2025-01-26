@@ -1,8 +1,8 @@
 <script setup>
-import { onMounted, onUnmounted, ref, computed, nextTick } from 'vue';
+import {computed, nextTick, onMounted, onUnmounted, ref} from 'vue';
 import Post from "@/Components/Post.vue";
 import axios from 'axios';
-import { throttle } from 'lodash-es';
+import {throttle} from 'lodash-es';
 
 const props = defineProps({
     likedColor: String,
@@ -10,7 +10,7 @@ const props = defineProps({
         type: Boolean,
         default: false
     },
-    type: String
+    requestUrl: String
 });
 
 const posts = ref([]);
@@ -22,7 +22,9 @@ const retryCount = ref(0);
 const MAX_RETRIES = 3;
 
 // check if we can load more posts
-const canLoadMore = computed(() => !loading.value && hasMorePosts.value);
+const canLoadMore = computed(() => {
+    return !loading.value && hasMorePosts.value;
+});
 
 const loadMore = async () => {
     if (!canLoadMore.value) return;
@@ -30,10 +32,11 @@ const loadMore = async () => {
     loading.value = true;
     error.value = null;
 
-
     try {
         const retryDelay = Math.pow(2, retryCount.value) * 1000;
-        const response = await axios.get(`user-post/get?type=${props.type}&page=${page.value + 1}`, {
+        const url = new URL(props.requestUrl);
+        url.searchParams.set('page', page.value + 1);
+        const response = await axios.get(url.toString(), {
             timeout: 1000,
             cancelToken: new axios.CancelToken(c => {
                 window.cancelPostRequest = c;
@@ -88,25 +91,93 @@ const loadMore = async () => {
 };
 
 const handleScroll = throttle(() => {
-    // More precise scroll detection
-    const bottomOfWindow = document.documentElement.scrollTop + window.innerHeight >=
-        document.documentElement.offsetHeight - 200; // 200px before bottom
+    // Log all possible scroll-related properties
+    console.log('Comprehensive Scroll Debug:', {
+        windowPageYOffset: window.pageYOffset,
+        documentElementScrollTop: document.documentElement.scrollTop,
+        bodyScrollTop: document.body.scrollTop,
+        windowInnerHeight: window.innerHeight,
+        documentElementClientHeight: document.documentElement.clientHeight,
+        documentElementScrollHeight: document.documentElement.scrollHeight,
+        bodyScrollHeight: document.body.scrollHeight,
+        loading: loading.value,
+        canLoadMore: canLoadMore.value
+    });
 
-    if (bottomOfWindow && canLoadMore.value) {
-        loadMore();
+    // Multiple scroll detection methods
+    const scrollTop =
+        window.pageYOffset ||
+        document.documentElement.scrollTop ||
+        document.body.scrollTop ||
+        0;
+
+    const windowHeight =
+        window.innerHeight ||
+        document.documentElement.clientHeight ||
+        document.body.clientHeight;
+
+    const documentHeight =
+        Math.max(
+            document.documentElement.scrollHeight,
+            document.body.scrollHeight,
+            document.documentElement.offsetHeight,
+            document.body.offsetHeight
+        );
+
+    // Detailed near bottom logging
+    const nearBottom = scrollTop + windowHeight >= documentHeight - 200;
+
+    console.log('Near Bottom Calculation:', {
+        scrollTop,
+        windowHeight,
+        documentHeight,
+        calculation: scrollTop + windowHeight,
+        threshold: documentHeight - 200,
+        isNearBottom: nearBottom
+    });
+
+    // Fallback scroll detection
+    if (nearBottom && !loading.value && canLoadMore.value) {
+        console.log('Attempting to load more posts via scroll...');
+        loadMore().catch(err => {
+            console.error('Scroll-triggered load error:', err);
+        });
     }
-}, 300); // 300ms throttle time
+}, 300);
 
 onMounted(() => {
+    // Multiple scroll event listeners
     window.addEventListener('scroll', handleScroll);
-    reloadPosts()
+    document.addEventListener('scroll', handleScroll);
+
+    // Intersection Observer as a fallback
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && canLoadMore.value && !loading.value) {
+                loadMore().catch(err => {
+                    console.error('Intersection Observer load error:', err);
+                });
+            }
+        });
+    }, {
+        root: null,
+        rootMargin: '0px',
+        threshold: 0.1
+    });
+
+    // Optional: Add an observer to the last post if possible
+    const lastPost = document.querySelector('.post-container > :last-child');
+    if (lastPost) {
+        observer.observe(lastPost);
+    }
+
+    // Initial posts load
+    reloadPosts();
 });
 
 onUnmounted(() => {
     window.removeEventListener('scroll', handleScroll);
-    if (window.cancelPostRequest) {
-        window.cancelPostRequest();
-    }
+    document.removeEventListener('scroll', handleScroll);
 });
 
 const reloadPosts = async () => {
@@ -114,7 +185,9 @@ const reloadPosts = async () => {
     error.value = null;
 
     try {
-        const response = await axios.get(`user-post/get?type=${props.type}&page=${page.value}`, {
+        const url = new URL(props.requestUrl);
+        url.searchParams.set('page', page.value);
+        const response = await axios.get(url.toString(), {
             timeout: 1000,
         });
         posts.value = response.data.data;

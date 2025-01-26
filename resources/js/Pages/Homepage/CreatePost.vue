@@ -30,9 +30,12 @@ const linkText = ref('');
 const selectedRange = ref(null);
 
 const props = defineProps({
-    posts: Object,
     stUsers: Object,
-    defaultType: String
+    defaultType: String,
+    requestUrl: {
+        type: String,
+        required: true,
+    }
 });
 
 const form = useForm({
@@ -390,7 +393,7 @@ onMounted(() => {
             </p>
         </div>
 
-        <PostContent :posts="posts" :post-status="true" />
+        <PostContent :post-status="true" :requestUrl="requestUrl" />
     </HomeLayout>
 
     <TransitionRoot appear :show="showLinkModal" as="template">

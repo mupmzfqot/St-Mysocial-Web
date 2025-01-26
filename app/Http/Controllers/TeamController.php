@@ -10,7 +10,7 @@ class TeamController extends Controller
     public function get()
 {
     $cacheKey = 'team_users_' . (auth()->user() ? auth()->user()->id : 'guest');
-    $cacheDuration = now()->addHours(1); 
+    $cacheDuration = now()->addMinutes(5);
 
     return \Cache::remember($cacheKey, $cacheDuration, function () {
         $query = User::query()
@@ -18,11 +18,8 @@ class TeamController extends Controller
                 $query->where('name', 'user');
             })
             ->whereNotNull('email_verified_at')
-            ->where('is_active', true);
-
-        if(auth()->user()) {
-            $query->where('id', '!=', auth()->user()->id);
-        }
+            ->where('is_active', true)
+            ->where('id', '!=', auth()->user()->id);
 
         return $query->get();
     });

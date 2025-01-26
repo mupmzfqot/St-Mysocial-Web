@@ -9,7 +9,10 @@ defineProps({
     totalPosts: Number,
     totalComments: Number,
     totalLikes: Number,
-    posts: Object
+    requestUrl: {
+        type: String,
+        required: true,
+    }
 })
 </script>
 
@@ -51,7 +54,7 @@ defineProps({
 
         <div class="py-4">
             <h2 class="font-medium mb-2">Recent Posts</h2>
-            <PostContent :posts="posts" />
+            <PostContent :requestUrl="requestUrl" />
         </div>
     </HomeLayout>
 </template>

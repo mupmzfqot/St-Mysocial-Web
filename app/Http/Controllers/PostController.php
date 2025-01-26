@@ -7,6 +7,7 @@ use App\Actions\Posts\Repost;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
@@ -15,16 +16,17 @@ class PostController extends Controller
     public function get(Request $request)
     {
         try {
+
             $query = Post::query()
                 ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media', 'repost.tags')
                 ->orderBy('created_at', 'desc')
                 ->published();
 
 
-            if (auth()->user()->hasRole('public_user')) {
-                $query->where('type', 'public');
-            } else {
-                $query->where('type', $request->type);
+            if($request->has('type')) {
+                $request->validate(['type' => 'required|in:st,public']);
+                $type = auth()->user()->hasRole('public_user') ? 'public' : $request->input('type');
+                $query->where('type', $type);
             }
 
             $posts = $query->simplePaginate(50)
@@ -37,7 +39,6 @@ class PostController extends Controller
                 'message' => config('app.debug')
                     ? $e->getMessage()
                     : 'An unexpected error occurred while retrieving posts.',
-                'status' => 500
             ], 500);
         }
     }
@@ -121,8 +122,6 @@ class PostController extends Controller
         } catch (\Exception $e) {
             return back()->withErrors(['error' => $e->getMessage()]);
         }
-
-
     }
 
     public function share(Request $request, Repost $repost)
@@ -163,5 +162,62 @@ class PostController extends Controller
             ->first();
 
         return Inertia::render('Posts/Form', compact('post', 'defaultType', 'stUsers', 'title'));
+    }
+
+    public function getTopPost(Request $request)
+    {
+        $posts = Post::query()
+            ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media', 'repost.tags')
+            ->where('comment_count', '>', 0)
+            ->where('like_count', '>', 0)
+            ->orderBy(DB::raw('comment_count + like_count'), 'desc')
+            ->published()
+            ->simplePaginate(50);
+
+        return response()->json($posts);
+    }
+
+    public function getLikedPost(Request $request)
+    {
+        $posts = Post::query()
+            ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media', 'repost.tags')
+            ->orderBy('created_at', 'desc')
+            ->whereHas('likes', function ($query) {
+                $query->where('user_id', auth()->id());
+            })
+            ->published()
+            ->simplePaginate(50);
+
+        return response()->json($posts);
+
+    }
+
+    public function getRecentPost(Request $request)
+    {
+        $posts = Post::query()
+            ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media', 'repost.tags')
+            ->orderBy('created_at', 'desc')
+            ->where('user_id', auth()->id())
+            ->published()
+            ->simplePaginate(50);
+
+        return response()->json($posts);
+
+    }
+
+    public function getTagPost(Request $request)
+    {
+        $user_id = $request->user_id;
+        $posts = Post::query()
+            ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media', 'repost.tags')
+            ->orderBy('created_at', 'desc')
+            ->where('user_id', $user_id)
+            ->orWhereHas('tags', function ($query) use($user_id) {
+                $query->where('user_id', $user_id);
+            })
+            ->simplePaginate(50);
+
+        return response()->json($posts);
+
     }
 }

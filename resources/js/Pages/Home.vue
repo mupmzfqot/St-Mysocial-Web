@@ -8,7 +8,10 @@ const props = defineProps({
     title: String,
     description: String,
     likedColor: String,
-    type: String
+    requestUrl : {
+        type: String,
+        required: true
+    }
 });
 
 </script>
@@ -27,7 +30,7 @@ const props = defineProps({
             </Link>
         </div>
 
-        <PostContent :type="props.type" />
+        <PostContent :type="props.type" :requestUrl="requestUrl" />
     </HomeLayout>
 </template>
 
