@@ -118,7 +118,7 @@ class PostController extends Controller
                 }
             }
 
-            return redirect()->back()->with('success', 'Post successfully updated.');
+            return redirect()->route('post-moderation.index-st')->with('success', 'Post successfully updated.');
 
         } catch (\Exception $e) {
             return back()->withErrors(['error' => $e->getMessage()]);
