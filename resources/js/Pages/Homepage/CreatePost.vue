@@ -1,13 +1,15 @@
 <script setup>
 import {Head, useForm, Link, router} from "@inertiajs/vue3";
-import {AlertCircle, ChevronDown, ImagePlus, Loader2, X, Paperclip, SmilePlus, SendHorizontal, LinkIcon, UserPlus} from "lucide-vue-next";
+import {AlertCircle, ChevronDown, Loader2, X, Paperclip, SmilePlus, SendHorizontal, LinkIcon, UserPlus} from "lucide-vue-next";
 import {computed, onMounted, ref} from "vue";
 import HomeLayout from "@/Layouts/HomeLayout.vue";
 import PostContent from "@/Components/PostContent.vue";
 import MultiSelect from "@/Components/MultiSelect.vue";
-import {Delta, QuillEditor} from '@vueup/vue-quill'
-import '@vueup/vue-quill/dist/vue-quill.snow.css'
-import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
+import {Delta, QuillEditor} from '@vueup/vue-quill';
+import '@vueup/vue-quill/dist/vue-quill.snow.css';
+import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue';
+import EmojiPicker from 'vue3-emoji-picker';
+import 'vue3-emoji-picker/css';
 
 const MAX_FILES = 10;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -200,7 +202,18 @@ onMounted(() => {
             }
         });
     }
-})
+});
+
+const showEmojiPicker = ref(false);
+const onSelectEmoji = (emoji) => {
+    if (quillEditor.value) {
+        const quill = quillEditor.value.getQuill();
+        const range = quill.getSelection() || { index: quill.getLength() };
+        quill.insertText(range.index, emoji.i);
+        quill.setSelection(range.index + emoji.i.length);
+    }
+    showEmojiPicker.value = false;
+};
 </script>
 
 <template>
@@ -322,12 +335,18 @@ onMounted(() => {
                             </div>
 
                             <div class="hs-tooltip [--placement:bottom] inline-block">
-                                <button type="button" class="hs-tooltip-toggle size-10 inline-flex justify-center items-center gap-2 rounded-md bg-gray-50 border border-gray-200 text-gray-600 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 focus:outline-none focus:bg-blue-50 focus:border-blue-200 focus:text-blue-600 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-white/10 dark:hover:border-white/10 dark:hover:text-white dark:focus:bg-white/10 dark:focus:border-white/10 dark:focus:text-white">
+                                <button @click="showEmojiPicker = !showEmojiPicker" type="button" class="hs-tooltip-toggle size-10 inline-flex justify-center items-center gap-2 rounded-md bg-gray-50 border border-gray-200 text-gray-600 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 focus:outline-none focus:bg-blue-50 focus:border-blue-200 focus:text-blue-600 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-white/10 dark:hover:border-white/10 dark:hover:text-white dark:focus:bg-white/10 dark:focus:border-white/10 dark:focus:text-white">
                                     <SmilePlus class="shrink-0 size-4" />
                                     <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible opacity-0 transition-opacity inline-block absolute invisible z-10 py-1 px-2 bg-gray-900 text-xs font-medium text-white rounded shadow-sm dark:bg-neutral-700" role="tooltip">
                                         Emoji
                                     </span>
                                 </button>
+
+                                <EmojiPicker
+                                    v-if="showEmojiPicker"
+                                    @select="onSelectEmoji"
+                                    class="absolute z-50"
+                                />
                             </div>
 
                             <div class="hs-tooltip [--placement:bottom] inline-block">

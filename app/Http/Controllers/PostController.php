@@ -89,7 +89,7 @@ class PostController extends Controller
                 $message = 'Your post will be available after admin approval.';
             }
 
-            return redirect()->back()->with('success', $message);
+            return redirect()->route('post.index')->with('success', $message);
 
         } catch (\Exception $e) {
             return back()->withErrors(['error' => $e->getMessage()]);

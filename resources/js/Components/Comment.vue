@@ -3,25 +3,22 @@ import { ref } from 'vue';
 import { useForm } from "@inertiajs/vue3";
 import { Heart, XCircle, X, SmilePlus, Paperclip } from "lucide-vue-next";
 import PostMedia from "@/Components/PostMedia.vue";
+import EmojiPicker from 'vue3-emoji-picker';
+import 'vue3-emoji-picker/css';
 
-// Props definition with comprehensive type checking
 const props = defineProps({
-    // Post ID for comment submission
     postId: {
         type: [Number, String],
         required: true
     },
-    // Array of comments to display
     comments: {
         type: Array,
         default: () => []
     },
-    // Current logged-in user
     currentUser: {
         type: Object,
         default: null
     },
-    // Configuration options for comment display
     config: {
         type: Object,
         default: () => ({
@@ -32,7 +29,6 @@ const props = defineProps({
     }
 });
 
-// Emitted events for parent component interaction
 const emit = defineEmits([
     'like-comment',
     'unlike-comment',
@@ -40,19 +36,16 @@ const emit = defineEmits([
     'comment-added'
 ]);
 
-// Form for comment submission
 const form = useForm({
     message: '',
     post_id: props.postId,
     files: []
 });
 
-// Reactive state for file handling
 const fileInput = ref(null);
 const previews = ref([]);
 const commentsContainer = ref(null);
 
-// File upload methods
 const triggerFileInput = () => {
     fileInput.value.click();
 };
@@ -61,7 +54,6 @@ const handleFiles = (event) => {
     const files = event.target?.files;
     if (files) {
         Array.from(files).forEach((file) => {
-            // File size limit (5MB)
             if (file.size <= 5 * 1024 * 1024) {
                 const fileReader = new FileReader();
                 fileReader.onload = (e) => {
@@ -79,7 +71,6 @@ const handleFiles = (event) => {
             }
         });
     }
-    // Reset file input
     if (event.target) {
         event.target.value = '';
     }
@@ -90,9 +81,7 @@ const removeMedia = (index) => {
     form.files.splice(index, 1);
 };
 
-// Comment submission method
 const submitComment = () => {
-    // Validate comment
     if (!form.message.trim() && previews.value.length === 0) {
         alert('Please enter a comment or upload a file');
         return;
@@ -100,14 +89,9 @@ const submitComment = () => {
 
     form.post(route('user-post.store-comment'), {
         onSuccess: () => {
-            // Reset form
             form.reset();
             previews.value = [];
-
-            // Emit event to parent
             emit('comment-added');
-
-            // Scroll to bottom of comments
             nextTick(() => {
                 if (commentsContainer.value) {
                     commentsContainer.value.scrollTop = commentsContainer.value.scrollHeight;
@@ -129,7 +113,6 @@ const handleDeleteComment = (commentId) => {
     emit('delete-comment', commentId);
 };
 
-// Date formatting utility
 const formatCommentTime = (timestamp) => {
     return new Date(timestamp).toLocaleString('en-US', {
         year: 'numeric',
@@ -138,6 +121,13 @@ const formatCommentTime = (timestamp) => {
         hour: '2-digit',
         minute: '2-digit'
     });
+};
+
+const showEmojiPicker = ref(false);
+
+const onSelectEmoji = (emoji) => {
+    form.message += emoji.i;
+    showEmojiPicker.value = false;
 };
 </script>
 
@@ -231,15 +221,18 @@ const formatCommentTime = (timestamp) => {
                         contenteditable="true"
                         class="flex-1 py-2 px-3 text-sm border rounded-lg border-gray-300 bg-white focus:ring-1 focus:ring-blue-500 focus:outline-none break-words"
                         placeholder="Type a message..."
-                    ></input>
+                    >
 
                     <!-- Emoji Picker -->
-                    <button
-                        type="button"
-                        class="flex items-center text-gray-800 hover:text-blue-600"
-                    >
+                    <button @click="showEmojiPicker = !showEmojiPicker"  type="button" class="flex items-center text-gray-800 hover:text-blue-600">
                         <SmilePlus class="shrink-0 size-5" />
                     </button>
+
+                    <EmojiPicker
+                        v-if="showEmojiPicker"
+                        @select="onSelectEmoji"
+                        class="absolute bottom-16 right-3"
+                    />
 
                     <!-- File Upload -->
                     <div v-if="config.allowFileUpload" class="flex items-center">
