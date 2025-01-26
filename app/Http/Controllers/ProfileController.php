@@ -34,19 +34,10 @@ class ProfileController extends Controller
         $totalPosts = $user->posts()->count();
         $totalLikes = $user->likes()->count();
         $totalComments = $user->comments()->count();
-        $posts = Post::query()
-            ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media', 'repost.tags')
-            ->orderBy('created_at', 'desc')
-            ->published()
-            ->orWhereHas('tags', function ($query) use ($id) {
-                $query->where('user_id', $id)
-                    ->whereHas('post', fn ($query) => $query->where('repost_id', null));
-            })
-            ->where('user_id', $id)
-            ->paginate(50);
+        $type = 'user-post';
 
         return Inertia::render('Homepage/UserProfile',
-            compact('user', 'totalPosts', 'totalLikes', 'totalComments', 'posts')
+            compact('user', 'totalPosts', 'totalLikes', 'totalComments', 'type')
         );
     }
 
