@@ -3,6 +3,7 @@ import {Head, router} from "@inertiajs/vue3";
 import HomeLayout from "@/Layouts/HomeLayout.vue";
 import {ref, onMounted, onBeforeUnmount, watch, nextTick} from 'vue';
 import axios from "axios";
+import {useUnreadMessages} from "@/Composables/useUnreadMessages.js";
 
 const props = defineProps({
     messages: Object,
@@ -29,7 +30,7 @@ const fetchMessages = async () => {
     try {
         const response = await axios.get(route('message.fetch', props.conversation.id));
         const newMessages = response.data;
-        
+
         // Only update if there are new messages
         if (newMessages.length > activeMessages.value.length) {
             activeMessages.value = newMessages;
@@ -59,14 +60,14 @@ const sendMessage = async (conversationId) => {
             const response = await axios.post(route('message.send', conversationId), {
                 message: content.value,
             });
-            
+
             content.value = "";
-            
+
             // If WebSocket is down, immediately add the message to the list
             if (!isWebSocketConnected.value) {
                 activeMessages.value.push(response.data);
             }
-            
+
             scrollToBottom();
         } catch (error) {
             console.error('Error sending message:', error);
@@ -82,6 +83,8 @@ function textareaAutoHeight(el, offsetTop = 0) {
 
 const markAsRead = async() => {
     await axios.post(route('message.mark-as-read', props.conversation.id));
+    fetchUnreadMessageCount();
+
 };
 
 onMounted(() => {
@@ -170,6 +173,10 @@ onMounted(() => {
 });
 
 
+const {
+    fetchUnreadMessageCount,
+} = useUnreadMessages();
+
 </script>
 
 <template>
@@ -222,10 +229,10 @@ onMounted(() => {
             <div class="shrink-0 border-t mt-auto">
                 <!-- Textarea -->
                 <div class="relative">
-                    <textarea id="hs-textarea-ex-1" @input="sendTypingEvent" v-model="content" 
-                        class="p-4 pb-12 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 
-                        focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 
-                        dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 
+                    <textarea id="hs-textarea-ex-1" @input="sendTypingEvent" v-model="content"
+                        class="p-4 pb-12 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500
+                        focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900
+                        dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500
                         dark:focus:ring-neutral-600 max-h-32"
                         placeholder="Send message..."></textarea>
 

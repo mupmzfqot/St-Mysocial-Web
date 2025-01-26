@@ -45,8 +45,8 @@ class DashboardController extends Controller
             ->count();
 
         return response()->json([
-            'pendingUsers' => $pendingUsers,
-            'pendingPosts' => $pendingPosts,
+            'users' => $pendingUsers,
+            'posts' => $pendingPosts,
         ]);
     }
 

@@ -14,6 +14,7 @@ const teams = ref([]);
 
 const isPublic = userRoles.includes("public_user");
 const isST = userRoles.includes("user");
+const { unreadMessageCount, fetchUnreadMessageCount } = useUnreadMessages();
 
 const readNotification = (item) => {
     router.visit(route('read-notification', item.id), {
@@ -25,18 +26,9 @@ const readNotification = (item) => {
     })
 }
 
-const {
-    unreadMessageCount,
-    fetchUnreadMessageCount,
-    markConversationAsRead
-} = useUnreadMessages();
-
 const fetchTeams = async () => {
     teams.value = await TeamStore.fetchTeams();
 }
-
-// Computed property to determine if there are unread messages
-const hasUnreadMessages = computed(() => unreadMessageCount.value > 0);
 
 // Poll for unread messages every 30 seconds
 let pollInterval;
@@ -56,14 +48,12 @@ onMounted(() => {
     fetchTeams();
     fetchUnreadMessageCount();
 
-    // Start polling
     pollInterval = setInterval(fetchUnreadMessageCount, 30000);
 
-    // Set up real-time listener for new messages
     window.Echo.private(`App.Models.User.${usePage().props.auth.user.id}`)
         .notification((notification) => {
             if (notification.type === 'NewMessage') {
-                fetchUnreadMessageCount(); // Fetch the updated count when new message arrives
+                fetchUnreadMessageCount();
             }
         });
 })

@@ -7,6 +7,7 @@ import ConfirmDialog from "@/Components/ConfirmDialog.vue";
 import {reactive, ref, watch} from "vue";
 import {debounce} from "lodash";
 import Pagination from "@/Components/Pagination.vue";
+import {usePendingApprovals} from "@/Composables/usePendingApprovals.js";
 
 const props = defineProps({
     users: Object,
@@ -16,6 +17,7 @@ const props = defineProps({
 });
 
 const search = ref(props.searchTerm);
+const { fetchPendingApprovals } = usePendingApprovals();
 
 watch(
     search,
@@ -32,6 +34,9 @@ const removeUser = (user) => {
     confirmData.id = user.id;
     confirmData.message = `Do you want to remove user <b>${user.name}</b>?`;
     confirmData.url = route('user.delete', user.id);
+    confirmData.onSuccess = async () => {
+        await fetchPendingApprovals();
+    };
 }
 
 const setActive = (user) => {
@@ -39,6 +44,9 @@ const setActive = (user) => {
     confirmData.message = `Do you want to activate user <b>${user.name}</b>?`;
     confirmData.url = route('admin.update-status', user.id);
     confirmData.data = { is_active: true };
+    confirmData.onSuccess = async () => {
+        await fetchPendingApprovals();
+    };
 }
 
 const reject = (user) => {
@@ -46,6 +54,9 @@ const reject = (user) => {
     confirmData.message = `Do you want to activate user <b>${user.name}</b>?`;
     confirmData.url = route('admin.update-status', user.id);
     confirmData.data = { is_active: false };
+    confirmData.onSuccess = async () => {
+        await fetchPendingApprovals();
+    };
 }
 
 </script>

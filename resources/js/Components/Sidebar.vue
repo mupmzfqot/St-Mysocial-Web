@@ -1,29 +1,18 @@
 <script setup>
 import {Link, usePage} from "@inertiajs/vue3";
-import { LucideHome, Users, CircleUser, IdCard, MessageSquareMore, Settings, CircleHelp, SlidersHorizontal } from "lucide-vue-next";
-import {onMounted, ref} from "vue";
+import { LucideHome, Users, IdCard, MessageSquareMore, SlidersHorizontal } from "lucide-vue-next";
+import {computed, onMounted, ref, watch} from "vue";
+import { usePendingApprovals } from "@/Composables/usePendingApprovals.js";
 
 const currentPath = ref(usePage().url)
-const pendingUserApprovals = ref(0)
-const pendingPostApprovals = ref(0)
+const page = usePage();
+const { pendingApprovals } = usePendingApprovals();
 
 function isActiveNav(path) {
     return currentPath.value === path
 }
 
-async function fetchPendingApprovals() {
-    try {
-        const response = await axios.get(route('admin.pending-approval'))
-        pendingUserApprovals.value = response.data.pendingUsers;
-        pendingPostApprovals.value = response.data.pendingPosts;
-        return response.data;
-    } catch (error) {
-        console.error('Error fetching pending approvals:', error)
-    }
-}
-
-onMounted(fetchPendingApprovals)
-
+watch(() => page.props.pendingApprovals, (newApprovals) => {}, { immediate: true });
 </script>
 
 <template>
@@ -107,7 +96,7 @@ onMounted(fetchPendingApprovals)
                                         <Link :href="route('post-moderation.index')" type="button" :class="['flex items-center gap-x-3.5 py-2 px-2.5 text-sm font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:bg-gray-100', isActiveNav('/post-moderation') ? 'bg-blue-100 text-gray-800': 'text-white']" aria-expanded="true" aria-controls="users-accordion-child">
                                             Public Post
                                             <span class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full ms-auto text-xs font-medium bg-gray-100 text-red-800 dark:bg-white/10 dark:text-white">
-                                                {{ pendingPostApprovals }}
+                                                {{ pendingApprovals.pendingPosts }}
                                             </span>
                                         </Link>
                                     </li>
@@ -119,7 +108,7 @@ onMounted(fetchPendingApprovals)
                             <Link :href="route('user.public')" :class="['flex items-center gap-x-3.5 py-2 px-2.5 text-sm font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:bg-gray-100', isActiveNav('/user/public-account') ? 'bg-blue-100 text-gray-800': 'text-white']">
                                 <IdCard class="shrink-0 size-4" /> Public Account
                                 <span class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full ms-auto text-xs font-medium bg-gray-100 text-red-800 dark:bg-white/10 dark:text-white">
-                                    {{ pendingUserApprovals }}
+                                    {{ pendingApprovals.pendingUsers }}
                                 </span>
                             </Link>
                         </li>

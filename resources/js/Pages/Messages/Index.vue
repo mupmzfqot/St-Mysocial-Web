@@ -1,7 +1,6 @@
 <script setup>
-import {Head, Link, router} from "@inertiajs/vue3";
+import {Head, Link} from "@inertiajs/vue3";
 import HomeLayout from "@/Layouts/HomeLayout.vue";
-import {ref} from "vue";
 import { useUnreadMessages } from '@/Composables/useUnreadMessages';
 
 const props = defineProps({
