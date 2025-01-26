@@ -54,7 +54,7 @@ class ProfileController extends Controller
                 'gender' => ['required', 'in:Male,Female'],
             ]);
 
-            $user = User::query()->find('id', $request->user()->id);
+            $user = User::query()->find($request->user()->id);
             $user->name = $request->name;
             $user->username = $request->username;
             $user->gender = $request->gender;
