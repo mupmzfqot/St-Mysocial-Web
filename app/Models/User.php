@@ -69,6 +69,11 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
         return $query->where('is_active', true);
     }
 
+    public function scopeExceptId($query, $id)
+    {
+        return $query->whereNot('id', $id);
+    }
+
     public function getAvatarAttribute(): ?string
     {
         return $this->getMedia('avatar')
