@@ -21,52 +21,18 @@ class HomeController extends Controller
 {
     public function index()
     {
-        $query = Post::query()
-            ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media')
-            ->orderBy('created_at', 'desc')
-            ->published();
-
-        if(auth()->user()->hasRole('public_user')) {
-            $query->where('type', 'public');
-        }
-
-        $query->where('type', 'st');
-
-        $posts = $query->paginate(30)
-            ->through(function ($post) {
-                $post->load('likes');
-                return $post;
-            })
-            ->withQueryString();
-
-
-        $title = 'ST Post';
-        $description = 'Post from ST Team';
-
         return Inertia::render('Home', [
-            'posts' => $posts,
-            'title' => $title,
-            'description' => $description,
+            'title' =>'ST Post',
+            'description' => 'Post from Team ST',
             'type'  => 'st'
         ]);
     }
 
     public function publicPost()
     {
-        $posts = Post::query()
-        ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media')
-        ->orderBy('created_at', 'desc')
-        ->published()
-        ->where('type', 'public')
-        ->paginate(30);
-
-        $title = 'Public Post';
-        $description = 'Post for Public';
-
         return Inertia::render('Home', [
-            'posts' => $posts,
-            'title' => $title,
-            'description' => $description,
+            'title' =>'Public Post',
+            'description' => 'Post for Public',
             'type'  => 'public'
         ]);
     }

@@ -27,11 +27,7 @@ class PostController extends Controller
                 $query->where('type', $request->type);
             }
 
-            $posts = $query->paginate(30)
-                ->through(function ($post) {
-                    $post->load('likes');
-                    return $post;
-                })
+            $posts = $query->simplePaginate(50)
                 ->withQueryString();
 
             return response()->json($posts);

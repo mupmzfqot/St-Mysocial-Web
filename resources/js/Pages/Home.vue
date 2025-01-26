@@ -3,12 +3,9 @@ import {Head, Link} from "@inertiajs/vue3";
 import HomeLayout from "@/Layouts/HomeLayout.vue";
 import {SquarePen} from "lucide-vue-next";
 import PostContent from "@/Components/PostContent.vue";
+import InfinitePostLoad from "@/Components/InfinitePostLoad.vue";
 
 const props = defineProps({
-    posts: {
-        type: Object,
-        required: true,
-    },
     title: String,
     description: String,
     likedColor: String,
@@ -31,7 +28,7 @@ const props = defineProps({
             </Link>
         </div>
 
-        <PostContent :posts="posts" :type="props.type" />
+        <PostContent :type="props.type" />
     </HomeLayout>
 </template>
 
