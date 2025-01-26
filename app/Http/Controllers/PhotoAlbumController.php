@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\MediaResource;
 use App\Models\Post;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
@@ -15,11 +15,12 @@ class PhotoAlbumController extends Controller
             ->where('user_id', auth()->id())
             ->pluck('id');
 
-        $media = Media::query()
+        $medias = Media::query()
             ->whereIn('model_id', $postId)
             ->where('model_type', Post::class)
+            ->where('mime_type', '!=', 'application/pdf')
             ->get();
 
-        return Inertia::render('PhotoAlbum/Index', compact('media'));
+        return Inertia::render('PhotoAlbum/Index', compact('medias'));
     }
 }

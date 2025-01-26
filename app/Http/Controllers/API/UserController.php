@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\MediaResource;
 use App\Http\Resources\UserResource;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class UserController extends Controller
 {
@@ -65,30 +67,49 @@ class UserController extends Controller
 
     public function getMedia(Request $request)
     {
-        $user = $request->user()->id;
-        $postMedia = Post::where('user_id', $user)->with('media')->get();
+        try {
+            $user = $request->user()->id;
+            $post_id = Post::where('user_id', $user)->get()->pluck('id');
 
-        $media = $postMedia?->map(function ($post) {
-            $medias = [];
-             foreach ($post->media as $item) {
-                 $medias[] = [
-                     'id' => $item['id'],
-                     'name' => $item['name'],
-                     'file_name' => $item['file_name'],
-                     'mime_type' => $item['mime_type'],
-                     'size' => $item['size'],
-                     'collection_name' => $item['collection_name'],
-                     'url' => $item['original_url'],
-                 ];
-             }
+            $medias = Media::query()
+                ->whereIn('model_id', $post_id)
+                ->where('model_type', Post::class)
+                ->where('mime_type', '!=', 'application/pdf')
+                ->get();
 
-             return $medias;
-        });
+            $groupedMedias = $medias->map(fn ($item) => [
+                'id'            => $item->id,
+                'filename'      => $item->file_name,
+                'preview_url'   => $item->preview_url,
+                'original_url'  => $item->original_url,
+                'extension'     => $item->extension,
+                'mime_type'     => $item->mime_type,
+            ])->groupBy(function ($item) {
+                if (str_starts_with($item['mime_type'], 'video/')) {
+                    return 'video';
+                } elseif (str_starts_with($item['mime_type'], 'image/')) {
+                    return 'image';
+                } elseif ($item['mime_type'] === 'application/pdf') {
+                    return 'document';
+                }
+                return 'other';
+            })->map(function ($items, $type) {
+                return [
+                    'type' => $type,
+                    'content' => $items->pluck('original_url')->all(),
+                ];
+            })->values();
 
-        return response()->json([
-            'error' => 0,
-            'data' => $media
-        ]);
+            return response()->json([
+                'error' => 0,
+                'data' => $groupedMedias
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 1,
+                'message' => $e->getMessage()
+            ]);
+        }
 
     }
 }

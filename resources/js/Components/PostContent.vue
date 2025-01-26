@@ -24,8 +24,6 @@ const hasMorePosts = ref(true);
 const retryCount = ref(0);
 const MAX_RETRIES = 3;
 
-console.log(props.requestUrl)
-
 // check if we can load more posts
 const canLoadMore = computed(() => {
     return !loading.value && hasMorePosts.value;
