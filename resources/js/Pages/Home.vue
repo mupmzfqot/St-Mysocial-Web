@@ -3,7 +3,6 @@ import {Head, Link} from "@inertiajs/vue3";
 import HomeLayout from "@/Layouts/HomeLayout.vue";
 import {SquarePen} from "lucide-vue-next";
 import PostContent from "@/Components/PostContent.vue";
-import InfinitePostLoad from "@/Components/InfinitePostLoad.vue";
 
 const props = defineProps({
     title: String,
