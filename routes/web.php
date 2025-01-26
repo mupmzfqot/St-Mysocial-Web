@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ChangePasswordController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MessageController;
@@ -42,6 +43,8 @@ Route::middleware(['auth', 'verified', 'role:user|public_user'])->group(function
     });
 
     Route::get('st-user', [UserController::class, 'stIndex'])->name('st-user');
+    Route::get('change-password', [ChangePasswordController::class, 'index'])->name('change-password.index');
+    Route::post('change-password', [ChangePasswordController::class, 'store'])->name('change-password.store');
     Route::get('notifications', [HomeController::class, 'notifications'])->name('notifications');
 
 });

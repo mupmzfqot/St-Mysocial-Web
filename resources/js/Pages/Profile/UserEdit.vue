@@ -2,11 +2,10 @@
 import DeleteUserForm from './Partials/DeleteUserForm.vue';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm.vue';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm.vue';
-import {Head, Link, usePage} from '@inertiajs/vue3';
+import {Head, usePage} from '@inertiajs/vue3';
 import HomeLayout from "@/Layouts/HomeLayout.vue";
 import ImageCropper from "@/Components/ImageCropper.vue";
 import {ref} from "vue";
-import {MessageSquareMore} from "lucide-vue-next";
 import { Dialog, DialogPanel, DialogTitle, TransitionRoot } from '@headlessui/vue';
 
 defineProps({

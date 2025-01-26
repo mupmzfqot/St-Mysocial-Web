@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -41,6 +42,16 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
         $request->session()->regenerate();
+
+        $verified_at = auth()->user()->email_verified_at;
+        $isSameDay = false;
+        if ($verified_at && Carbon::parse($verified_at)->isSameDay(Carbon::now())) {
+            $isSameDay = true;
+        }
+
+        if (is_null(auth()->user()->last_login) && $isSameDay === false) {
+            return redirect()->route('change-password.index');
+        }
 
         auth()->user()->update(['is_login' => 1, 'last_login' => now()]);
         $role = auth()->user()->getRoleNames()->first();

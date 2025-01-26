@@ -1,8 +1,8 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
+import {Link, usePage} from '@inertiajs/vue3';
 
 import { onMounted } from 'vue';
-import {HSCopyMarkup as HSStaticMethods} from "preline";
+const { auth } = usePage().props;
 
 onMounted(() => {
     window.HSStaticMethods.autoInit()
@@ -32,7 +32,7 @@ onMounted(() => {
             <!-- End Logo w/ Collapse Button -->
 
             <!-- Collapse -->
-            <div id="hs-header-classic" class="hs-collapse hidden overflow-hidden transition-all duration-300 basis-full grow md:block" aria-labelledby="hs-header-classic-collapse">
+            <div v-if="!auth.user" id="hs-header-classic" class="hs-collapse hidden overflow-hidden transition-all duration-300 basis-full grow md:block" aria-labelledby="hs-header-classic-collapse">
                 <div class="overflow-hidden overflow-y-auto max-h-[75vh] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500">
                     <div class="py-2 md:py-0 flex flex-col md:flex-row md:items-center md:justify-end gap-0.5 md:gap-1">
 
