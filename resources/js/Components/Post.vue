@@ -529,7 +529,7 @@ const styledTag = (value) => {
                                             <div class="text-xs text-gray-500 dark:text-neutral-500">{{ postDetails.created_at }}</div>
                                         </div>
                                     </div>
-                                    <div class="text-gray-800 text-wrap text-sm dark:text-neutral-400" v-html="styledTag(postDetails.post)"></div>
+                                    <div class="text-gray-800 text-wrap text-sm dark:text-neutral-400 pt-1" v-html="styledTag(postDetails.post)"></div>
 
                                     <!-- Post Media -->
                                     <PostMedia

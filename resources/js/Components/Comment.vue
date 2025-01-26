@@ -136,12 +136,12 @@ const onSelectEmoji = (emoji) => {
         <!-- Comments List (Scrollable) -->
         <div
             ref="commentsContainer"
-            class="comments-list flex-grow overflow-y-auto pr-2 pb-10"
+            class="comments-list flex-grow overflow-y-auto pr-2 pb-10 min-h-60"
         >
             <!-- No Comments State -->
             <div
                 v-if="comments.length === 0"
-                class="text-center text-gray-500 text-sm py-4"
+                class="text-gray-500 text-sm py-4"
             >
                 No comments yet
             </div>
