@@ -7,6 +7,7 @@ use App\Actions\Posts\Repost;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -166,16 +167,21 @@ class PostController extends Controller
 
     public function getTopPost(Request $request)
     {
-        $posts = Post::query()
-            ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media', 'repost.tags')
-            ->where('comment_count', '>', 0)
-            ->where('like_count', '>', 0)
-            ->orderBy(DB::raw('comment_count + like_count'), 'desc')
-            ->published()
-            ->simplePaginate(50);
+            $cacheKey = 'top_posts_' . md5(json_encode($request->all()));
+            $posts = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($request) {
+                $query = Post::query()
+                    ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media', 'repost.tags')
+                    ->where('comment_count', '>', 0)
+                    ->where('like_count', '>', 0)
+                    ->orderBy(DB::raw('comment_count + like_count'), 'desc')
+                    ->published();
 
-        return response()->json($posts);
+                return $query->simplePaginate(50)->withQueryString();
+            });
+
+            return response()->json($posts);
     }
+
 
     public function getLikedPost(Request $request)
     {

@@ -38,6 +38,13 @@ class HomeController extends Controller
         ]);
     }
 
+    public function showTopPosts()
+    {
+        return Inertia::render('Homepage/TopPost', [
+            'requestUrl' => route('user-post.get-top-post')
+        ]);
+    }
+
     public function showLikedPosts()
     {
         return Inertia::render('Homepage/LikedPost', [
@@ -55,7 +62,6 @@ class HomeController extends Controller
             ->first();
 
         return response()->json($post);
-//        return Inertia::render('Homepage/PostDetail', compact('post'));
     }
 
     public function createPost()
@@ -152,13 +158,6 @@ class HomeController extends Controller
         } Catch (\Exception $e) {
             DB::rollBack();
         }
-    }
-
-    public function showTopPosts()
-    {
-        return Inertia::render('Homepage/TopPost', [
-            'requestUrl' => route('user-post.get-top-post')
-        ]);
     }
 
     public function notifications()

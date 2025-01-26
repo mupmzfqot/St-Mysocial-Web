@@ -17,7 +17,7 @@ const posts = ref([]);
 const loading = ref(false);
 const error = ref(null);
 const page = ref(1);
-const hasMorePosts = ref(!!posts.next_page_url);
+const hasMorePosts = ref(true);
 const retryCount = ref(0);
 const MAX_RETRIES = 3;
 
