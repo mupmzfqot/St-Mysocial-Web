@@ -8,8 +8,9 @@ import TextInput from '@/Components/TextInput.vue';
 import {Head, Link, useForm} from '@inertiajs/vue3';
 import TogglePassword from "@/Components/TogglePassword.vue";
 import {useRecaptchaProvider, Checkbox as RecaptchaCheckbox} from "vue-recaptcha";
+import { ref, computed } from 'vue';
 
-defineProps({
+const props = defineProps({
     canResetPassword: {
         type: Boolean,
     },
@@ -18,7 +19,6 @@ defineProps({
     },
 });
 
-
 const form = useForm({
     email: '',
     password: '',
@@ -26,14 +26,49 @@ const form = useForm({
     recaptcha: '',
 });
 
+const loginError = ref({
+    message: '',
+    remainAttempts: null,
+    maxAttempts: null,
+    unlockAt: null
+});
+
 useRecaptchaProvider()
 
 const submit = () => {
+    // Reset previous error
+    loginError.value = {
+        message: '',
+        remainAttempts: null,
+        maxAttempts: null,
+        unlockAt: null
+    };
+
     form.post(route('login'), {
         onFinish: () => form.reset('password'),
+        onError: (errors) => {
+            // Check if email error contains our custom rate limit information
+            if (errors.email && Array.isArray(errors.email)) {
+                const errorDetails = errors.email[0];
+
+                loginError.value = {
+                    message: errorDetails.message || 'Login failed',
+                    remainAttempts: errorDetails.remain_attempts ?? null,
+                    maxAttempts: errorDetails.max_attempts ?? null,
+                    unlockAt: errorDetails.unlock_at ? new Date(errorDetails.unlock_at) : null
+                };
+            }
+        }
     });
 };
 
+// Computed property to format unlock time
+const formattedUnlockTime = computed(() => {
+    if (loginError.value.unlockAt) {
+        return loginError.value.unlockAt.toLocaleString();
+    }
+    return null;
+});
 </script>
 
 <template>
@@ -42,6 +77,21 @@ const submit = () => {
 
         <div v-if="status" class="mb-4 font-medium text-sm text-green-600">
             {{ status }}
+        </div>
+
+        <!-- Rate Limit Error Message -->
+        <div v-if="loginError.message" class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+            <p>{{ loginError.message }}</p>
+
+            <!-- Remaining Attempts Message -->
+            <p v-if="loginError.remainAttempts !== null && loginError.remainAttempts >= 0">
+                Remaining attempts: {{ loginError.remainAttempts }} / {{ loginError.maxAttempts }}
+            </p>
+
+            <!-- Unlock Time Message -->
+            <p v-if="formattedUnlockTime">
+                You can try again after: {{ formattedUnlockTime }}
+            </p>
         </div>
 
         <div class="bg-white border rounded-xl shadow-sm sm:flex dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-700/70">
@@ -53,11 +103,31 @@ const submit = () => {
                     <h3 class="text-2xl text-center font-bold text-gray-800 dark:text-white">
                         Login
                     </h3>
-                    <div class="mt-16">
+                    <div :class="[form.errors.email ? 'mt-0': 'mt-4']">
+                        <div class="py-3" v-if="form.errors.email">
+                            <div class="bg-yellow-50 border border-red-400 text-sm text-red-800 rounded-lg p-4 dark:bg-yellow-800/10 dark:border-yellow-900 dark:text-yellow-500" role="alert" tabindex="-1" aria-labelledby="hs-with-description-label">
+                                <div class="flex">
+                                    <div class="shrink-0">
+                                        <svg class="shrink-0 size-4 mt-0.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                                            <path d="M12 9v4"></path>
+                                            <path d="M12 17h.01"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="ms-4">
+                                        <h3 id="hs-with-description-label" class="text-sm font-semibold">
+                                            Login Failed!
+                                        </h3>
+                                        <div class="mt-1 text-sm text-gray-800">
+                                            {{ form.errors.email }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <form @submit.prevent="submit">
                             <div>
                                 <InputLabel for="email" value="Email" />
-
                                 <TextInput
                                     id="email"
                                     type="email"
@@ -67,16 +137,11 @@ const submit = () => {
                                     autofocus
                                     autocomplete="username"
                                 />
-
-                                <InputError class="mt-2" :message="form.errors.email" />
                             </div>
 
                             <div class="mt-4">
                                 <InputLabel for="password" value="Password" />
-
                                 <TogglePassword v-model="form.password" />
-
-                                <InputError class="mt-2" :message="form.errors.password" />
                             </div>
 
                             <div class="block mt-4">
@@ -90,7 +155,6 @@ const submit = () => {
                                     <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">Remember me</span>
                                 </label>
                             </div>
-
 
                             <div class="flex items-center justify-between mt-4">
                                 <PrimaryButton class="" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
@@ -113,7 +177,5 @@ const submit = () => {
                 </div>
             </div>
         </div>
-
-
     </GuestLayout>
 </template>
