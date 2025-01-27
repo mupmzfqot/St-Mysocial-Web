@@ -164,13 +164,14 @@ const onSelectEmoji = (emoji) => {
 
             <div class="flex items-center space-x-2 border-t rounded-xl border-gray-200 p-1 bg-gray-200">
                 <!-- Chat Input -->
-                <input
+                <textarea
                     id="chat-input"
                     v-model="content"
                     contenteditable="true"
-                    class="flex-1 py-2 px-3 text-sm border rounded-lg border-gray-300 bg-white focus:ring-1 focus:ring-blue-500 focus:outline-none break-words"
+                    rows="1"
                     placeholder="Type a message..."
-                >
+                    class="flex-1 py-2 px-3 text-sm border rounded-lg border-gray-300 bg-white focus:ring-1 focus:ring-blue-500 focus:outline-none break-words resize-none overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full"
+                ></textarea>
 
                 <!-- Emoji Picker -->
                 <button @click="showEmojiPicker = !showEmojiPicker"  type="button"
@@ -194,32 +195,6 @@ const onSelectEmoji = (emoji) => {
                 </button>
 
             </div>
-
-<!--            &lt;!&ndash; Input Area &ndash;&gt;-->
-<!--            <div class="shrink-0 border-t mt-auto">-->
-<!--                &lt;!&ndash; Textarea &ndash;&gt;-->
-<!--                <div class="relative">-->
-<!--                    <textarea id="hs-textarea-ex-1" @input="sendTypingEvent" v-model="content"-->
-<!--                        class="p-4 pb-12 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500-->
-<!--                        focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900-->
-<!--                        dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500-->
-<!--                        dark:focus:ring-neutral-600 max-h-32"-->
-<!--                        placeholder="Send message..."></textarea>-->
-
-<!--                    &lt;!&ndash; Toolbar &ndash;&gt;-->
-<!--                    <div class="absolute bottom-px inset-x-px p-2 rounded-b-md bg-white dark:bg-neutral-900">-->
-<!--                        &lt;!&ndash; Send Button &ndash;&gt;-->
-<!--                        <button type="button"-->
-<!--                                class="rounded-lg bg-blue-600 text-sm text-white hover:bg-blue-500 px-4 py-1"-->
-<!--                                @click="sendMessage(conversation.id)">-->
-<!--                            Send-->
-<!--                        </button>-->
-<!--                        &lt;!&ndash; End Send Button &ndash;&gt;-->
-<!--                    </div>-->
-<!--                    &lt;!&ndash; End Toolbar &ndash;&gt;-->
-<!--                </div>-->
-<!--                &lt;!&ndash; End Textarea &ndash;&gt;-->
-<!--            </div>-->
 
         </div>
 
