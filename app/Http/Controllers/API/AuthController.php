@@ -49,9 +49,9 @@ class AuthController extends Controller
         return response()->json([
             'error' => 0,
             'token' => $token,
-            'token_expired_at' => $t_expired_at,
+            'token_expired_at' => $t_expired_at->toDateTimeString(),
             'refresh_token' => $refresh_token,
-            'refresh_token_expired_at' => $rt_expired_at,
+            'refresh_token_expired_at' => $rt_expired_at->toDateTimeString(),
             'token_type' => 'Bearer',
             'user'  => new UserResource($user),
         ]);
@@ -206,9 +206,9 @@ class AuthController extends Controller
         return response()->json([
             'error' => 0,
             'token' => $token,
-            'token_expired_at' => $t_expired_at,
+            'token_expired_at' => $t_expired_at->toDateTimeString(),
             'refresh_token' => $refresh_token,
-            'refresh_token_expired_at' => $rt_expired_at,
+            'refresh_token_expired_at' => $rt_expired_at->toDateTimeString(),
             'token_type' => 'Bearer',
         ], 201);
     }
