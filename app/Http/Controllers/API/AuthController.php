@@ -6,13 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\APILoginRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Auth\Events\PasswordReset;
-use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
@@ -40,13 +41,20 @@ class AuthController extends Controller
         }
 
         $user->update(['is_login' => 1, 'last_login' => now()]);
-        $token = $user->createToken($user->name)->plainTextToken;
+        $t_expired_at     = Carbon::now()->addHours(1);
+        $rt_expired_at    = Carbon::now()->addDays(30);
+        $token = $user->createToken('access_token', ['*'], $t_expired_at)->plainTextToken;
+        $refresh_token = $user->createToken('refresh_token', ['refresh_token'], $rt_expired_at )->plainTextToken;
 
         return response()->json([
             'error' => 0,
             'token' => $token,
+            'token_expired_at' => $t_expired_at,
+            'refresh_token' => $refresh_token,
+            'refresh_token_expired_at' => $rt_expired_at,
+            'token_type' => 'Bearer',
             'user'  => new UserResource($user),
-        ], 200);
+        ]);
 
     }
 
@@ -122,23 +130,6 @@ class AuthController extends Controller
                 'email' => 'required|email|exists:users,email',
             ]);
 
-
-//            $email = $request->email;
-//            $token = Str::random(64);
-//            ResetPassword::createUrlUsing(function () use($email, $token) {
-//                \DB::table('password_reset_tokens')->updateOrInsert(
-//                    ['email' => $email],
-//                    [
-//                        'email' => $email,
-//                        'token' => $token,
-//                        'created_at' => now()
-//                    ]
-//                );
-//
-//                return config('app.url').'api/reset-password?token='.$token;
-//
-//            });
-
             $status = \Illuminate\Support\Facades\Password::sendResetLink(
                 $request->only('email')
             );
@@ -191,5 +182,34 @@ class AuthController extends Controller
                 'message'   => $e->getMessage(),
             ]);
         }
+    }
+
+    public function refresh_token(Request $request)
+    {
+        $access_token = PersonalAccessToken::findToken($request->bearerToken());
+        if(!$access_token || !$access_token->can('refresh_token') || $access_token->expires_at->isPast()) {
+            return response()->json([
+                'error'     => 1,
+                'message'   => 'Invalid or expired refresh token.',
+            ], 401);
+        }
+
+        $user = $access_token->tokenable;
+        $access_token->delete();
+
+        $t_expired_at = Carbon::now()->addHours(1);
+        $rt_expired_at = Carbon::now()->addDays(30);
+
+        $token = $user->createToken('access_token', ['*'], $t_expired_at)->plainTextToken;
+        $refresh_token = $user->createToken('refresh_token', ['refresh_token'], $rt_expired_at)->plainTextToken;
+
+        return response()->json([
+            'error' => 0,
+            'token' => $token,
+            'token_expired_at' => $t_expired_at,
+            'refresh_token' => $refresh_token,
+            'refresh_token_expired_at' => $rt_expired_at,
+            'token_type' => 'Bearer',
+        ], 201);
     }
 }

@@ -14,6 +14,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanc
 Route::post('/forgot-password', [AuthController::class, 'sendResetPasswordLink']);
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('refresh-token', [AuthController::class, 'refresh_token']);
 
     Route::resource('user-profile', ProfileController::class)->only(['index', 'update']);
     Route::resource('posts', PostController::class);
