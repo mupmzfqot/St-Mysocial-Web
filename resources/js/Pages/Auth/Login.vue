@@ -5,10 +5,10 @@ import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
-import {Head, Link, useForm} from '@inertiajs/vue3';
+import {Head, Link, useForm, usePage} from '@inertiajs/vue3';
 import TogglePassword from "@/Components/TogglePassword.vue";
 import {useRecaptchaProvider, Checkbox as RecaptchaCheckbox} from "vue-recaptcha";
-import { ref, computed } from 'vue';
+import {ref, computed, onMounted, watch} from 'vue';
 
 const props = defineProps({
     canResetPassword: {
@@ -33,10 +33,29 @@ const loginError = ref({
     unlockAt: null
 });
 
+const recaptchaKey = ref(0);
 useRecaptchaProvider()
 
+const resetRecaptcha = () => {
+    recaptchaKey.value++;
+    form.reset();
+    loginError.value = {
+        message: '',
+        remainAttempts: null,
+        maxAttempts: null,
+        unlockAt: null
+    };
+};
+
+onMounted(() => {
+    resetRecaptcha();
+});
+
+watch(() => usePage().component.value, () => {
+    resetRecaptcha();
+});
+
 const submit = () => {
-    // Reset previous error
     loginError.value = {
         message: '',
         remainAttempts: null,
@@ -46,11 +65,12 @@ const submit = () => {
 
     form.post(route('login'), {
         onFinish: () => form.reset('password'),
-        onError: (errors) => {
-            // Check if email error contains our custom rate limit information
+        onError: async (errors) => {
+            recaptchaKey.value++;
+            await nextTick();
+
             if (errors.email && Array.isArray(errors.email)) {
                 const errorDetails = errors.email[0];
-
                 loginError.value = {
                     message: errorDetails.message || 'Login failed',
                     remainAttempts: errorDetails.remain_attempts ?? null,
@@ -62,7 +82,6 @@ const submit = () => {
     });
 };
 
-// Computed property to format unlock time
 const formattedUnlockTime = computed(() => {
     if (loginError.value.unlockAt) {
         return loginError.value.unlockAt.toLocaleString();
@@ -145,7 +164,7 @@ const formattedUnlockTime = computed(() => {
                             </div>
 
                             <div class="block mt-4">
-                                <RecaptchaCheckbox v-model="form.recaptcha" theme="light" size="normal" />
+                                <RecaptchaCheckbox :key="recaptchaKey" v-model="form.recaptcha" theme="light" size="normal" />
                                 <InputError class="mt-2" :message="form.errors.recaptcha" />
                             </div>
 
