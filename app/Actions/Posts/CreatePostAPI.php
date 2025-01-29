@@ -20,7 +20,7 @@ class CreatePostAPI
         try {
 
             $validated = $request->validate([
-                'content' => 'required|string|max:1000',
+                'content' => 'required|string',
                 'images' => 'nullable|array',
                 'videos' => 'nullable|array',
                 'images.*' => [
