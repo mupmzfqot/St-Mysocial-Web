@@ -57,7 +57,7 @@ class Post extends Model implements HasMedia
     protected function casts(): array
     {
         return [
-            'created_at' => 'datetime:d F Y H:i A',
+            'created_at' => 'datetime:d F Y h:i A',
         ];
     }
 
