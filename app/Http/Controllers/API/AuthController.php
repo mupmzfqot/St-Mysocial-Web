@@ -41,6 +41,8 @@ class AuthController extends Controller
         }
 
         $user->update(['is_login' => 1, 'last_login' => now()]);
+        $user->tokens()?->delete();
+
         $t_expired_at     = Carbon::now()->addHours(1);
         $rt_expired_at    = Carbon::now()->addDays(30);
         $token = $user->createToken('access_token', ['*'], $t_expired_at)->plainTextToken;
@@ -187,7 +189,8 @@ class AuthController extends Controller
     public function refresh_token(Request $request)
     {
         $access_token = PersonalAccessToken::findToken($request->bearerToken());
-        if(!$access_token || !$access_token->can('refresh_token') || $access_token->expires_at->isPast()) {
+
+        if(!$access_token || !$access_token->can('create') || $access_token->expires_at->isPast()) {
             return response()->json([
                 'error'     => 1,
                 'message'   => 'Invalid or expired refresh token.',
