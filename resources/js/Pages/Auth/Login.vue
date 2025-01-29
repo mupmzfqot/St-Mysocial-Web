@@ -33,8 +33,30 @@ const loginError = ref({
     unlockAt: null
 });
 
+const createRecaptchaProviderSingleton = () => {
+    let instance = null;
+    return {
+        initialize() {
+            if (!instance) {
+                instance = useRecaptchaProvider();
+            }
+            return instance;
+        },
+        reset() {
+            instance = null;
+        }
+    };
+};
+
+const recaptchaProviderManager = createRecaptchaProviderSingleton();
+
 const recaptchaKey = ref(0);
-useRecaptchaProvider()
+const recaptchaProviderInitialized = ref(false);
+
+if (!recaptchaProviderInitialized.value) {
+    useRecaptchaProvider();
+    recaptchaProviderInitialized.value = true;
+}
 
 const resetRecaptcha = () => {
     recaptchaKey.value++;
