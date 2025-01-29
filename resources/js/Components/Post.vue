@@ -203,7 +203,7 @@ const handleLinkClick = (event) => {
                     </span>
         </div>
 
-        <div class="mt-2 text-gray-800 text-wrap text-sm dark:text-neutral-400" v-html="styledTag(content.post)"></div>
+        <div class="mt-2 text-gray-800 text-wrap text-justify text-sm dark:text-neutral-400" v-html="styledTag(content.post)"></div>
 
         <div class="my-3 border border-gray-200 px-3 pb-2 rounded-xl">
             <div class="flex items-center mt-2">
@@ -223,7 +223,7 @@ const handleLinkClick = (event) => {
                     <div class="text-xs text-gray-500 dark:text-neutral-500">{{ content.repost.created_at }}</div>
                 </div>
             </div>
-            <div @click="handleLinkClick" class="mt-2 text-gray-800 text-wrap text-sm dark:text-neutral-400" v-html="styledTag(content.repost.post)"></div>
+            <div @click="handleLinkClick" class="mt-2 text-gray-800 text-wrap text-justify text-sm dark:text-neutral-400" v-html="styledTag(content.repost.post)"></div>
 
             <!-- Image Grid -->
             <PostMedia :medias="content.repost.media" v-if="content.repost.media.length > 0" />
@@ -256,7 +256,7 @@ const handleLinkClick = (event) => {
                       <CheckCircle class="size-3" />Published
                     </span>
         </div>
-        <div @click="handleLinkClick" class="mt-2 text-gray-800 text-wrap text-sm dark:text-neutral-400" v-html="styledTag(content.post)"></div>
+        <div @click="handleLinkClick" class="mt-2 text-gray-800 text-wrap text-justify text-sm dark:text-neutral-400" v-html="styledTag(content.post)"></div>
 
         <!-- Image Grid -->
         <PostMedia :medias="content.media" v-if="content.media.length > 0" />
@@ -565,7 +565,7 @@ const handleLinkClick = (event) => {
                                             </button>
                                         </div>
                                     </div>
-                                    <div @click="handleLinkClick" class="text-gray-800 text-wrap text-sm dark:text-neutral-400 pt-1" v-html="styledTag(postDetails.post)"></div>
+                                    <div @click="handleLinkClick" class="text-gray-800 text-wrap text-justify text-sm dark:text-neutral-400 pt-1" v-html="styledTag(postDetails.post)"></div>
 
                                     <!-- Post Media -->
                                     <PostMedia
@@ -584,7 +584,7 @@ const handleLinkClick = (event) => {
                                                 <div class="text-xs text-gray-500 dark:text-neutral-500">{{ postDetails.repost.created_at }}</div>
                                             </div>
                                         </Link>
-                                        <div @click="handleLinkClick" class="mt-2 text-gray-800 text-wrap text-sm dark:text-neutral-400" v-html="styledTag(postDetails.repost.post)"></div>
+                                        <div @click="handleLinkClick" class="mt-2 text-gray-800 text-wrap text-justify text-sm dark:text-neutral-400" v-html="styledTag(postDetails.repost.post)"></div>
 
                                         <!-- Image Grid -->
                                         <PostMedia :medias="postDetails.repost.media" :inside_modal="true" v-if="postDetails.repost.media.length > 0" />
