@@ -9,7 +9,6 @@ use App\Models\CommentLiked;
 use App\Models\Post;
 use App\Models\PostLiked;
 use App\Models\User;
-use App\Notifications\NewComment;
 use App\Notifications\NewCommentLike;
 use App\Notifications\NewLike;
 use Illuminate\Http\Request;
@@ -22,7 +21,7 @@ class HomeController extends Controller
     public function index()
     {
         return Inertia::render('Home', [
-            'title' =>'ST Post',
+            'title' =>'Home',
             'description' => 'Post from Team ST',
             'requestUrl' => route('user-post.get', ['type' => 'st']),
         ]);

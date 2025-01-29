@@ -22,7 +22,7 @@ import 'vue3-emoji-picker/css';
 
 const MAX_FILES = 10;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4', 'video/quicktime', 'application/pdf'];
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'video/mp4', 'video/quicktime', 'application/pdf'];
 const MAX_CONTENT_LENGTH = 1000;
 
 const fileInput = ref(null);
@@ -374,7 +374,7 @@ const onSelectEmoji = (emoji) => {
                                     <span
                                         class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible opacity-0 transition-opacity inline-block absolute invisible z-10 py-1 px-2 bg-gray-900 text-xs font-medium text-white rounded shadow-sm dark:bg-neutral-700"
                                         role="tooltip">
-                                        Insert Files
+                                        Insert Files(.pdf, .jpg. jpeg, .mp4)
                                     </span>
                                 </button>
                             </div>

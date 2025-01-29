@@ -72,13 +72,13 @@ watch(() => page.props.pendingApprovals, (newApprovals) => {}, { immediate: true
 
                         <li>
                             <Link :href="route('post.index')" type="button" :class="['flex items-center gap-x-3.5 py-2 px-2.5 text-sm font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:bg-gray-100', isActiveNav('/post/index') || isActiveNav('/post/create') ? 'bg-blue-100 text-gray-800': 'text-white']">
-                                <MessageSquareMore class="shrink-0 size-4" /> Post Creation
+                                <MessageSquareMore class="shrink-0 size-4" /> Admin Post
                             </Link>
                         </li>
 
                         <li class="hs-accordion" id="account-accordion">
                             <button type="button" class="hs-accordion-toggle w-full text-start flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:bg-gray-100" aria-expanded="true" aria-controls="account-accordion-child">
-                                <MessageSquareMore class="shrink-0 size-4" /> Post Moderation
+                                <MessageSquareMore class="shrink-0 size-4" /> User Post
 
                                 <svg class="hs-accordion-active:block ms-auto hidden size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
 
@@ -89,12 +89,12 @@ watch(() => page.props.pendingApprovals, (newApprovals) => {}, { immediate: true
                                 <ul class="ps-8 pt-1 space-y-1">
                                     <li>
                                         <Link :href="route('post-moderation.index-st')" type="button" :class="['flex items-center gap-x-3.5 py-2 px-2.5 text-sm font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:bg-gray-100', isActiveNav('/post-moderation/st') ? 'bg-blue-100 text-gray-800': 'text-white']" aria-expanded="true" aria-controls="users-accordion-child">
-                                            ST Post
+                                            ST User Post
                                         </Link>
                                     </li>
                                     <li>
                                         <Link :href="route('post-moderation.index')" type="button" :class="['flex items-center gap-x-3.5 py-2 px-2.5 text-sm font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:bg-gray-100', isActiveNav('/post-moderation') ? 'bg-blue-100 text-gray-800': 'text-white']" aria-expanded="true" aria-controls="users-accordion-child">
-                                            Public Post
+                                            Public User Post
                                             <span class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full ms-auto text-xs font-medium bg-gray-100 text-red-800 dark:bg-white/10 dark:text-white">
                                                 {{ pendingApprovals.pendingPosts }}
                                             </span>
