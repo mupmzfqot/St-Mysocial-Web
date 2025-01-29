@@ -144,7 +144,7 @@ const formatTags = (tags) => {
     return `${firstTwoTags.join(', ')}, and ${remainingCount} other${remainingCount > 1 ? 's' : ''}`;
 }
 const styledTag = (value) => {
-    return value.replace(/<a /g, '<a class="text-blue-500 underline hover:text-blue-800 hover:no-underline" ')
+    return value.replace(/<a /g, '<a class="text-blue-600 hover:text-blue-800 hover:no-underline" ')
         .replace(/<ul>/g, '<ul class="list-disc list-inside pl-4">')
         .replace(/<ol>/g, '<ol class="list-decimal list-inside pl-3.5">');
 }
@@ -247,7 +247,7 @@ const styledTag = (value) => {
                 <Heart class="shrink-0 size-5 fill-red-500 text-transparent" v-if="content.is_liked" />
             </a>
             <a href="#" class="inline-flex gap-x-2" @click.prevent="sendLike(content.id)" v-else>
-                <Heart class="shrink-0 size-5 text-gray-500" />
+                <Heart class="shrink-0 size-5 text-gray-800" />
             </a>
 
             <a href="#" @click.prevent="showLikedBy(content.id)" class="hover:underline" v-if="content.like_count !== 0">
@@ -259,7 +259,7 @@ const styledTag = (value) => {
         </div>
 
         <a @click.prevent="showPost(content.id)" class="inline-flex items-center gap-x-2 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600" href="#">
-            <MessageSquareText class="shrink-0 size-5 text-blue-600" />
+            <MessageSquareText class="shrink-0 size-5 text-gray-800" />
             {{ content.comment_count }} Comments
 
         </a>
@@ -271,7 +271,7 @@ const styledTag = (value) => {
         </a>
 
         <a href="#" @click.prevent="openDeleteConfirm(content.id)" v-if="$page.props.auth.user.id === content.user_id" class="inline-flex items-center gap-x-1 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-red-900 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600">
-            <XCircle class="shrink-0 size-5 text-red-700" />Delete post
+            <XCircle class="shrink-0 size-5 text-gray-800" />Delete post
         </a>
     </div>
 
@@ -534,6 +534,7 @@ const styledTag = (value) => {
                                     <PostMedia
                                         v-if="postDetails.media && postDetails.media.length > 0"
                                         :medias="postDetails.media"
+                                        :inside_modal="true"
                                     />
 
                                     <div class="my-3 border border-gray-200 px-3 pb-2 rounded-xl" v-if="postDetails.repost">
@@ -549,7 +550,7 @@ const styledTag = (value) => {
                                         <div class="mt-2 text-gray-800 text-wrap text-sm dark:text-neutral-400" v-html="styledTag(postDetails.repost.post)"></div>
 
                                         <!-- Image Grid -->
-                                        <PostMedia :medias="postDetails.repost.media" v-if="postDetails.repost.media.length > 0" />
+                                        <PostMedia :medias="postDetails.repost.media" :inside_modal="true" v-if="postDetails.repost.media.length > 0" />
                                         <!-- End Image Grid -->
 
                                     </div>
@@ -561,7 +562,7 @@ const styledTag = (value) => {
                                                 <Heart class="shrink-0 size-5 fill-red-500 text-transparent" v-if="content.is_liked" />
                                             </a>
                                             <a href="#" class="inline-flex gap-x-2" @click.prevent="sendLike(content.id)" v-else>
-                                                <Heart class="shrink-0 size-5 text-gray-500" />
+                                                <Heart class="shrink-0 size-5 text-gray-800" />
                                             </a>
 
                                             <a href="#" @click.prevent="showLikedBy(content.id)" class="hover:underline" v-if="content.like_count !== 0">
@@ -573,7 +574,7 @@ const styledTag = (value) => {
                                         </div>
 
                                         <a @click.prevent="showPost(content.id)" class="inline-flex items-center gap-x-2 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600" href="#">
-                                            <MessageSquareText class="shrink-0 size-5 text-blue-600" />
+                                            <MessageSquareText class="shrink-0 size-5 text-gray-800" />
                                             {{ content.comment_count }} Comments
 
                                         </a>
@@ -585,7 +586,7 @@ const styledTag = (value) => {
                                         </a>
 
                                         <a href="#" @click.prevent="openDeleteConfirm(content.id)" v-if="$page.props.auth.user.id === content.user_id" class="inline-flex items-center gap-x-2 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-red-900 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600">
-                                            <XCircle class="shrink-0 size-5 text-red-700" />Delete post
+                                            <XCircle class="shrink-0 size-5 text-gray-800" />Delete post
                                         </a>
                                     </div>
                                     <hr class="border-1 -mx-6">

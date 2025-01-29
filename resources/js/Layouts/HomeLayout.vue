@@ -1,7 +1,7 @@
 <script setup>
 import {onMounted, ref, watch, onUnmounted, computed} from 'vue';
 import {Link, router, usePage} from "@inertiajs/vue3";
-import {CircleCheckBig, Heart, Images, LogOut, MessageSquareMore, Rss, Star, StickyNote, UserIcon} from "lucide-vue-next";
+import {CircleCheckBig, Heart, Images, LogOut, MessageSquareMore, Newspaper, Star, UserIcon, LayoutGrid} from "lucide-vue-next";
 import {debounce} from "lodash";
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
@@ -214,29 +214,29 @@ function isActiveNav(path) {
                             </div>
                         </Link>
                         <Link v-if="isST" :href="route('homepage')" type="button" :class="['inline-flex items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/home') ? 'text-blue-600' : '']">
-                            <Rss class="shrink-0 size-4" />
-                            ST Posts
+                            <LayoutGrid class="shrink-0 size-5 text-blue-800 fill-blue-200" />
+                            Home
                         </Link>
                         <Link :href="route('public')" type="button" :class="['inline-flex items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/public') ? 'text-blue-600' : '']">
-                            <StickyNote class="shrink-0 size-4" />
+                            <Newspaper class="shrink-0 size-5 text-purple-800 fill-purple-200" />
                             Public Posts
                         </Link>
                         <Link v-if="isST" :href="route('message.index')" type="button" :class="['inline-flex items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/message') ? 'text-blue-600' : '']">
-                            <MessageSquareMore class="shrink-0 size-4" />
+                            <MessageSquareMore class="shrink-0 size-5 text-green-800 fill-green-100" />
                             Messages
                             <span class="inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium bg-red-500 text-white ms-auto">{{ unreadMessageCount }}</span>
                         </Link>
                         <Link :href="route('liked-posts')" type="button" :class="['inline-flex items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/liked-posts') ? 'text-blue-600' : '']">
-                            <Heart class="shrink-0 size-4 text-red-600 fill-red-600" />
+                            <Heart class="shrink-0 size-5 text-red-600 fill-red-600" />
                             My Likes
                         </Link>
                         <Link :href="route('top-posts')" type="button" :class="['inline-flex items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/top-posts') ? 'text-blue-600' : '']">
-                            <Star class="shrink-0 size-4 text-yellow-600 fill-yellow-500" />
+                            <Star class="shrink-0 size-5 text-yellow-600 fill-yellow-500" />
                             Top Posts
                         </Link>
                         <Link :href="route('photoAlbum.index')" type="button" :class="['inline-flex items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/photo-album') ? 'text-blue-600' : '']">
-                            <Images class="shrink-0 size-4" />
-                            My Photo Albums
+                            <Images class="shrink-0 size-5 text-amber-800" />
+                            My Photos
                         </Link>
                     </div>
                 </div>

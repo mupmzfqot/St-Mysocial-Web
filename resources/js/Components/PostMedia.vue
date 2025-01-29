@@ -7,7 +7,11 @@ const props = defineProps({
         type: Array,
         required: true,
     },
-    small: Boolean
+    small: Boolean,
+    inside_modal: {
+        type: Boolean,
+        default: false,
+    }
 });
 
 let filteredMedia = props.medias.filter((media) => media.mime_type !== "application/pdf");
@@ -88,12 +92,23 @@ const otherMedia = computed(() => {
                 ></video>
             </div>
 
-            <img v-else
-                :src="filteredMedia[0].original_url"
-                :alt="filteredMedia[0].name"
-                :class="['hover:opacity-90 cursor-pointer object-cover', small === true ? 'h-32' : 'w-full h-80']"
-                @click.stop="previewMedia(filteredMedia[0])"
-            />
+            <div v-else>
+                <img v-if="inside_modal === false"
+                     :src="filteredMedia[0].original_url"
+                     :alt="filteredMedia[0].name"
+                     :class="['hover:opacity-90 cursor-pointer object-cover', small === true ? 'h-32' : 'w-full']"
+                     @click.stop="previewMedia(filteredMedia[0])"
+                />
+
+                <img v-else-if="inside_modal === true"
+                     :src="filteredMedia[0].original_url"
+                     :alt="filteredMedia[0].name"
+                     :class="['hover:opacity-90 cursor-pointer object-cover', small === true ? 'h-32' : 'w-full h-80']"
+                     @click.stop="previewMedia(filteredMedia[0])"
+                />
+            </div>
+
+
         </template>
 
         <template v-else-if="filteredMedia.length === 3" class="grid grid-cols-3 gap-y-0.5">
@@ -169,12 +184,12 @@ const otherMedia = computed(() => {
          :key="index">
         <div class="flex items-center gap-x-2">
             <img src="../../images/pdf-icon.svg" class="shrink-0 size-6" alt="document" />
-            <a :href="file.original_url" @click.stop target="_blank" class="text-sm flex-wrap">
+            <a :href="file.original_url" @click.stop target="_blank" title="preview" class="text-sm flex-wrap">
                 <span>{{ file.file_name }}</span>
             </a>
             <div class="ms-auto">
-                <a :href="file.original_url" @click.stop download type="button" class="button flex gap-x-1 text-sm hover:text-blue-600">
-                    <Download class="shrink-0 size-4"/> download
+                <a :href="file.original_url" @click.stop download type="button" title="download" class="button flex gap-x-1 text-sm hover:text-blue-600">
+                    <Download class="shrink-0 size-4"/>
                 </a>
             </div>
 

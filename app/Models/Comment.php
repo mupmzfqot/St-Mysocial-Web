@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use DateTimeInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -53,5 +54,10 @@ class Comment extends Model implements HasMedia
     public function getIsLikedAttribute(): bool
     {
         return $this->likes()->where('user_id', auth()->id())->exists();
+    }
+
+    protected function serializeDate(DateTimeInterface $date)
+    {
+        return $date->timezone(config('app.timezone'));
     }
 }

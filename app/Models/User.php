@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use DateTimeInterface;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -78,7 +79,7 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
     {
         return $this->getMedia('avatar')
             ->where('is_verified', true)
-            ->first()?->original_url ?? asset('default-avatar.png');
+            ->first()?->original_url ?? asset('default-avatar.webp');
     }
 
     public function getCoverImageAttribute(): ?string
@@ -113,6 +114,11 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
     public function comments(): HasMany
     {
         return $this->hasMany(Comment::class, 'user_id', 'id');
+    }
+
+    protected function serializeDate(DateTimeInterface $date)
+    {
+        return $date->timezone(config('app.timezone'));
     }
 
 }
