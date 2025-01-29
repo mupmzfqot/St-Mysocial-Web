@@ -87,9 +87,9 @@ const submit = () => {
 
     form.post(route('login'), {
         onFinish: () => form.reset('password'),
-        onError: async (errors) => {
+        onError: (errors) => {
             recaptchaKey.value++;
-            await nextTick();
+            nextTick();
 
             if (errors.email && Array.isArray(errors.email)) {
                 const errorDetails = errors.email[0];
