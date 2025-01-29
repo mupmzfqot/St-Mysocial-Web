@@ -43,6 +43,5 @@ return Application::configure(basePath: dirname(__DIR__))
                     'message'   => 'Unauthenticated.',
                 ], 401);
             }
-            return $exception->render($request);
         });
     })->create();
