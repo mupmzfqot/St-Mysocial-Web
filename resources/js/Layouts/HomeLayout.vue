@@ -213,28 +213,28 @@ function isActiveNav(path) {
                                 </div>
                             </div>
                         </Link>
-                        <Link v-if="isST" :href="route('homepage')" type="button" :class="['inline-flex items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/home') ? 'text-blue-600' : '']">
+                        <Link v-if="isST" :href="route('homepage')" type="button" :class="['inline-flex hover:bg-blue-100 items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/home') ? 'text-blue-600' : '']">
                             <LayoutGrid class="shrink-0 size-5 text-blue-800 fill-blue-200" />
                             Home
                         </Link>
-                        <Link :href="route('public')" type="button" :class="['inline-flex items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/public') ? 'text-blue-600' : '']">
+                        <Link :href="route('public')" type="button" :class="['inline-flex hover:bg-blue-100 items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/public') ? 'text-blue-600' : '']">
                             <Newspaper class="shrink-0 size-5 text-purple-800 fill-purple-200" />
                             Public Posts
                         </Link>
-                        <Link v-if="isST" :href="route('message.index')" type="button" :class="['inline-flex items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/message') ? 'text-blue-600' : '']">
+                        <Link v-if="isST" :href="route('message.index')" type="button" :class="['inline-flex hover:bg-blue-100 items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/message') ? 'text-blue-600' : '']">
                             <MessageSquareMore class="shrink-0 size-5 text-green-800 fill-green-100" />
                             Messages
                             <span class="inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium bg-red-500 text-white ms-auto">{{ unreadMessageCount }}</span>
                         </Link>
-                        <Link :href="route('liked-posts')" type="button" :class="['inline-flex items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/liked-posts') ? 'text-blue-600' : '']">
+                        <Link :href="route('liked-posts')" type="button" :class="['inline-flex hover:bg-blue-100 items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/liked-posts') ? 'text-blue-600' : '']">
                             <Heart class="shrink-0 size-5 text-red-600 fill-red-600" />
                             My Likes
                         </Link>
-                        <Link :href="route('top-posts')" type="button" :class="['inline-flex items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/top-posts') ? 'text-blue-600' : '']">
+                        <Link :href="route('top-posts')" type="button" :class="['inline-flex hover:bg-blue-100 items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/top-posts') ? 'text-blue-600' : '']">
                             <Star class="shrink-0 size-5 text-yellow-600 fill-yellow-500" />
                             Top Posts
                         </Link>
-                        <Link :href="route('photoAlbum.index')" type="button" :class="['inline-flex items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/photo-album') ? 'text-blue-600' : '']">
+                        <Link :href="route('photoAlbum.index')" type="button" :class="['inline-flex hover:bg-blue-100 items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/photo-album') ? 'text-blue-600' : '']">
                             <Images class="shrink-0 size-5 text-amber-800" />
                             My Photos
                         </Link>
@@ -265,17 +265,17 @@ function isActiveNav(path) {
     [&::-webkit-scrollbar-thumb]:rounded-full
     [&::-webkit-scrollbar-thumb]:bg-gray-300
     hover:[&::-webkit-scrollbar-thumb]:bg-gray-400">
-                            <Link :href="route('profile.show', team.id)" v-for="team in teams" class="shrink-0 group block p-2 hover:bg-gray-100 rounded-lg">
+                            <Link :href="route('profile.show', team.id)" v-for="team in teams" class="shrink-0 group block p-2 hover:bg-blue-100 rounded-lg">
                                 <div class="flex items-center">
                                     <div class="hs-tooltip inline-block">
                                         <a class="hs-tooltip-toggle relative inline-block" href="#">
-                                            <img class="inline-block size-[40px] rounded-full" :src="team.avatar" alt="Avatar">
+                                            <img class="inline-block size-[40px] object-cover rounded-full" :src="team.avatar" alt="Avatar">
 <!--                                            <span class="absolute bottom-0 end-0 block size-3 rounded-full ring-2 ring-white bg-green-700"></span>-->
                                         </a>
                                     </div>
                                     <div class="ms-3">
                                         <h3 class="font-semibold text-sm text-gray-800 dark:text-white">{{ team.name }}</h3>
-                                        <p class="text-sm text-gray-600 dark:text-neutral-500">{{ team.email }}</p>
+<!--                                        <p class="text-sm text-gray-600 dark:text-neutral-500">{{ team.email }}</p>-->
                                     </div>
                                 </div>
                             </Link>
