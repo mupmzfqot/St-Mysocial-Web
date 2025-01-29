@@ -144,10 +144,9 @@ const formatTags = (tags) => {
     return `${firstTwoTags.join(', ')}, and ${remainingCount} other${remainingCount > 1 ? 's' : ''}`;
 }
 const styledTag = (value) => {
-    return value.replace(
-        /<a /g,
-        '<a class="text-blue-500 underline hover:text-blue-800 hover:no-underline" '
-    );
+    return value.replace(/<a /g, '<a class="text-blue-500 underline hover:text-blue-800 hover:no-underline" ')
+        .replace(/<ul>/g, '<ul class="list-disc list-inside pl-4">')
+        .replace(/<ol>/g, '<ol class="list-decimal list-inside pl-3.5">');
 }
 
 
