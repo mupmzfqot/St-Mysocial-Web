@@ -50,7 +50,7 @@ onMounted(() => {
 
     pollInterval = setInterval(fetchUnreadMessageCount, 30000);
 
-    window.Echo.private(`App.Models.User.${usePage().props.auth.user.id}`)
+    window.Echo.private(`App.Models.User.${usePage().props.auth.user?.id}`)
         .notification((notification) => {
             if (notification.type === 'NewMessage') {
                 fetchUnreadMessageCount();
@@ -64,7 +64,7 @@ onUnmounted(() => {
         clearInterval(pollInterval);
     }
     if (window.Echo) {
-        window.Echo.leave(`App.Models.User.${usePage().props.auth.user.id}`);
+        window.Echo.leave(`App.Models.User.${usePage().props.auth.user?.id}`);
     }
 })
 
