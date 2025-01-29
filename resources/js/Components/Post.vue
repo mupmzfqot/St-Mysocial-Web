@@ -155,15 +155,26 @@ const handleLinkClick = (event) => {
         event.preventDefault();
         event.stopPropagation();
 
-        // Open link in new tab
-        if (target.href) {
-            window.open(target.href, '_blank', 'noopener,noreferrer');
-        }
+        let href = target.getAttribute('href');
+        if (href) {
+            href = href.trim();
 
-        // Prevent post modal from opening
+            let finalUrl;
+            if (!href.startsWith('http://') && !href.startsWith('https://')) {
+                if (href.includes('.')) {
+                    finalUrl = `https://${href}`;
+                } else {
+                    finalUrl = href;
+                }
+            } else {
+                finalUrl = href;
+            }
+
+            window.open(finalUrl, '_blank', 'noopener,noreferrer');
+        }
         return false;
     }
-}
+};
 </script>
 
 <template>
