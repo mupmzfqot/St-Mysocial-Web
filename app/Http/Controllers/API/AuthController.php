@@ -190,7 +190,7 @@ class AuthController extends Controller
     {
         $access_token = PersonalAccessToken::findToken($request->bearerToken());
 
-        if(!$access_token || !$access_token->can('create') || $access_token->expires_at->isPast()) {
+        if(!$access_token || !$access_token->can('refresh_token') || $access_token->expires_at->isPast()) {
             return response()->json([
                 'error'     => 1,
                 'message'   => 'Invalid or expired refresh token.',
