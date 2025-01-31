@@ -34,6 +34,7 @@ class MessageController extends Controller
             ])
             ->withMax('messages', 'created_at')
             ->orderByDesc('messages_max_created_at')
+            ->whereHas('messages')
             ->get();
 
         $conversations = $results->map(function ($conversation) {
