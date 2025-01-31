@@ -26,7 +26,8 @@ const props = defineProps({
             showUserAvatar: true,
             allowFileUpload: true
         })
-    }
+    },
+    singlePost: false
 });
 
 const emit = defineEmits([
@@ -92,11 +93,6 @@ const submitComment = () => {
             form.reset();
             previews.value = [];
             emit('comment-added');
-            nextTick(() => {
-                if (commentsContainer.value) {
-                    commentsContainer.value.scrollTop = commentsContainer.value.scrollHeight;
-                }
-            });
         },
         onError: (errors) => {
             console.error('Comment submission error:', errors);
@@ -132,11 +128,18 @@ const onSelectEmoji = (emoji) => {
 </script>
 
 <template>
-    <div class="comment-container relative flex flex-col h-full">
+    <div class="comment-container relative flex flex-col">
         <!-- Comments List (Scrollable) -->
         <div
             ref="commentsContainer"
-            class="comments-list flex-grow overflow-y-auto pr-2 pb-10 min-h-20"
+            class="comments-list flex-grow overflow-y-auto pb-10 pr-2 min-h-28
+                [&::-webkit-scrollbar]:w-1
+                [&::-webkit-scrollbar-track]:rounded-full
+                [&::-webkit-scrollbar-track]:bg-gray-100
+                [&::-webkit-scrollbar-thumb]:rounded-full
+                [&::-webkit-scrollbar-thumb]:bg-gray-300
+                dark:[&::-webkit-scrollbar-track]:bg-neutral-700
+                dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500"
         >
             <!-- No Comments State -->
             <div
@@ -200,13 +203,13 @@ const onSelectEmoji = (emoji) => {
         </div>
 
         <!-- Comment Input (Fixed at Bottom) -->
-        <div style="z-index: 9999">
+        <div style="z-index: 9999" >
             <div
                 v-if="currentUser"
-                class="comment-input-container bg-gray-100 fixed bottom-0 left-0 right-0 dark:bg-neutral-900 shadow-lg p-4 border-t"
+                class="bg-gray-100 fixed bottom-0 left-0 right-0 dark:bg-neutral-900 shadow-lg p-4 border-t"
             >
                 <!-- Chat Input Area -->
-                <div class="flex items-center space-x-2">
+                <div class="flex items-center space-x-2" >
 
                     <img
                         :src="currentUser.avatar"

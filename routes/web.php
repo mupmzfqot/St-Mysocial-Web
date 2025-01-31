@@ -24,6 +24,7 @@ Route::middleware(['auth', 'verified', 'role:user|public_user'])->group(function
     Route::get('/top-posts', [HomeController::class, 'showTopPosts'])->name('top-posts');
     Route::prefix('user-post')->name('user-post.')->group(function () {
         Route::get('get', [PostController::class, 'get'])->name('get');
+        Route::get('get-post/{id}', [PostController::class, 'postById'])->name('get-post');
         Route::get('top-post', [PostController::class, 'getTopPost'])->name('get-top-post');
         Route::get('liked-post', [PostController::class, 'getLikedPost'])->name('liked-post');
         Route::get('recent-post', [PostController::class, 'getRecentPost'])->name('recent-post');

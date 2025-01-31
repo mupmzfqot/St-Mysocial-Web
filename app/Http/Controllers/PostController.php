@@ -44,6 +44,18 @@ class PostController extends Controller
         }
     }
 
+    public function postById($id)
+    {
+        $post = Post::query()
+            ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media', 'repost.tags')
+            ->orderBy('created_at', 'desc')
+            ->published()
+            ->where('id', $id)
+            ->first();
+
+        return response()->json($post);
+    }
+
     public function index(Request $request)
     {
         $searchTerm = $request->query('search');

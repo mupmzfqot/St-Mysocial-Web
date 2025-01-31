@@ -2,17 +2,21 @@
 
 import {CheckCircle, Heart, MessageSquareText, MinusCircle, XCircle, Repeat2} from "lucide-vue-next";
 import PostMedia from "@/Components/PostMedia.vue";
-import {Link, router} from "@inertiajs/vue3";
+import {Link, router, usePage} from "@inertiajs/vue3";
 import {ref} from "vue";
 import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from "@headlessui/vue";
 import Comment from "@/Components/Comment.vue";
 
-defineProps({
+const props = defineProps({
     content: {
         type: Object,
         required: true,
     },
     status: {
+        type: Boolean,
+        default: false,
+    },
+    singlePost: {
         type: Boolean,
         default: false,
     }
@@ -26,11 +30,15 @@ const showPostModal = ref(false);
 const postDetails = ref(null);
 
 const showPost = (id) => {
-    axios.get(route('user-post.show-post', id))
-        .then(response => {
-            postDetails.value = response.data;
-            showPostModal.value = true;
-        });
+    if(props.singlePost === true) {
+        showPostModal.value = false;
+    } else {
+        axios.get(route('user-post.get-post', id))
+            .then(response => {
+                postDetails.value = response.data;
+                showPostModal.value = true;
+            });
+    }
 };
 
 const sendLike = (id) => {
@@ -97,7 +105,7 @@ const submitShare = () => {
 
 const refreshComments = () => {
     if (postDetails.value) {
-        axios.get(route('user-post.show-post', postDetails.value.id))
+        axios.get(route('user-post.get-post', postDetails.value.id))
             .then(response => {
                 postDetails.value = response.data;
                 emit('reload-posts');
@@ -261,7 +269,6 @@ const handleLinkClick = (event) => {
         <!-- Image Grid -->
         <PostMedia :medias="content.media" v-if="content.media.length > 0" />
         <!-- End Image Grid -->
-
     </div>
 
     <hr class="my-3 border-1 -mx-4">
@@ -282,13 +289,10 @@ const handleLinkClick = (event) => {
                 {{ content.like_count }} Likes
             </a>
         </div>
-
         <a @click.prevent="showPost(content.id)" class="inline-flex items-center gap-x-2 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600" href="#">
             <MessageSquareText class="shrink-0 size-5 text-gray-800" />
             {{ content.comment_count }} Comments
-
         </a>
-
 
         <a @click.prevent="openShareModal(content.id)" class="inline-flex items-center gap-x-2 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600" href="#">
             <Repeat2 class="shrink-0 size-5 text-gray-800" />
@@ -298,6 +302,32 @@ const handleLinkClick = (event) => {
         <a href="#" @click.prevent="openDeleteConfirm(content.id)" v-if="$page.props.auth.user.id === content.user_id" class="inline-flex items-center gap-x-1 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-red-900 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600">
             <XCircle class="shrink-0 size-5 text-gray-800" />Delete post
         </a>
+    </div>
+
+    <hr class="mt-3 mb-1 border-1 -mx-4" v-if="singlePost">
+
+    <!-- Scrollable Content -->
+    <div  class="relative transform overflow-hidden px-4 rounded-2xl bg-white dark:bg-neutral-800 text-left align-middle"
+    >
+
+        <div class="flex-grow overflow-y-auto custom-scrollbar" v-if="singlePost">
+            <!-- Comments Section -->
+            <div class="mt-1">
+                <p class="text-md font-semibold mb-3 text-gray-800 dark:text-white">
+                    Comments
+                </p>
+                <Comment class="max-h-[80vh]"
+                    :post-id="content.id"
+                    :comments="content?.comments || []"
+                    :current-user="usePage().props.auth.user"
+                    @like-comment="sendCommentLike"
+                    @unlike-comment="unlikeComment"
+                    @delete-comment="openDeleteCommentConfirm"
+                    @comment-added="refreshComments"
+                    :singlePost="singlePost"
+                />
+            </div>
+        </div>
     </div>
 
     <!-- Delete Confirmation Modal -->
@@ -640,7 +670,7 @@ const handleLinkClick = (event) => {
                                     <Comment
                                         :post-id="content.id"
                                         :comments="postDetails?.comments || []"
-                                        :current-user="$page.props.auth.user"
+                                        :current-user="usePage().props.auth.user"
                                         @like-comment="sendCommentLike"
                                         @unlike-comment="unlikeComment"
                                         @delete-comment="openDeleteCommentConfirm"
