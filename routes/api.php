@@ -29,14 +29,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('top-posts', [PostController::class, 'topPosts']);
     Route::post('posts/comment', [PostController::class, 'storeComments']);
     Route::get('posts/{id}/comment', [PostController::class, 'getComments']);
+    Route::get('posts/liked-by/{id}', [PostController::class, 'likedBy']);
     Route::get('posts/user-post/get', [PostController::class, 'getUserPosts']);
     Route::get('posts/{id}/comment', [PostController::class, 'getComments']);
     Route::post('posts/like', [PostController::class, 'storeLike']);
     Route::post('posts/like-comment', [PostController::class, 'storeCommentLike']);
+    Route::post('posts/delete-comment/{id}', [PostController::class, 'deleteComment']);
     Route::post('posts/unlike', [PostController::class, 'unlikePost']);
     Route::post('posts/unlike-comment', [PostController::class, 'unlikeComment']);
     Route::post('posts/repost', [PostController::class, 'repost']);
-
+    Route::post('posts/repost', [PostController::class, 'repost']);
 
 
     Route::group(['prefix' => 'message'], function () {

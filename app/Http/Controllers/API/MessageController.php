@@ -22,7 +22,11 @@ class MessageController extends Controller
             ->whereHas('users', function ($query) use ($currentUserId) {
                 $query->where('user_id', $currentUserId);
             })
+            ->whereHas('messages')
             ->withCount('users')
+            ->withCount(['messages' => function ($query) {
+                $query->where('is_read', false);
+            }])
             ->having('users_count', 2)
             ->with([
                 'users' => function ($query) use ($currentUserId) {
@@ -30,7 +34,7 @@ class MessageController extends Controller
                         ->select('users.id', 'name');
                 },
                 'messages' => function ($query) {
-                    $query->latest()->first();
+                    $query->latest()->limit(1);
                 }
             ])
             ->get();
@@ -42,10 +46,15 @@ class MessageController extends Controller
                 'name' => $conversation->users->first()->name,
                 'avatar' => $conversation->users->first()->avatar,
                 'latest_message' => $conversation->messages,
+                'unread_message_count' => $conversation->messages_count,
             ];
         });
 
         return response()->json([
+            'error' => 0,
+            'unread_conversation_count' => $conversation->filter(function ($value) {
+                return $value['unread_message_count'] > 0;
+            })->count(),
             'data' => $conversation
         ]);
     }
