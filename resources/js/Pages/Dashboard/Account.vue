@@ -1,7 +1,7 @@
 <script setup>
 import {Head, router, Link} from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import { ChevronRight, Search } from "lucide-vue-next";
+import {CheckCircle, ChevronRight, MinusCircle, Search} from "lucide-vue-next";
 import Breadcrumbs from "@/Components/Breadcrumbs.vue";
 import Pagination from "@/Components/Pagination.vue";
 import {ref, watch} from "vue";
@@ -67,6 +67,13 @@ watch(
                         <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
                             <thead class="bg-gray-50 dark:bg-neutral-800">
                             <tr>
+                                <th scope="col" class="px-6 py-3 text-start">
+                                    <div class="flex items-center gap-x-2">
+                                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
+                                          No.
+                                        </span>
+                                    </div>
+                                </th>
                                 <th scope="col" class="px-6 py-3 text-start w-2/4">
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
@@ -74,11 +81,10 @@ watch(
                                         </span>
                                     </div>
                                 </th>
-
                                 <th scope="col" class="px-6 py-3 text-start">
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
-                                          Last login
+                                          Status
                                         </span>
                                     </div>
                                 </th>
@@ -90,13 +96,23 @@ watch(
                                     </div>
                                 </th>
                                 <th scope="col" class="px-6 py-3 text-start">
+                                    <div class="flex items-center gap-x-2">
+                                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
+                                          Action
+                                        </span>
+                                    </div>
                                 </th>
 
                             </tr>
                             </thead>
 
                             <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
-                            <tr v-for="user in users.data" key="user.id" class="bg-white hover:bg-gray-50 dark:bg-neutral-900 dark:hover:bg-neutral-800">
+                            <tr v-for="(user, index) in users.data" key="user.id" class="bg-white hover:bg-gray-50 dark:bg-neutral-900 dark:hover:bg-neutral-800">
+                                <td class="size-px whitespace-nowrap align-top">
+                                    <a class="block p-6" href="#">
+                                        <span class="text-sm text-gray-600 dark:text-neutral-400">{{ index+1 }}</span>
+                                    </a>
+                                </td>
                                 <td class="size-px whitespace-nowrap align-top">
                                     <a class="block p-6" href="#">
                                         <div class="flex items-center gap-x-3">
@@ -108,12 +124,17 @@ watch(
                                         </div>
                                     </a>
                                 </td>
-
-                                <td class="size-px whitespace-nowrap align-top">
+                                <td class="h-px w-72 min-w-72 align-top">
                                     <a class="block p-6" href="#">
-                                        <span class="text-sm text-gray-600 dark:text-neutral-400">{{ user.last_login }}</span>
+                                        <span v-if="user.is_active" class="py-1 px-3 inline-flex items-center gap-x-1 text-xs font-medium bg-teal-100 text-teal-800 rounded-full dark:bg-teal-500/10 dark:text-teal-500">
+                                          <CheckCircle class="size-3" />Active
+                                        </span>
+                                        <span v-else-if="!user.is_active" class="py-1 px-3 inline-flex items-center gap-x-1 text-xs font-medium bg-red-100 text-red-800 rounded-full dark:bg-red-500/10 dark:text-red-500">
+                                          <MinusCircle class="size-3" />Blocked
+                                        </span>
                                     </a>
                                 </td>
+
                                 <td class="size-px whitespace-nowrap align-top">
                                     <a class="block p-6" href="#">
                                         <span class="text-sm text-gray-600 dark:text-neutral-400">{{ user.created_at }}</span>
