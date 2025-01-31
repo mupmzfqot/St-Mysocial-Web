@@ -8,6 +8,7 @@ use App\Actions\Posts\Repost;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CommentResource;
 use App\Http\Resources\PostResource;
+use App\Http\Resources\UserResource;
 use App\Models\Comment;
 use App\Models\CommentLiked;
 use App\Models\Post;
@@ -161,6 +162,20 @@ class PostController extends Controller
         ]);
     }
 
+    public function likedBy(Request $request, $id)
+    {
+        $user = User::whereHas('likes', function ($query) use ($id) {
+                    $query->where('post_id', $id);
+                })->get();
+
+        $code = !$user ? '404' : 200;
+
+        return response()->json([
+            'error' => 0,
+            'data' => UserResource::collection($user)
+        ], $code);
+    }
+
     public function storeLike(Request $request)
     {
         $liked = PostLiked::query()->where('post_id', $request->post_id)->where('user_id', $request->user()->id)->first();
@@ -272,5 +287,44 @@ class PostController extends Controller
                 'message' => $e->getMessage(),
             ]);
         }
+    }
+
+    public function deleteComment(Request $request, $id)
+    {
+        DB::beginTransaction();
+        try {
+            $comment = Comment::query()->find($id);
+
+            if(!$comment) {
+                return response()->json([
+                    'error' => 1,
+                    'message' => 'Comment not found',
+                ], 404);
+            }
+            if($request->user()->id === $comment->user_id) {
+
+                $comment->getMedia()->each(function ($media) {
+                    $media->delete();
+                });
+                $comment->delete();
+                DB::commit();
+                return response()->json([
+                    'error' => 0,
+                    'message' => 'Comment has been deleted'
+                ], 202);
+            }
+
+            return response()->json([
+                'error' => 0,
+                'message' => "You don't have permission to delete this comment"
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'error' => 1,
+                'message' => $e->getMessage(),
+            ]);
+        }
+
     }
 }

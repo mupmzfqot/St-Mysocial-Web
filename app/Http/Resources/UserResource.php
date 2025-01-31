@@ -29,7 +29,7 @@ class UserResource extends JsonResource
             'profile_img'       => $this->avatar,
             'cover_img'         => $this->cover_image,
             'user_type'         => in_array('user', array_column($roles, 'name')) ? 'st' : 'public',
-            'last_login'        => $this->last_login->toDateTimeString(),
+            'last_login'        => $this->last_login?->toDateTimeString(),
         ];
     }
 
