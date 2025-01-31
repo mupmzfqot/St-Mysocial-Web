@@ -224,7 +224,7 @@ function isActiveNav(path) {
                         <Link v-if="isST" :href="route('message.index')" type="button" :class="['inline-flex hover:bg-blue-100 items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/message') ? 'text-blue-600' : '']">
                             <MessageSquareMore class="shrink-0 size-5 text-green-800 fill-green-100" />
                             Messages
-                            <span class="inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium bg-red-500 text-white ms-auto">{{ unreadMessageCount }}</span>
+                            <span v-if="unreadMessageCount > 0" class="inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium bg-red-500 text-white ms-auto">{{ unreadMessageCount }}</span>
                         </Link>
                         <Link :href="route('liked-posts')" type="button" :class="['inline-flex hover:bg-blue-100 items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/liked-posts') ? 'text-blue-600' : '']">
                             <Heart class="shrink-0 size-5 text-red-600 fill-red-600" />
