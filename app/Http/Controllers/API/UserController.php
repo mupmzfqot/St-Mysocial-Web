@@ -74,31 +74,10 @@ class UserController extends Controller
             $medias = Media::query()
                 ->whereIn('model_id', $post_id)
                 ->where('model_type', Post::class)
-                ->where('mime_type', '!=', 'application/pdf')
+                ->whereLike('mime_type', 'image/%')
                 ->get();
 
-            $groupedMedias = $medias->map(fn ($item) => [
-                'id'            => $item->id,
-                'filename'      => $item->file_name,
-                'preview_url'   => $item->preview_url,
-                'original_url'  => $item->original_url,
-                'extension'     => $item->extension,
-                'mime_type'     => $item->mime_type,
-            ])->groupBy(function ($item) {
-                if (str_starts_with($item['mime_type'], 'video/')) {
-                    return 'video';
-                } elseif (str_starts_with($item['mime_type'], 'image/')) {
-                    return 'image';
-                } elseif ($item['mime_type'] === 'application/pdf') {
-                    return 'document';
-                }
-                return 'other';
-            })->map(function ($items, $type) {
-                return [
-                    'type' => $type,
-                    'content' => $items->pluck('original_url')->all(),
-                ];
-            })->values();
+            $groupedMedias = $this->groupMedia($medias, 'image');
 
             return response()->json([
                 'error' => 0,
@@ -111,5 +90,53 @@ class UserController extends Controller
             ]);
         }
 
+    }
+
+    public function getVideo(Request $request)
+    {
+        try {
+            $user = $request->user()->id;
+            $post_id = Post::where('user_id', $user)->get()->pluck('id');
+
+            $medias = Media::query()
+                ->whereIn('model_id', $post_id)
+                ->where('model_type', Post::class)
+                ->whereLike('mime_type', 'video/%')
+                ->get();
+
+            $groupedMedias = $this->groupMedia($medias, 'video');
+
+            return response()->json([
+                'error' => 0,
+                'data' => $groupedMedias
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 1,
+                'message' => $e->getMessage()
+            ]);
+        }
+
+    }
+
+    private function groupMedia($medias, $type)
+    {
+        return $medias->map(fn ($item) => [
+            'id'            => $item->id,
+            'filename'      => $item->file_name,
+            'preview_url'   => $item->preview_url,
+            'original_url'  => $item->original_url,
+            'extension'     => $item->extension,
+            'mime_type'     => $item->mime_type,
+        ])->groupBy(function ($item) use($type) {
+            if (str_starts_with($item['mime_type'], "{$type}/")) {
+                return $type;
+            }
+        })->map(function ($items, $type) {
+            return [
+                'type' => $type,
+                'content' => $items->pluck('original_url')->all(),
+            ];
+        })->values();
     }
 }

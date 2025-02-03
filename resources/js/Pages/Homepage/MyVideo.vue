@@ -57,10 +57,10 @@ const handleKeydown = (e) => {
 </script>
 
 <template>
-    <Head title="My Photos" />
+    <Head title="My Videos" />
     <HomeLayout>
         <div class="pb-3">
-            <h1 class="font-semibold text-xl dark:text-white">My Photos</h1>
+            <h1 class="font-semibold text-xl dark:text-white">My Videos</h1>
         </div>
 
         <div :class="['rounded-lg overflow-hidden py-2 gallery grid']">

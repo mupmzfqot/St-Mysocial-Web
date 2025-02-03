@@ -57,9 +57,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/profile/update-status-image/{id}', [ProfileController::class, 'updateProfileImageStatus'])->name('profile.update-status-image');
 
-    Route::prefix('photo-album')->name('photoAlbum.')->group(function () {
-        Route::get('/', [PhotoAlbumController::class, 'index'])->name('index');
-    });
+        Route::get('/photo-album', [PhotoAlbumController::class, 'index'])->name('photoAlbum.index');
+        Route::get('/videos', [PhotoAlbumController::class, 'videos'])->name('videos.index');
 
     Route::get('user-post/show/{id}', [HomeController::class, 'showPost'])->name('user-post.show-post');
     Route::post('upload-profile-image', [ProfileController::class, 'uploadImage'])->name('profile.upload-image');

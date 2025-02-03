@@ -51,6 +51,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('search-user', [UserController::class, 'searchUser']);
     Route::get('teams', [UserController::class, 'getTeams']);
     Route::get('get-albums', [UserController::class, 'getMedia']);
+    Route::get('video/get', [UserController::class, 'getVideo']);
 
     Route::group(['prefix' => 'notification'], function () {
         Route::get('/get', [NotificationController::class, 'index']);
