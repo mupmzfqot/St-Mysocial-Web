@@ -53,6 +53,10 @@ class HomeController extends Controller
 
     public function showPost($id)
     {
+        if(auth()->user()->hasRole('admin')) {
+            return redirect()->route('post.show', $id);
+        }
+
         $post = Post::query()
             ->with('author', 'media', 'tags', 'comments.user', 'comments.media', 'repost.author', 'repost.media')
             ->orderBy('created_at', 'desc')
@@ -163,6 +167,10 @@ class HomeController extends Controller
     {
         auth()->user()->unreadNotifications->markAsRead();
         $notifications = auth()->user()->notifications()->paginate(20);
+
+        if(auth()->user()->hasRole('admin')) {
+            return Inertia::render('Dashboard/Notification', compact('notifications'));
+        }
 
         return Inertia::render('Homepage/Notifications', compact('notifications'));
     }

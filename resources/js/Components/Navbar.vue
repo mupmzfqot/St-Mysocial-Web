@@ -69,7 +69,7 @@ const readNotification = (item) => {
                             </svg>
                             <span class="sr-only">Notifications</span>
                             <span class="absolute top-0 end-0 inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium transform -translate-y-1/2 translate-x-1/2 bg-red-500 text-white">
-                                {{ notifications.length }}
+                                {{ notifications.length > 99 ? '99+' : notifications.length }}
                             </span>
                         </button>
 
@@ -80,15 +80,15 @@ const readNotification = (item) => {
                                 </p>
                             </div>
                             <div class="p-1 space-y-0.5">
-                                <a href="#" @click="readNotification(notif)" v-for="notif in notifications" class="flex items-center gap-x-1 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700">
+                                <a href="#" @click="readNotification(notif)" v-for="notif in notifications.slice(0, 9)" class="flex items-center gap-x-1 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700">
                                     {{ notif.data.message }}
                                 </a>
 
                             </div>
                             <div class="p-1 space-y-0.5">
-                                <a href="#" class="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700">
+                                <Link :href="route('notifications')" class="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700">
                                     <CircleCheckBig class="shrink-0 size-4 text-green-700" /> Mark all as read
-                                </a>
+                                </Link>
                             </div>
 
                         </div>

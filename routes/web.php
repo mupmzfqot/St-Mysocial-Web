@@ -32,7 +32,6 @@ Route::middleware(['auth', 'verified', 'role:user|public_user'])->group(function
         Route::post('store', [PostController::class, 'store'])->name('store');
         Route::post('share', [PostController::class, 'share'])->name('share');
         Route::post('store', [PostController::class, 'store'])->name('store');
-        Route::get('show/{id}', [HomeController::class, 'showPost'])->name('show-post');
         Route::get('liked-by/{id}', [HomeController::class, 'postLikedBy'])->name('liked-by');
         Route::post('delete', [HomeController::class, 'deletePost'])->name('delete');
         Route::post('comment', [HomeController::class, 'storeComment'])->name('store-comment');
@@ -46,8 +45,6 @@ Route::middleware(['auth', 'verified', 'role:user|public_user'])->group(function
     Route::get('st-user', [UserController::class, 'stIndex'])->name('st-user');
     Route::get('change-password', [ChangePasswordController::class, 'index'])->name('change-password.index');
     Route::post('change-password', [ChangePasswordController::class, 'store'])->name('change-password.store');
-    Route::get('notifications', [HomeController::class, 'notifications'])->name('notifications');
-
 });
 
 Route::get('registration-success', [UserController::class, 'registrationSuccess'])
@@ -64,6 +61,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', [PhotoAlbumController::class, 'index'])->name('index');
     });
 
+    Route::get('user-post/show/{id}', [HomeController::class, 'showPost'])->name('user-post.show-post');
     Route::post('upload-profile-image', [ProfileController::class, 'uploadImage'])->name('profile.upload-image');
 
     Route::prefix('message')->name('message.')->group(function () {
@@ -76,7 +74,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('team-st', [TeamController::class, 'get'])->name('team.get');
     Route::get('search', [UserController::class, 'search'])->name('user.search');
-
+    Route::get('notifications', [HomeController::class, 'notifications'])->name('notifications');
     Route::post('read-notification/{id?}', [NotificationController::class, 'readNotification'])->name('read-notification');
 });
 

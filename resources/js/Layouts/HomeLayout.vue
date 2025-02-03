@@ -137,7 +137,7 @@ function isActiveNav(path) {
                                 <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
                                 <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path>
                             </svg>
-                            <span class="absolute top-0 end-0 inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium transform -translate-y-1/2 translate-x-1/2 bg-red-500 text-white">{{ notifications.length }}</span>
+                            <span class="absolute top-0 end-0 inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium transform -translate-y-1/2 translate-x-1/2 bg-red-500 text-white">{{ notifications.length > 99 ? '99+' : notifications.length }}</span>
                         </button>
 
                         <div class="hs-dropdown-menu transition-[opacity,margin] w-[350px] duration hs-dropdown-open:opacity-100 opacity-0 hidden min-w-60 bg-white shadow-md border border-gray-200 rounded-lg mt-2 divide-y divide-gray-200 dark:bg-neutral-800 dark:border dark:border-neutral-700 dark:divide-neutral-700" role="menu" aria-orientation="vertical" aria-labelledby="hs-dropdown-with-dividers">
@@ -147,7 +147,7 @@ function isActiveNav(path) {
                                 </p>
                             </div>
                             <div class="p-1 space-y-0.5">
-                                <a href="#" @click="readNotification(notif)" v-for="notif in notifications" class="flex items-center gap-x-1 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100">
+                                <a href="#" @click="readNotification(notif)" v-for="notif in notifications.slice(0, 9)" class="flex items-center gap-x-1 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100">
                                     {{ notif.data.message }}
                                 </a>
                                 <a href="#" v-if="notifications.length === 0" class="flex items-center gap-x-3.5 py-2 px-3 font-light italic text-gray-800">
