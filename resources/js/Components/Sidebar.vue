@@ -77,7 +77,7 @@ watch(() => page.props.pendingApprovals, (newApprovals) => {}, { immediate: true
                         </li>
 
                         <li class="hs-accordion" id="account-accordion">
-                            <button type="button" class="hs-accordion-toggle w-full text-start flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:bg-gray-100" aria-expanded="true" aria-controls="account-accordion-child">
+                            <button type="button" class="hs-accordion-toggle w-full text-start flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 active:text-gray-800" aria-expanded="true" aria-controls="account-accordion-child">
                                 <MessageSquareMore class="shrink-0 size-4" /> User Post
 
                                 <svg class="hs-accordion-active:block ms-auto hidden size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
