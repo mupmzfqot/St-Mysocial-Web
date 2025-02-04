@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, nextTick } from 'vue';
 import { useForm } from "@inertiajs/vue3";
 import { Heart, XCircle, X, SmilePlus, Paperclip } from "lucide-vue-next";
 import PostMedia from "@/Components/PostMedia.vue";
@@ -98,6 +98,12 @@ const submitComment = () => {
             console.error('Comment submission error:', errors);
         }
     });
+
+    nextTick(() => {
+        if (commentsContainer.value) {
+            commentsContainer.value.scrollTop = commentsContainer.value.scrollHeight;
+        }
+    });
 };
 
 // Comment interaction methods
@@ -132,7 +138,7 @@ const onSelectEmoji = (emoji) => {
         <!-- Comments List (Scrollable) -->
         <div
             ref="commentsContainer"
-            class="comments-list flex-grow overflow-y-auto pb-10 pr-2 min-h-[160px] max-h-[500px]
+            class="comments-list flex-grow overflow-y-auto pb-10 pr-2 mb-2
                 [&::-webkit-scrollbar]:w-1
                 [&::-webkit-scrollbar-track]:rounded-full
                 [&::-webkit-scrollbar-track]:bg-gray-100
