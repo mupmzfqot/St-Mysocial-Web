@@ -330,7 +330,7 @@ const handleLinkClick = (event) => {
                 <p class="text-md font-semibold mb-3 text-gray-800 dark:text-white">
                     Comments
                 </p>
-                <Comment class="max-h-[80vh]"
+                <Comment
                     :post-id="content.id"
                     :comments="content?.comments || []"
                     :current-user="usePage().props.auth.user"

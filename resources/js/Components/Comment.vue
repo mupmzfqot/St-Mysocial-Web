@@ -132,7 +132,7 @@ const onSelectEmoji = (emoji) => {
         <!-- Comments List (Scrollable) -->
         <div
             ref="commentsContainer"
-            class="comments-list flex-grow overflow-y-auto pb-10 pr-2 min-h-28
+            class="comments-list flex-grow overflow-y-auto pb-10 pr-2 max-h-[500px]
                 [&::-webkit-scrollbar]:w-1
                 [&::-webkit-scrollbar-track]:rounded-full
                 [&::-webkit-scrollbar-track]:bg-gray-100
@@ -150,7 +150,7 @@ const onSelectEmoji = (emoji) => {
             </div>
 
             <!-- comment list -->
-            <div class="flex gap-x-3" v-for="comment in comments">
+            <div class="flex gap-x-3 overflow-auto" v-for="comment in comments">
                 <!-- Icon -->
                 <div class="relative last:after:hidden after:absolute after:top-10 after:bottom-0 after:start-5 after:w-px after:-translate-x-[0.5px] after:bg-gray-200 dark:after:bg-neutral-700">
                     <div class="relative z-10 size-10 flex justify-center items-center">
