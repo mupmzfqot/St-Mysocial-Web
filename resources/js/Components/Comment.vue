@@ -132,7 +132,7 @@ const onSelectEmoji = (emoji) => {
         <!-- Comments List (Scrollable) -->
         <div
             ref="commentsContainer"
-            class="comments-list flex-grow overflow-y-auto pb-10 pr-2 max-h-[500px]
+            class="comments-list flex-grow overflow-y-auto pb-10 pr-2 min-h-[160px] max-h-[500px]
                 [&::-webkit-scrollbar]:w-1
                 [&::-webkit-scrollbar-track]:rounded-full
                 [&::-webkit-scrollbar-track]:bg-gray-100
@@ -203,7 +203,7 @@ const onSelectEmoji = (emoji) => {
         </div>
 
         <!-- Comment Input (Fixed at Bottom) -->
-        <div style="z-index: 9999" >
+        <div style="z-index: 9999" class="mt-4" >
             <div
                 v-if="currentUser"
                 class="bg-gray-100 fixed bottom-0 left-0 right-0 dark:bg-neutral-900 shadow-lg p-4 border-t"
