@@ -61,6 +61,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/videos', [PhotoAlbumController::class, 'videos'])->name('videos.index');
 
     Route::get('user-post/show/{id}', [HomeController::class, 'showPost'])->name('user-post.show-post');
+    Route::get('user-post/tagged-user/{id}', [PostController::class, 'getTaggedUser'])->name('user-post.tagged-user');
     Route::post('upload-profile-image', [ProfileController::class, 'uploadImage'])->name('profile.upload-image');
 
     Route::prefix('message')->name('message.')->group(function () {

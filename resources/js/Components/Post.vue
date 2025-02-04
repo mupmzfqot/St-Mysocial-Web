@@ -23,10 +23,12 @@ const props = defineProps({
 });
 
 const likedByUsers = ref([]);
+const taggedUsers = ref([]);
 const showLikedByModal = ref(false);
 const showDeleteConfirmModal = ref(false);
 const postToDelete = ref(false);
 const showPostModal = ref(false);
+const showTaggedModal = ref(false);
 const postDetails = ref(null);
 
 const showPost = (id) => {
@@ -63,6 +65,18 @@ const showLikedBy = (id) => {
         })
         .catch(error => {
             console.error('Error fetching liked by users:', error);
+        })
+};
+
+const showTaggedUser = (id) => {
+    axios.get(route('user-post.tagged-user', id))
+        .then(response => {
+            taggedUsers.value = response.data;
+            console.log(taggedUsers);
+            showTaggedModal.value = true;
+        })
+        .catch(error => {
+            console.error('Error fetching tagged users:', error);
         })
 };
 
@@ -196,7 +210,7 @@ const handleLinkClick = (event) => {
                     <Link :href="route('profile.show', content.author.id)" class="text-base font-semibold text-gray-800 dark:text-neutral-400 hover:text-blue-700 me-1">{{ content.author.name }}</Link>
                     <div class="flex flex-wrap gap-x-1" v-if="content.tags && content.tags.length > 0">
                         <p class="text-sm text-gray-800 dark:text-gray-200">with </p>
-                        <p class="text-sm text-blue-700 dark:text-gray-200">
+                        <p @click.stop="showTaggedUser(content.id)" class="text-sm text-blue-700 dark:text-gray-200">
                             {{ formatTags(content.tags.map(tag => tag.name)) }}
                         </p>
                     </div>
@@ -223,7 +237,7 @@ const handleLinkClick = (event) => {
                         <Link :href="route('profile.show', content.repost.author.id)" class="text-base font-semibold text-gray-800 dark:text-neutral-400 hover:text-blue-700 me-1">{{ content.repost.author.name }}</Link>
                         <div class="flex flex-wrap gap-x-1" v-if="content.repost.tags && content.repost.tags.length > 0">
                             <p class="text-sm text-gray-800 dark:text-gray-200">with </p>
-                            <p class="text-sm text-blue-700 dark:text-gray-200">
+                            <p @click.stop="showTaggedUser(content.id)" class="text-sm text-blue-700 dark:text-gray-200">
                                 {{ formatTags(content.repost.tags.map(tag => tag.name)) }}
                             </p>
                         </div>
@@ -250,7 +264,7 @@ const handleLinkClick = (event) => {
                     <Link :href="route('profile.show', content.author.id)" class="text-base font-semibold text-gray-800 dark:text-neutral-400 hover:text-blue-700 me-1">{{ content.author.name }}</Link>
                     <div class="flex flex-wrap gap-x-1" v-if="content.tags && content.tags.length > 0">
                         <p class="text-sm text-gray-800 dark:text-gray-200">with </p>
-                        <p class="text-sm text-blue-700 dark:text-gray-200">
+                        <p @click.stop="showTaggedUser(content.id)" class="text-sm text-blue-700 dark:text-gray-200">
                             {{ formatTags(content.tags.map(tag => tag.name)) }}
                         </p>
                     </div>
@@ -451,6 +465,79 @@ const handleLinkClick = (event) => {
                                     type="button"
                                     class="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                                     @click="showLikedByModal = false"
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </DialogPanel>
+                    </TransitionChild>
+                </div>
+            </div>
+        </Dialog>
+    </TransitionRoot>
+
+    <!-- Tagged User Modal -->
+    <TransitionRoot appear :show="showTaggedModal" as="template" style="position: absolute; z-index: 99999">
+        <Dialog as="div" @close="showTaggedModal = false" class="relative">
+            <TransitionChild
+                as="template"
+                enter="duration-300 ease-out"
+                enter-from="opacity-0"
+                enter-to="opacity-100"
+                leave="duration-200 ease-in"
+                leave-from="opacity-100"
+                leave-to="opacity-0"
+            >
+                <div class="fixed inset-0 bg-black/25" />
+            </TransitionChild>
+
+            <div class="fixed inset-0 overflow-y-auto">
+                <div class="flex min-h-full items-center justify-center p-4 text-center">
+                    <TransitionChild
+                        as="template"
+                        enter="duration-300 ease-out"
+                        enter-from="opacity-0 scale-95"
+                        enter-to="opacity-100 scale-100"
+                        leave="duration-200 ease-in"
+                        leave-from="opacity-100 scale-100"
+                        leave-to="opacity-0 scale-95"
+                    >
+                        <DialogPanel class="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all dark:bg-neutral-800">
+                            <DialogTitle as="h3" class="text-md font-medium leading-6 text-gray-900 dark:text-white mb-4">
+                                People in this post
+                            </DialogTitle>
+                            <div class="mt-4 max-h-[400px] overflow-y-auto">
+                                <div v-if="taggedUsers.length === 0" class="text-center text-gray-500 dark:text-neutral-400">
+                                    No Tags
+                                </div>
+                                <div v-else class="grid grid-cols-2 gap-3">
+                                    <Link
+                                        v-for="user in taggedUsers"
+                                        :key="user.id"
+                                        :href="route('profile.show', user.id)"
+                                        class="flex items-center hover:bg-gray-100 dark:hover:bg-neutral-700 px-2 py-1 rounded-lg"
+                                    >
+                                        <img
+                                            :src="user.avatar"
+                                            :alt="user.name"
+                                            class="w-10 h-10 rounded-full mr-3"
+                                        />
+                                        <div>
+                                            <div class="text-sm font-semibold text-gray-800 dark:text-neutral-300">
+                                                {{ user.name }}
+                                            </div>
+                                            <div class="text-xs text-gray-500 dark:text-neutral-500">
+                                                {{ user.email }}
+                                            </div>
+                                        </div>
+                                    </Link>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <button
+                                    type="button"
+                                    class="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                                    @click="showTaggedModal = false"
                                 >
                                     Close
                                 </button>

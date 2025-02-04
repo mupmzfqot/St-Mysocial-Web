@@ -111,6 +111,11 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
         return $this->hasMany(PostLiked::class, 'user_id', 'id');
     }
 
+    public function tags(): HasMany
+    {
+        return $this->hasMany(PostTag::class, 'user_id', 'id');
+    }
+
     public function comments(): HasMany
     {
         return $this->hasMany(Comment::class, 'user_id', 'id');

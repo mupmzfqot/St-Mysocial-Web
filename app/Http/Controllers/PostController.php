@@ -241,6 +241,24 @@ class PostController extends Controller
             ->simplePaginate(30);
 
         return response()->json($posts);
+    }
 
+    public function getTaggedUser($postId)
+    {
+        $user = User::query()
+            ->whereHas('tags', function ($query) use($postId) {
+                $query->where('post_id', $postId);
+            })
+            ->get()
+            ->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'avatar' => $user->avatar
+                ];
+            });;
+
+        return response()->json($user);
     }
 }
