@@ -81,7 +81,7 @@ const otherMedia = computed(() => {
 </script>
 
 <template>
-    <div :class="['rounded-lg overflow-hidden py-2', filteredMedia.length === 1 ? 'gallery full' : 'gallery grid']">
+    <div :class="['rounded-lg overflow-hidden py-2', filteredMedia.length === 1 ? 'gallery full' : '', small ? 'mb-2 flex flex-wrap gap-x-2' : 'grid gallery']">
         <template v-if="filteredMedia.length === 1" >
             <div v-if="isVideo(filteredMedia[0])" class="video-container">
                 <video
@@ -164,7 +164,7 @@ const otherMedia = computed(() => {
                 <img v-else
                     :src="media.preview_url"
                     :alt="media.name"
-                     :class="['hover:opacity-90 cursor-pointer object-cover', small === true ? 'h-32' : 'w-full h-40']"
+                     :class="['hover:opacity-90 cursor-pointer object-cover', small === true ? 'h-32 w-24' : 'w-full h-40']"
                     @click.stop="previewMedia(filteredMedia, index)"
                 />
                 <!-- Overlay untuk gambar lebih dari 4 -->
@@ -284,6 +284,9 @@ const otherMedia = computed(() => {
 }
 .gallery.grid {
     grid-template-columns: repeat(2, 1fr);
+}
+.gallery.grid-auto {
+    grid-template-columns: repeat(4, 1fr);
 }
 .gallery .more-overlay {
     display: flex;

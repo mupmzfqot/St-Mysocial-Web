@@ -68,6 +68,7 @@ const sendMessage = async (conversationId) => {
         content.value = "";
         form.reset();
         previews.value = [];
+        form.files = [];
     } catch (error) {
         console.error('Error sending message:', error);
     }
@@ -219,17 +220,15 @@ const removeMedia = (index) => {
                                 :small="true"
                             />
                             <p class="text-sm text-white mt-1" v-html="message.content"></p>
-                            </div>
+                        </div>
 
-
-                        <div class="bg-white border border-gray-200 rounded-xl px-4 py-2 space-y-3" v-else>
-                            <p class="text-sm text-gray-800" v-html="message.content"></p>
-
+                        <div class="bg-white border border-gray-200 rounded-xl px-2 pb-2" v-else>
                             <PostMedia
                                 v-if="message.media && message.media.length > 0"
                                 :medias="message.media"
                                 :small="true"
                             />
+                            <p class="text-sm text-gray-800" v-html="message.content"></p>
                         </div>
                     </li>
                 </ul>

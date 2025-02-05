@@ -79,6 +79,16 @@ class MessageController extends Controller
     public function sendMessage(Request $request, $conversation_id)
     {
         try {
+            $request->validate([
+                'message' => 'required',
+                'files' => 'nullable|array',
+                'files.*' => [
+                    'file',
+                    'mimetypes:image/jpeg,image/png,image/gif,video/mp4,
+                        video/quicktime,video/mpeg,video/ogg,video/webm,video/avi,application/pdf',
+                    'max:10240' // 10MB
+                ],
+            ]);
             $conversation = Conversation::query()->find($conversation_id);
             Gate::authorize('send', $conversation);
 
@@ -94,6 +104,8 @@ class MessageController extends Controller
                 }
             }
 
+            $message->load('sender', 'media');
+
 //            broadcast(new MessageSent($message));
 
             return response()->json([
@@ -102,6 +114,7 @@ class MessageController extends Controller
                 'content' => $message->content,
                 'sender_id' => $message->sender_id,
                 'sender_name' => $message->sender->name,
+                'media' => array_values($message->getMedia('message_media')->toArray())
             ]);
         } catch (\Exception $exception) {
             return response()->json([
