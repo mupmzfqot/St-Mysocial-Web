@@ -156,7 +156,7 @@ const styledTag = (value) => {
                                         <span class="text-sm text-gray-600 dark:text-neutral-400">{{ post.author.name }}</span>
                                     </a>
                                 </td>
-                                <td class="size-px whitespace-nowrap align-top">
+                                <td class="size-px whitespace-nowrap p-6 align-top">
                                     <span class="text-sm text-gray-600 dark:text-neutral-400 text-wrap" v-html="styledTag(post.post)"></span>
                                 </td>
                                 <td class="size-px whitespace-nowrap text-center">

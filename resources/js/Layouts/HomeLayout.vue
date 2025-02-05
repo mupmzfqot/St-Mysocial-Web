@@ -7,6 +7,8 @@ import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 import { useUnreadMessages } from '@/Composables/useUnreadMessages';
 import { TeamStore } from '@/Composables/useTeamStore';
+import {toast, ToastifyContainer} from "vue3-toastify";
+import 'vue3-toastify/dist/index.css';
 
 const { auth: { roles: userRoles } } = usePage().props;
 const { unreadNotifications: notifications } = usePage().props;
@@ -292,6 +294,8 @@ function isActiveNav(path) {
         </div>
     </main>
     <!-- ========== END MAIN CONTENT ========== -->
+
+    <ToastifyContainer />
 </template>
 
 <style scoped>

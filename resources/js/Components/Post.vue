@@ -327,7 +327,7 @@ const handleLinkClick = (event) => {
                 <p class="text-md font-semibold mb-3 text-gray-800 dark:text-white">
                     Comments
                 </p>
-                <Comment class="overflow-y-auto max-h-[575px] pb-8 min-h-[125px]"
+                <Comment class="overflow-y-auto max-h-[575px] pb-8 min-h-[125px] -mr-4"
                          :post-id="content.id"
                          :comments="content?.comments || []"
                          :current-user="usePage().props.auth.user"

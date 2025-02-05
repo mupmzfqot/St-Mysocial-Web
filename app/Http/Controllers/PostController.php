@@ -99,14 +99,12 @@ class PostController extends Controller
             $message = 'Post successfully created!';
             if($request->type === 'public' && !auth()->user()->hasRole('admin')) {
                 $message = 'Your post will be available after admin approval.';
-                return redirect()->back()->with(['message' => $message]);
+                return redirect()->back()->with('success', $message);
             }
 
             if(auth()->user()->hasRole('admin')) {
                 return redirect()->route('post.index')->with('success', $message);
             }
-
-            return redirect('/');
 
         } catch (\Exception $e) {
             return back()->withErrors(['error' => $e->getMessage()]);

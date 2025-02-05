@@ -10,6 +10,7 @@ import '@vueup/vue-quill/dist/vue-quill.snow.css';
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue';
 import EmojiPicker from 'vue3-emoji-picker';
 import 'vue3-emoji-picker/css';
+import {toast} from "vue3-toastify";
 
 const MAX_FILES = 10;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -134,14 +135,18 @@ const submit = () => {
             const flash = page.props.flash;
 
             if (flash.success) {
-                successMessage.value = flash.success;
-                showSuccessMessage.value = true;
+                toast.success(flash.success, {
+                    autoClose: 3000,
+                    position: 'top-right'
+                });
             }
 
             form.reset();
             previews.value = [];
             isLoading.value = false;
-            router.visit(route('home'))
+            setTimeout(function () {
+                router.visit(route('home'))
+            }, 3000)
         },
         onError: (error) => {
             errorMessage.value = Object.values(error)[0];
