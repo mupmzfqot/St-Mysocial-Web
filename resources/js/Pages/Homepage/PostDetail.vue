@@ -13,8 +13,8 @@ const props = defineProps({
 <template>
     <Head title="Post Detail" />
     <HomeLayout>
-        <div v-if="post" class="relative flex transform flex-col text-wrap bg-white border shadow-sm rounded-xl py-3 px-4 mb-2 max-h-[80vh]">
-            <Post :content="post" :singlePost="true" />
+        <div v-if="post" class="relative flex transform flex-col text-wrap bg-white border shadow-sm rounded-xl py-3 px-4 mb-2">
+            <Post :content="post" :singlePost="true" class=" max-h-[80vh]" />
         </div>
 
         <div v-else class="bg-red-50 border-s-4 border-red-500 p-4 dark:bg-red-800/30" role="alert" tabindex="-1" aria-labelledby="hs-bordered-red-style-label">
