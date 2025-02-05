@@ -324,13 +324,13 @@ const handleLinkClick = (event) => {
     <div  class="relative transform overflow-hidden px-4 rounded-2xl bg-white dark:bg-neutral-800 text-left align-middle"
     >
 
-        <div class="" v-if="singlePost">
+        <div class="flex flex-col h-full" v-if="singlePost">
             <!-- Comments Section -->
             <div class="mt-1">
                 <p class="text-md font-semibold mb-3 text-gray-800 dark:text-white">
                     Comments
                 </p>
-                <Comment class="overflow-y-auto max-h-[575px]"
+                <Comment class="overflow-y-auto max-h-[575px] min-h-[125px]"
                     :post-id="content.id"
                     :comments="content?.comments || []"
                     :current-user="usePage().props.auth.user"
