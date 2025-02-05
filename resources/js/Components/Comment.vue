@@ -209,7 +209,7 @@ const onSelectEmoji = (emoji) => {
         </div>
 
         <!-- Comment Input (Fixed at Bottom) -->
-        <div style="z-index: 9999" class="mt-4" >
+        <div class="z-[9999]" >
             <div
                 v-if="currentUser"
                 class="bg-gray-100 fixed bottom-0 left-0 right-0 dark:bg-neutral-900 shadow-lg p-4 border-t"
@@ -240,7 +240,7 @@ const onSelectEmoji = (emoji) => {
                     <EmojiPicker
                         v-if="showEmojiPicker"
                         @select="onSelectEmoji"
-                        class="absolute bottom-16 right-3"
+                        :class="['absolute bottom-16', singlePost ? 'right-1' : '']"
                     />
 
                     <!-- File Upload -->

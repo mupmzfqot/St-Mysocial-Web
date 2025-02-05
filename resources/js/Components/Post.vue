@@ -287,7 +287,6 @@ const handleLinkClick = (event) => {
 
     <hr class="my-3 border-1 -mx-4">
     <div class="inline-flex items-center justify-between">
-
         <div class="inline-flex items-center gap-x-2 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600">
             <a href="#" v-if="content.is_liked" @click.prevent="unlike(content.id)">
                 <Heart class="shrink-0 size-5 fill-red-500 text-transparent" v-if="content.is_liked" />
@@ -319,30 +318,31 @@ const handleLinkClick = (event) => {
     </div>
 
     <hr class="mt-3 mb-1 border-1 -mx-4" v-if="singlePost">
-
     <!-- Scrollable Content -->
-    <div  class="relative transform overflow-hidden px-4 rounded-2xl bg-white dark:bg-neutral-800 text-left align-middle"
+    <div class="relative overflow-hidden px-4 rounded-2xl bg-white dark:bg-neutral-800 text-left align-middle"
     >
-
-        <div class="flex flex-col h-full" v-if="singlePost">
+        <div class="flex flex-col h-full relative" v-if="singlePost">
             <!-- Comments Section -->
             <div class="mt-1">
                 <p class="text-md font-semibold mb-3 text-gray-800 dark:text-white">
                     Comments
                 </p>
-                <Comment class="overflow-y-auto max-h-[575px] min-h-[125px]"
-                    :post-id="content.id"
-                    :comments="content?.comments || []"
-                    :current-user="usePage().props.auth.user"
-                    @like-comment="sendCommentLike"
-                    @unlike-comment="unlikeComment"
-                    @delete-comment="openDeleteCommentConfirm"
-                    @comment-added="refreshComments"
-                    :singlePost="singlePost"
+                <Comment class="overflow-y-auto max-h-[575px] pb-8 min-h-[125px]"
+                         :post-id="content.id"
+                         :comments="content?.comments || []"
+                         :current-user="usePage().props.auth.user"
+                         @like-comment="sendCommentLike"
+                         @unlike-comment="unlikeComment"
+                         @delete-comment="openDeleteCommentConfirm"
+                         @comment-added="refreshComments"
+                         :singlePost="singlePost"
                 />
             </div>
         </div>
     </div>
+    <!-- end of if repost empty -->
+
+
 
     <!-- Delete Confirmation Modal -->
     <TransitionRoot appear :show="showDeleteConfirmModal" as="template" style="position: absolute; z-index: 99999">

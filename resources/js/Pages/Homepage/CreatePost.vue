@@ -337,7 +337,7 @@ const onSelectEmoji = (emoji) => {
                                 </button>
                             </div>
 
-                            <div class="hs-tooltip [--placement:bottom] inline-block">
+                            <div class="hs-tooltip [--placement:top] inline-block relative">
                                 <button @click="showEmojiPicker = !showEmojiPicker" type="button"
                                         class="hs-tooltip-toggle size-10 inline-flex justify-center items-center gap-2 rounded-md bg-gray-50 border border-gray-200 text-gray-600 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 focus:outline-none focus:bg-blue-50 focus:border-blue-200 focus:text-blue-600 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-white/10 dark:hover:border-white/10 dark:hover:text-white dark:focus:bg-white/10 dark:focus:border-white/10 dark:focus:text-white">
                                     <SmilePlus class="shrink-0 size-4"/>
@@ -350,7 +350,7 @@ const onSelectEmoji = (emoji) => {
                                 <EmojiPicker
                                     v-if="showEmojiPicker"
                                     @select="onSelectEmoji"
-                                    class="absolute z-50"
+                                    class="absolute z-50 mt-2"
                                 />
                             </div>
 

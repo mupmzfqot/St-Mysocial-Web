@@ -1,8 +1,9 @@
 <script setup>
-import {Head} from "@inertiajs/vue3";
+import {Head, usePage} from "@inertiajs/vue3";
 import HomeLayout from "@/Layouts/HomeLayout.vue";
 import '@vueup/vue-quill/dist/vue-quill.snow.css'
 import Post from "@/Components/Post.vue";
+import Comment from "@/Components/Comment.vue";
 
 const props = defineProps({
     post: Object
@@ -12,9 +13,10 @@ const props = defineProps({
 <template>
     <Head title="Post Detail" />
     <HomeLayout>
-        <div v-if="post" class="flex flex-col text-wrap bg-white border shadow-sm rounded-xl py-3 px-4 mb-2 max-h-[80vh]">
+        <div v-if="post" class="relative flex transform flex-col text-wrap bg-white border shadow-sm rounded-xl py-3 px-4 mb-2 max-h-[80vh]">
             <Post :content="post" :singlePost="true" />
         </div>
+
         <div v-else class="bg-red-50 border-s-4 border-red-500 p-4 dark:bg-red-800/30" role="alert" tabindex="-1" aria-labelledby="hs-bordered-red-style-label">
             <div class="flex">
                 <div class="shrink-0">
