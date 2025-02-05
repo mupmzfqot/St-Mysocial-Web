@@ -87,6 +87,13 @@ class MessageController extends Controller
                 'content' => $request->message,
             ]);
 
+            if ($request->hasFile('files')) {
+                foreach ($request->file('files') as $file) {
+                    $message->addMedia($file)
+                        ->toMediaCollection('message_media');
+                }
+            }
+
 //            broadcast(new MessageSent($message));
 
             return response()->json([

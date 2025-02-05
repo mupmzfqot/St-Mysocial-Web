@@ -26,7 +26,7 @@ class OpenConversation
         }
 
         $messages = $conversation->messages()
-            ->with('sender')
+            ->with('sender', 'media')
             ->orderBy('created_at')
             ->get()
             ->map(function ($message) {
@@ -36,6 +36,7 @@ class OpenConversation
                     'content' => $message->content,
                     'sender_id' => $message->sender_id,
                     'sender_name' => $message->sender->name,
+                    'media' => $message->getMedia('message_media'),
 
                 ];
             });

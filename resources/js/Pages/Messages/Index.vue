@@ -20,8 +20,11 @@ const truncatedText = (originalText) => {
 <template>
     <Head title="Messages"/>
     <HomeLayout>
-        <div class="pb-3">
+        <div class="pb-3 flex justify-between items-center">
             <h1 class="font-semibold text-xl dark:text-white">Messages</h1>
+            <Link :href="route('user.search')" type="button" class="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
+                New Message
+            </Link>
         </div>
 
         <div class="flex flex-col bg-white border shadow-sm rounded-xl p-1">

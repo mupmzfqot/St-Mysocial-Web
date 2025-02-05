@@ -1,18 +1,35 @@
 <script setup>
-import {Head} from "@inertiajs/vue3";
+import {Head, Link, useForm} from "@inertiajs/vue3";
 import HomeLayout from "@/Layouts/HomeLayout.vue";
 import {ref, onMounted, onBeforeUnmount, watch, nextTick} from 'vue';
 import {useUnreadMessages} from "@/Composables/useUnreadMessages.js";
-import {SmilePlus} from "lucide-vue-next";
+import {Paperclip, SmilePlus, X} from "lucide-vue-next";
 import EmojiPicker from 'vue3-emoji-picker';
 import 'vue3-emoji-picker/css';
+import PostMedia from "@/Components/PostMedia.vue";
 
 const props = defineProps({
     messages: Object,
     user: Object,
     conversation: Object,
+    config: {
+        type: Object,
+        default: () => ({
+            showLikeCount: true,
+            showUserAvatar: true,
+            allowFileUpload: true
+        })
+    },
 });
 
+const form = useForm({
+    message: '',
+    post_id: props.postId,
+    files: []
+});
+
+const fileInput = ref(null);
+const previews = ref([]);
 const content = ref('');
 const activeMessages = ref([...props.messages]);
 const messagesContainer = ref(null);
@@ -36,11 +53,21 @@ const sendMessage = async (conversationId) => {
     if (!content.value.trim()) return;
 
     try {
-        const response = await axios.post(route('message.send', conversationId), {
-            message: content.value,
+        const formData = new FormData();
+        formData.append('message', content.value);
+        form.files.forEach((file, index) => {
+            formData.append(`files[${index}]`, file);
         });
+        const response = await axios.post(route('message.send', conversationId), formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+
         handleNewMessage(response.data);
         content.value = "";
+        form.reset();
+        previews.value = [];
     } catch (error) {
         console.error('Error sending message:', error);
     }
@@ -117,13 +144,51 @@ const onSelectEmoji = (emoji) => {
     showEmojiPicker.value = false;
 };
 
+const triggerFileInput = () => {
+    fileInput.value.click();
+};
+
+const handleFiles = (event) => {
+    const files = event.target?.files;
+    if (files) {
+        Array.from(files).forEach((file) => {
+            if (file.size <= 5 * 1024 * 1024) {
+                const fileReader = new FileReader();
+                fileReader.onload = (e) => {
+                    previews.value.push({
+                        url: e.target.result,
+                        type: file.type,
+                        name: file.name,
+                        file: file
+                    });
+                };
+                form.files.push(file);
+                fileReader.readAsDataURL(file);
+            } else {
+                alert('File is too large. Maximum size is 5MB.');
+            }
+        });
+    }
+    if (event.target) {
+        event.target.value = '';
+    }
+};
+
+const removeMedia = (index) => {
+    previews.value.splice(index, 1);
+    form.files.splice(index, 1);
+};
+
 </script>
 
 <template>
     <Head title="Messages"/>
     <HomeLayout>
-        <div class="pb-3">
+        <div class="pb-3 flex justify-between items-center">
             <h1 class="font-semibold text-xl dark:text-white">Messages</h1>
+            <Link :href="route('message.index')" type="button" class="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-gray-200 text-gray-800 hover:bg-gray-400-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
+                Back
+            </Link>
         </div>
 
         <div class="flex flex-col bg-white border shadow-sm rounded-xl p-1 h-[calc(100vh-180px)]">
@@ -147,12 +212,24 @@ const onSelectEmoji = (emoji) => {
                 <ul class="space-y-2" v-if="activeMessages.length > 0" id="messagesContainer">
                     <li :class="['max-w-md flex gap-x-2 sm:gap-x-4', message.sender_id === $page.props.auth.user.id ? 'justify-end ms-auto' : '']"
                         v-for="message in activeMessages" :key="message.id">
-                        <div class="bg-blue-600 rounded-2xl px-4 py-2 space-y-3" v-if="message.sender_id === $page.props.auth.user.id">
-                            <p class="text-sm text-white" v-html="message.content"></p>
-                        </div>
+                        <div v-if="message.sender_id === $page.props.auth.user.id" class="bg-blue-600 px-2 pb-2 rounded-lg">
+                            <PostMedia
+                                v-if="message.media && message.media.length > 0"
+                                :medias="message.media"
+                                :small="true"
+                            />
+                            <p class="text-sm text-white mt-1" v-html="message.content"></p>
+                            </div>
+
 
                         <div class="bg-white border border-gray-200 rounded-xl px-4 py-2 space-y-3" v-else>
                             <p class="text-sm text-gray-800" v-html="message.content"></p>
+
+                            <PostMedia
+                                v-if="message.media && message.media.length > 0"
+                                :medias="message.media"
+                                :small="true"
+                            />
                         </div>
                     </li>
                 </ul>
@@ -162,7 +239,7 @@ const onSelectEmoji = (emoji) => {
                 </div>
             </div>
 
-            <div class="flex items-center space-x-2 border-t rounded-xl border-gray-200 p-1 bg-gray-200">
+            <div class="flex items-center space-x-1 border-t rounded-xl border-gray-200 p-1 bg-gray-200">
                 <!-- Chat Input -->
                 <textarea
                     id="chat-input"
@@ -187,13 +264,56 @@ const onSelectEmoji = (emoji) => {
                     />
                 </div>
 
-                <button
-                    @click="sendMessage(conversation.id)"
-                    class="px-3 py-1 bg-gray-200 text-sm font-medium border-gray-400 border text-gray-800 rounded-xl hover:text-blue-600 hover:font-bold disabled:opacity-50"
-                >
-                    Send
-                </button>
+                <!-- File Upload -->
+                <div v-if="config.allowFileUpload" class="flex items-center">
+                    <input
+                        type="file"
+                        ref="fileInput"
+                        @change="handleFiles"
+                        multiple
+                        accept="image/*,video/*,application/pdf"
+                        class="hidden"
+                    />
+                    <button
+                        @click="triggerFileInput"
+                        class="flex items-center text-gray-600 hover:text-blue-600"
+                    >
+                        <Paperclip class="w-5 h-5 mr-1" />
+                    </button>
 
+                    <!-- Submit Button -->
+                    <button
+                        @click="sendMessage(conversation.id)"
+                        :disabled="form.processing"
+                        class="px-3 py-1 bg-gray-200 text-sm font-medium border-gray-400 border text-gray-800 rounded-xl hover:text-blue-600 hover:font-bold disabled:opacity-50"
+                    >
+                        {{ form.processing ? 'Sending...' : 'Send' }}
+                    </button>
+                </div>
+
+            </div>
+            <!-- File Previews -->
+            <div v-if="previews.length > 0" class="flex bg-gray-100 py-2 flex-wrap gap-2 mt-2 ps-2">
+                <div
+                    v-for="(preview, index) in previews"
+                    :key="index"
+                    class="relative"
+                >
+                    <img v-if="preview.type === 'application/pdf'"
+                         src="../../../images/pdf-icon.svg"
+                         class="w-20 h-20 object-cover rounded-lg" alt=""
+                    />
+                    <img v-else
+                        :src="preview.url"
+                        class="w-20 h-20 object-cover rounded-lg" alt=""
+                    />
+                    <button
+                        @click="removeMedia(index)"
+                        class="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
+                    >
+                        <X class="w-4 h-4" />
+                    </button>
+                </div>
             </div>
 
         </div>

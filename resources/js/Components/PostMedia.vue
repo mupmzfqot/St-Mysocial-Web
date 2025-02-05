@@ -180,7 +180,7 @@ const otherMedia = computed(() => {
 
 
     </div>
-    <div v-if="docFiles.length > 0" class="mt-1 p-2 border border-gray-200 rounded-md" v-for="(file, index) in docFiles"
+    <div v-if="docFiles.length > 0" class="-mt-2 p-2 border bg-white border-gray-200 rounded-md" v-for="(file, index) in docFiles"
          :key="index">
         <div class="flex items-center gap-x-2">
             <img src="../../images/pdf-icon.svg" class="shrink-0 size-6" alt="document" />
