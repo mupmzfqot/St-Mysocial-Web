@@ -81,7 +81,7 @@ const otherMedia = computed(() => {
 </script>
 
 <template>
-    <div :class="['rounded-lg overflow-hidden py-2', filteredMedia.length === 1 ? 'gallery full' : '', small ? 'mb-2 flex flex-wrap gap-x-2' : 'grid gallery']">
+    <div :class="['rounded-lg overflow-hidden py-2', filteredMedia.length === 1 ? 'gallery full' : 'gallery grid', small ? 'mb-2 gap-x-2 inline-gallery' : '']">
         <template v-if="filteredMedia.length === 1" >
             <div v-if="isVideo(filteredMedia[0])" class="video-container">
                 <video
@@ -279,6 +279,13 @@ const otherMedia = computed(() => {
     display: grid;
     gap: 4px;
 }
+
+.inline-gallery {
+    display: flex !important;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
 .gallery.full {
     grid-template-columns: 1fr;
 }
