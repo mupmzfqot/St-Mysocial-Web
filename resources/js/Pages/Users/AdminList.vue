@@ -79,7 +79,7 @@ const updateStatus = (id, status) => {
                                         </span>
                                     </div>
                                 </th>
-                                <th scope="col" class="px-6 py-3 text-start">
+                                <th scope="col" class="px-6 py-3 text-start w-2/6">
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                           User
@@ -87,7 +87,7 @@ const updateStatus = (id, status) => {
                                     </div>
                                 </th>
 
-                                <th scope="col" class="px-6 py-3 text-start">
+                                <th scope="col" class="px-6 py-3 text-start w-1/6">
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                           Account State
@@ -95,7 +95,7 @@ const updateStatus = (id, status) => {
                                     </div>
                                 </th>
 
-                                <th scope="col" class="px-6 py-3 text-start">
+                                <th scope="col" class="px-6 py-3 text-start w-1/6">
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                           Joined Date
@@ -126,7 +126,7 @@ const updateStatus = (id, status) => {
                                 <td class="size-px whitespace-nowrap">
                                     <a class="block p-6" href="#">
                                         <span class="text-sm text-gray-600 dark:text-neutral-400">
-                                            {{ index+1 }}
+                                            {{ users.from+index }}
                                         </span>
                                     </a>
                                 </td>

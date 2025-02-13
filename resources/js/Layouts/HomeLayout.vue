@@ -241,7 +241,7 @@ function isActiveNav(path) {
                             My Photos
                         </Link>
                         <Link :href="route('videos.index')" type="button" :class="['inline-flex hover:bg-blue-100 items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/videos') ? 'text-blue-600' : '']">
-                            <Video class="shrink-0 size-5 text-amber-800" />
+                            <Video class="shrink-0 size-5 text-purple-800 fill-purple-200" />
                             My Videos
                         </Link>
                     </div>
@@ -259,10 +259,10 @@ function isActiveNav(path) {
                 </div>
                 <div class="col-span-3">
                     <div class="max-w-xs flex flex-col bg-white shadow-sm rounded-lg" v-if="isST">
-                        <div class="bg-gray-100 border-b rounded-t-xl py-3 px-4 md:py-4 md:px-5 dark:bg-neutral-900 dark:border-neutral-700">
-                            <p class="mt-1 font-semibold text-sm">
+                        <div class="bg-gray-100 border-b rounded-t-xl py-3 px-3 dark:bg-neutral-900 dark:border-neutral-700">
+                            <h1 class="font-semibold text-xl">
                                 ST Team
-                            </p>
+                            </h1>
                         </div>
                         <div class="p-1 gap-y-3 max-h-[70vh] overflow-y-auto
     [&::-webkit-scrollbar]:w-2

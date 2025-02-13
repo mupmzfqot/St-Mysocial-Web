@@ -54,7 +54,7 @@ const styledTag = (value) => {
             </li>
 
             <li class="inline-flex items-center text-sm font-semibold text-gray-800 truncate" aria-current="page">
-                Post Moderation's | Public Posts
+                Public User Posts
             </li>
         </Breadcrumbs>
 

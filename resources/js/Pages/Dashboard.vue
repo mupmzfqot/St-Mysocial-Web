@@ -163,7 +163,7 @@ const props = defineProps({
                 <Link :href="route('active-users')" class="flex flex-col bg-white border shadow-sm rounded-xl dark:bg-neutral-900 dark:border-neutral-800">
                     <div class="p-4 md:p-5 flex justify-between gap-x-3">
                         <div class="flex items-center gap-x-2 text-wrap text-xl font-medium text-gray-800 dark:text-neutral-200">
-                            Active users
+                            Online users
                         </div>
                         <div class="shrink-0 flex justify-center items-center size-[46px] bg-blue-600 text-white rounded-full dark:bg-blue-900 dark:text-blue-200">
                             <UserRoundCheck class="shrink-0 size-5" />
@@ -198,7 +198,7 @@ const props = defineProps({
                     </tr>
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">
-                            <Link :href="route('account', 1)" class="hover:text-blue-600">Active Accounts</Link>
+                            <Link :href="route('account', 1)" class="hover:text-blue-600">Registered Accounts</Link>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">
                             <Link :href="route('account', 1)" class="hover:text-blue-600">{{ totalActiveAccounts }}</Link>

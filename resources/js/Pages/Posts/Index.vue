@@ -43,7 +43,7 @@ const styledTag = (value) => {
             </li>
 
             <li class="inline-flex items-center text-sm font-semibold text-gray-800 truncate" aria-current="page">
-                Posts
+                Admin Post
             </li>
         </Breadcrumbs>
 
@@ -134,7 +134,7 @@ const styledTag = (value) => {
                                 <td class="size-px whitespace-nowrap">
                                     <a class="block p-6" href="#">
                                         <span class="text-sm text-gray-600 dark:text-neutral-400">
-                                            {{ index+1 }}
+                                            {{ posts.from+index }}
                                         </span>
                                     </a>
                                 </td>
