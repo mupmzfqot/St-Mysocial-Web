@@ -170,13 +170,18 @@ const insertLink = () => {
         const displayText = linkText.value || linkUrl.value;
         const quill = quillEditor.value.getQuill();
 
+        let finalUrl = linkUrl.value;
+        if(linkUrl.value.includes('.') && !linkUrl.value.startsWith('http://') && !linkUrl.value.startsWith('https://')) {
+            finalUrl = `https://${linkUrl.value}`;
+        }
+
         if (selectedRange.value) {
             if (selectedRange.value.length > 0) {
                 quill.deleteText(selectedRange.value.index, selectedRange.value.length);
             }
-            quill.insertText(selectedRange.value.index, displayText, { 'link': linkUrl.value });
+            quill.insertText(selectedRange.value.index, displayText, { 'link': finalUrl });
         } else {
-            quill.insertText(quill.getLength() - 1, displayText, { 'link': linkUrl.value });
+            quill.insertText(quill.getLength() - 1, displayText, { 'link': finalUrl });
         }
     }
 
