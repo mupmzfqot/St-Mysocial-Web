@@ -8,7 +8,7 @@ import {
     Paperclip,
     SmilePlus,
     SendHorizontal,
-    LinkIcon, ChevronRight,
+    LinkIcon, ChevronRight, List, ListOrdered,
 } from "lucide-vue-next";
 import {computed, onMounted, ref} from "vue";
 import MultiSelect from "@/Components/MultiSelect.vue";
@@ -242,6 +242,29 @@ const onSelectEmoji = (emoji) => {
     }
     showEmojiPicker.value = false;
 };
+const addNumberList = () => {
+    if (quillEditor.value) {
+        const quill = quillEditor.value.getQuill();
+        const selection = quill.getSelection();
+
+        if (selection) {
+            quill.format('list', false);
+            quill.format('list', 'ordered');
+        }
+    }
+};
+const addBulletList = () => {
+    if (quillEditor.value) {
+        const quill = quillEditor.value.getQuill();
+        const selection = quill.getSelection();
+
+        if (selection) {
+            quill.format('list', false);
+            quill.format('list', 'bullet');
+        }
+    }
+};
+
 </script>
 
 <template>
@@ -404,6 +427,30 @@ const onSelectEmoji = (emoji) => {
                                         class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible opacity-0 transition-opacity inline-block absolute invisible z-10 py-1 px-2 bg-gray-900 text-xs font-medium text-white rounded shadow-sm dark:bg-neutral-700"
                                         role="tooltip">
                                         Insert Link
+                                    </span>
+                                </button>
+                            </div>
+
+                            <div class="hs-tooltip [--placement:bottom] inline-block">
+                                <button @click="addBulletList" type="button"
+                                        class="hs-tooltip-toggle size-10 inline-flex justify-center items-center gap-2 rounded-md bg-gray-50 border border-gray-200 text-gray-600 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 focus:outline-none focus:bg-blue-50 focus:border-blue-200 focus:text-blue-600 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-white/10 dark:hover:border-white/10 dark:hover:text-white dark:focus:bg-white/10 dark:focus:border-white/10 dark:focus:text-white">
+                                    <List class="shrink-0 size-4"/>
+                                    <span
+                                        class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible opacity-0 transition-opacity inline-block absolute invisible z-10 py-1 px-2 bg-gray-900 text-xs font-medium text-white rounded shadow-sm dark:bg-neutral-700"
+                                        role="tooltip">
+                                        Bullet List
+                                    </span>
+                                </button>
+                            </div>
+
+                            <div class="hs-tooltip [--placement:bottom] inline-block">
+                                <button @click="addNumberList" type="button"
+                                        class="hs-tooltip-toggle size-10 inline-flex justify-center items-center gap-2 rounded-md bg-gray-50 border border-gray-200 text-gray-600 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 focus:outline-none focus:bg-blue-50 focus:border-blue-200 focus:text-blue-600 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-white/10 dark:hover:border-white/10 dark:hover:text-white dark:focus:bg-white/10 dark:focus:border-white/10 dark:focus:text-white">
+                                    <ListOrdered class="shrink-0 size-4"/>
+                                    <span
+                                        class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible opacity-0 transition-opacity inline-block absolute invisible z-10 py-1 px-2 bg-gray-900 text-xs font-medium text-white rounded shadow-sm dark:bg-neutral-700"
+                                        role="tooltip">
+                                        Number List
                                     </span>
                                 </button>
                             </div>
