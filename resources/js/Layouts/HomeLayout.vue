@@ -241,7 +241,7 @@ function isActiveNav(path) {
                             My Photos
                         </Link>
                         <Link :href="route('videos.index')" type="button" :class="['inline-flex hover:bg-blue-100 items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/videos') ? 'text-blue-600' : '']">
-                            <Video class="shrink-0 size-5 text-purple-800 fill-purple-200" />
+                            <Video class="shrink-0 size-5 text-teal-950 fill-lime-200" />
                             My Videos
                         </Link>
                     </div>
