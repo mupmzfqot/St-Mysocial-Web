@@ -3,10 +3,13 @@ import {Head, Link, useForm} from "@inertiajs/vue3";
 import HomeLayout from "@/Layouts/HomeLayout.vue";
 import {ref, onMounted, onBeforeUnmount, watch, nextTick} from 'vue';
 import {useUnreadMessages} from "@/Composables/useUnreadMessages.js";
-import {Paperclip, SmilePlus, X} from "lucide-vue-next";
+import {Paperclip, SmilePlus, X, LinkIcon} from "lucide-vue-next";
 import EmojiPicker from 'vue3-emoji-picker';
 import 'vue3-emoji-picker/css';
 import PostMedia from "@/Components/PostMedia.vue";
+import {QuillEditor} from "@vueup/vue-quill";
+import '@vueup/vue-quill/dist/vue-quill.snow.css';
+import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from "@headlessui/vue";
 
 const props = defineProps({
     messages: Object,
@@ -35,6 +38,10 @@ const activeMessages = ref([...props.messages]);
 const messagesContainer = ref(null);
 const isWebSocketConnected = ref(false);
 const pollingInterval = ref(null);
+const quillEditor = ref(null);
+const showLinkModal = ref(false);
+const linkUrl = ref('');
+const selectedRange = ref(null);
 
 const scrollToBottom = () => {
     nextTick(() => {
@@ -63,6 +70,10 @@ const sendMessage = async (conversationId) => {
                 'Content-Type': 'multipart/form-data'
             }
         });
+
+        if (quillEditor.value) {
+            quillEditor.value.setHTML('');
+        }
 
         handleNewMessage(response.data);
         content.value = "";
@@ -180,6 +191,46 @@ const removeMedia = (index) => {
     form.files.splice(index, 1);
 };
 
+const openLinkDialog = () => {
+    selectedRange.value = quillEditor.value.getQuill().getSelection();
+    if (selectedRange.value && selectedRange.value.length > 0) {
+        linkText.value = quillEditor.value.getQuill().getText(selectedRange.value.index, selectedRange.value.length);
+    }
+    showLinkModal.value = true;
+};
+
+const insertLink = () => {
+    if (linkUrl.value) {
+        const displayText = linkUrl.value;
+        const quill = quillEditor.value.getQuill();
+
+        let finalUrl = linkUrl.value;
+        if(linkUrl.value.includes('.') && !linkUrl.value.startsWith('http://') && !linkUrl.value.startsWith('https://')) {
+            finalUrl = `https://${linkUrl.value}`;
+        }
+
+        if (selectedRange.value) {
+            if (selectedRange.value.length > 0) {
+                quill.deleteText(selectedRange.value.index, selectedRange.value.length);
+            }
+            quill.insertText(selectedRange.value.index, displayText, { 'link': finalUrl });
+        } else {
+            quill.insertText(quill.getLength() - 1, displayText, { 'link': finalUrl });
+        }
+    }
+
+    // Reset the form
+    linkUrl.value = '';
+    showLinkModal.value = false;
+    selectedRange.value = null;
+};
+
+const styledTag = (value) => {
+    return value.replace(/<a /g, '<a class="underline" ')
+        .replace(/<ul>/g, '<ul class="list-disc list-inside pl-4">')
+        .replace(/<ol>/g, '<ol class="list-decimal list-inside pl-3.5">');
+}
+
 </script>
 
 <template>
@@ -219,16 +270,16 @@ const removeMedia = (index) => {
                                 :medias="message.media"
                                 :small="true"
                             />
-                            <p class="text-sm text-white mt-1" v-html="message.content"></p>
+                            <p class="text-sm text-white mt-1" v-html="styledTag(message.content)"></p>
                         </div>
 
-                        <div class="bg-white border border-gray-200 rounded-xl px-2 pb-2" v-else>
+                        <div class="bg-white border border-gray-200 rounded-xl px-2 py-2" v-else>
                             <PostMedia
                                 v-if="message.media && message.media.length > 0"
                                 :medias="message.media"
                                 :small="true"
                             />
-                            <p class="text-sm text-gray-800" v-html="message.content"></p>
+                            <p class="text-sm text-gray-800" v-html="styledTag(message.content)"></p>
                         </div>
                     </li>
                 </ul>
@@ -240,20 +291,31 @@ const removeMedia = (index) => {
 
             <div class="flex items-center space-x-1 border-t rounded-xl border-gray-200 p-1 bg-gray-200">
                 <!-- Chat Input -->
-                <textarea
-                    id="chat-input"
-                    v-model="content"
-                    contenteditable="true"
-                    rows="1"
-                    placeholder="Type a message..."
-                    class="flex-1 py-2 px-3 text-sm border rounded-lg border-gray-300 bg-white focus:ring-1 focus:ring-blue-500 focus:outline-none break-words resize-none overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full"
-                ></textarea>
+                    <QuillEditor
+                        ref="quillEditor"
+                        v-model:content="content"
+                        contentType="html"
+                        :options="{
+                                    placeholder: 'Type a message...',
+                                    modules: {
+                                        toolbar: false
+                                    }
+                                }"
+                        class="flex-1 text-sm border rounded-lg border-gray-300 bg-white focus:ring-1 focus:ring-blue-500 focus:outline-none break-words resize-none overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full"
+                    />
 
                 <!-- Emoji Picker -->
-                <button @click="showEmojiPicker = !showEmojiPicker"  type="button"
-                        class="flex items-center text-gray-800 hover:text-blue-600">
-                    <SmilePlus class="shrink-0 size-5" />
-                </button>
+                <div class="hs-tooltip [--placement:bottom] inline-block">
+                    <button @click="showEmojiPicker = !showEmojiPicker"  type="button"
+                            class="flex hs-tooltip-toggle items-center text-gray-800 hover:text-blue-600">
+                        <SmilePlus class="shrink-0 size-5" />
+                        <span
+                            class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible opacity-0 transition-opacity inline-block absolute invisible z-10 py-1 px-2 bg-gray-900 text-xs font-medium text-white rounded shadow-sm dark:bg-neutral-700"
+                            role="tooltip">
+                                        Emoji
+                                    </span>
+                    </button>
+                </div>
 
                 <div class="relative">
                     <EmojiPicker
@@ -261,6 +323,18 @@ const removeMedia = (index) => {
                         @select="onSelectEmoji"
                         class="z-50 absolute bottom-8 right-0"
                     />
+                </div>
+
+                <div class="hs-tooltip [--placement:bottom] inline-block">
+                    <button @click="openLinkDialog"  type="button"
+                            class="flex hs-tooltip-toggle items-center text-gray-800 hover:text-blue-600">
+                        <LinkIcon class="shrink-0 size-5" />
+                        <span
+                            class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible opacity-0 transition-opacity inline-block absolute invisible z-10 py-1 px-2 bg-gray-900 text-xs font-medium text-white rounded shadow-sm dark:bg-neutral-700"
+                            role="tooltip">
+                                        Insert Link
+                                    </span>
+                    </button>
                 </div>
 
                 <!-- File Upload -->
@@ -273,12 +347,19 @@ const removeMedia = (index) => {
                         accept="image/*,video/*,application/pdf"
                         class="hidden"
                     />
-                    <button
-                        @click="triggerFileInput"
-                        class="flex items-center text-gray-600 hover:text-blue-600"
-                    >
-                        <Paperclip class="w-5 h-5 mr-1" />
-                    </button>
+                    <div class="hs-tooltip [--placement:bottom] inline-block">
+                        <button
+                            @click="triggerFileInput"
+                            class="flex hs-tooltip-toggle items-center text-gray-600 hover:text-blue-600"
+                        >
+                            <Paperclip class="w-5 h-5 mr-1" />
+                            <span
+                                class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible opacity-0 transition-opacity inline-block absolute invisible z-10 py-1 px-2 bg-gray-900 text-xs font-medium text-white rounded shadow-sm dark:bg-neutral-700"
+                                role="tooltip">
+                                        Insert File
+                                    </span>
+                        </button>
+                    </div>
 
                     <!-- Submit Button -->
                     <button
@@ -316,6 +397,70 @@ const removeMedia = (index) => {
             </div>
 
         </div>
+
+        <TransitionRoot appear :show="showLinkModal" as="template">
+            <Dialog as="div" @close="showLinkModal = false" class="relative z-10">
+                <TransitionChild
+                    as="template"
+                    enter="duration-300 ease-out"
+                    enter-from="opacity-0"
+                    enter-to="opacity-100"
+                    leave="duration-200 ease-in"
+                    leave-from="opacity-100"
+                    leave-to="opacity-0"
+                >
+                    <div class="fixed inset-0 bg-black/25" />
+                </TransitionChild>
+
+                <div class="fixed inset-0 overflow-y-auto">
+                    <div class="flex min-h-full items-center justify-center p-4 text-center">
+                        <TransitionChild
+                            as="template"
+                            enter="duration-300 ease-out"
+                            enter-from="opacity-0 scale-95"
+                            enter-to="opacity-100 scale-100"
+                            leave="duration-200 ease-in"
+                            leave-from="opacity-100 scale-100"
+                            leave-to="opacity-0 scale-95"
+                        >
+                            <DialogPanel class="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                                <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900">
+                                    Insert Link
+                                </DialogTitle>
+                                <div class="mt-4">
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700">URL</label>
+                                        <input
+                                            type="url"
+                                            v-model="linkUrl"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                            placeholder="https://example.com"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 flex justify-end space-x-2">
+                                    <button
+                                        type="button"
+                                        class="inline-flex justify-center rounded-md border border-transparent bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"
+                                        @click="showLinkModal = false"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                                        @click="insertLink"
+                                    >
+                                        Insert
+                                    </button>
+                                </div>
+                            </DialogPanel>
+                        </TransitionChild>
+                    </div>
+                </div>
+            </Dialog>
+        </TransitionRoot>
 
     </HomeLayout>
 </template>
