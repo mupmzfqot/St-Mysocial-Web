@@ -1,11 +1,9 @@
 <script setup>
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import TextInput from '@/Components/TextInput.vue';
-import {Head, Link, useForm, usePage} from '@inertiajs/vue3';
+import {Head, Link, useForm} from '@inertiajs/vue3';
 import StrongPassword from "@/Components/StrongPassword.vue";
 import TogglePassword from "@/Components/TogglePassword.vue";
-import {useRecaptchaProvider, Checkbox as RecaptchaCheckbox} from "vue-recaptcha";
-import {onMounted, ref, watch} from "vue";
 
 const form = useForm({
     name: '',
@@ -13,32 +11,15 @@ const form = useForm({
     email: '',
     password: '',
     password_confirmation: '',
-    recaptcha: ''
 });
-
-const recaptchaKey = ref(0);
-useRecaptchaProvider();
 
 const submit = () => {
     form.post(route('register'), {
         onFinish: () => form.reset('password', 'password_confirmation'),
         onError: async (errors) => {
-            recaptchaKey.value++;
-            await nextTick();
         }
     });
 };
-
-const resetRecaptcha = () => {
-    recaptchaKey.value++;
-};
-onMounted(() => {
-    resetRecaptcha();
-});
-
-watch(() => usePage().component.value, () => {
-    resetRecaptcha();
-});
 </script>
 
 <template>
@@ -134,10 +115,6 @@ watch(() => usePage().component.value, () => {
                                 <TogglePassword v-model="form.password_confirmation" placeholder="Confirm Password" />
                             </div>
                             <!-- End Form Group -->
-
-                            <div>
-                                <RecaptchaCheckbox :key="recaptchaKey" v-model="form.recaptcha" theme="light" size="normal" />
-                            </div>
                             <div v-if="form.errors.recaptcha">
                                 <p class="text-sm text-red-600 mt-2">{{ form.errors.recaptcha }}</p>
                             </div>

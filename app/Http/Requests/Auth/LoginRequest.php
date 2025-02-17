@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Auth;
 
-use App\Rules\ReCaptcha;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Http\FormRequest;
@@ -31,7 +30,14 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
-            'recaptcha' => ['required', new ReCaptcha]
+            'captcha' => ['required', 'captcha']
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'captcha' => 'Captcha not match',
         ];
     }
 

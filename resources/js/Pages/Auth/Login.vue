@@ -1,14 +1,12 @@
 <script setup>
 import Checkbox from '@/Components/Checkbox.vue';
 import GuestLayout from '@/Layouts/GuestLayout.vue';
-import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
-import {Head, Link, useForm, usePage} from '@inertiajs/vue3';
+import {Head, Link, useForm} from '@inertiajs/vue3';
 import TogglePassword from "@/Components/TogglePassword.vue";
-import {useRecaptchaProvider, Checkbox as RecaptchaCheckbox} from "vue-recaptcha";
-import {ref, computed, onMounted, watch} from 'vue';
+import {ref, computed} from 'vue';
 
 const props = defineProps({
     canResetPassword: {
@@ -17,64 +15,22 @@ const props = defineProps({
     status: {
         type: String,
     },
+    captchaSrc: String
 });
 
 const form = useForm({
     email: '',
     password: '',
     remember: false,
-    recaptcha: '',
+    captcha: '',
 });
 
 const loginError = ref({
     message: '',
     remainAttempts: null,
     maxAttempts: null,
-    unlockAt: null
-});
-
-const createRecaptchaProviderSingleton = () => {
-    let instance = null;
-    return {
-        initialize() {
-            if (!instance) {
-                instance = useRecaptchaProvider();
-            }
-            return instance;
-        },
-        reset() {
-            instance = null;
-        }
-    };
-};
-
-const recaptchaProviderManager = createRecaptchaProviderSingleton();
-
-const recaptchaKey = ref(0);
-const recaptchaProviderInitialized = ref(false);
-
-if (!recaptchaProviderInitialized.value) {
-    useRecaptchaProvider();
-    recaptchaProviderInitialized.value = true;
-}
-
-const resetRecaptcha = () => {
-    recaptchaKey.value++;
-    form.reset();
-    loginError.value = {
-        message: '',
-        remainAttempts: null,
-        maxAttempts: null,
-        unlockAt: null
-    };
-};
-
-onMounted(() => {
-    resetRecaptcha();
-});
-
-watch(() => usePage().component.value, () => {
-    resetRecaptcha();
+    unlockAt: null,
+    captcha: null,
 });
 
 const submit = () => {
@@ -88,9 +44,6 @@ const submit = () => {
     form.post(route('login'), {
         onFinish: () => form.reset('password'),
         onError: (errors) => {
-            recaptchaKey.value++;
-            nextTick();
-
             if (errors.email && Array.isArray(errors.email)) {
                 const errorDetails = errors.email[0];
                 loginError.value = {
@@ -186,8 +139,22 @@ const formattedUnlockTime = computed(() => {
                             </div>
 
                             <div class="block mt-4">
-                                <RecaptchaCheckbox :key="recaptchaKey" v-model="form.recaptcha" theme="light" size="normal" />
-                                <InputError class="mt-2" :message="form.errors.recaptcha" />
+                                <img :src="captchaSrc" alt="" class="h-16">
+                            </div>
+
+                            <div class="block mt-4">
+                                <TextInput
+                                    id="captcha"
+                                    type="text"
+                                    class="mt-1 block w-full"
+                                    v-model="form.captcha"
+                                    placeholder="Captcha"
+                                    required
+                                    autofocus
+                                />
+                                <div class="text-red-600 text-xs mt-2" v-if="form.errors.captcha">
+                                    {{ form.errors.captcha }}
+                                </div>
                             </div>
 
                             <div class="block mt-4">

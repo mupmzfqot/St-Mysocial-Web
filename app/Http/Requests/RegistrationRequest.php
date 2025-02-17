@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Rules\ReCaptcha;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Password;
 
@@ -30,8 +29,7 @@ class RegistrationRequest extends FormRequest
             'password' => [
                 'required', Password::min(8)->mixedCase()->numbers()->symbols()->letters(),
                 'confirmed'
-            ],
-            'recaptcha' => ['required', new ReCaptcha]
+            ]
         ];
     }
 }

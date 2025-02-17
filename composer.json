@@ -12,6 +12,8 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
         "laravolt/avatar": "^5.1",
+        "mews/captcha": "^3.3",
+        "pusher/pusher-php-server": "^7.2",
         "spatie/laravel-medialibrary": "^11.9",
         "spatie/laravel-permission": "^6.9",
         "tightenco/ziggy": "^2.0"
