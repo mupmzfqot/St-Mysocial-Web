@@ -24,11 +24,9 @@ class DashboardController extends Controller
         $totalLikes = (int) PostLiked::whereHas('post')->count();
         $totalPhotos = (int) Media::count();
         $totalMessages = (int) Message::count();
-        $totalAccounts = (int) User::query()->whereHas('roles', function ($q) {
-            $q->whereIn('name', ['user', 'admin']);
-        })->count();
+        $totalAccounts = (int) User::query()->where('is_active', 1)->count();
         $totalActiveAccounts = (int) User::query()->whereNull('deleted_at')->where('is_active', 1)->count();
-        $totalBlockedAccounts = (int) User::query()->where('is_active', 0)->count();
+        $totalBlockedAccounts = (int) User::query()->where('is_active', 0)->whereNull('deleted_at')->count();
 
         return Inertia::render('Dashboard', compact(
             'users', 'totalPosts', 'totalActivePosts', 'totalComments', 'totalLikes', 'totalPhotos', 'totalMessages',
@@ -176,7 +174,7 @@ class DashboardController extends Controller
             'search' => 'nullable|string'
         ]);
 
-        $title = $request->type == 1 ? 'Active Account' : 'Blocked Account';
+        $title = $request->type == 1 ? 'Registered Account' : 'Blocked Account';
         $type = in_array($type, [0,1]) ? $type : 0;
 
         $searchTerm = $request->search;
