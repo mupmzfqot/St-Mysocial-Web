@@ -78,14 +78,12 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
     public function getAvatarAttribute(): ?string
     {
         return $this->getMedia('avatar')
-            ->where('is_verified', true)
             ->first()?->original_url ?? asset('default-avatar.webp');
     }
 
     public function getCoverImageAttribute(): ?string
     {
         return $this->getMedia('cover_image')
-            ->where('is_verified', true)
             ->first()?->original_url ?? asset('background.png');
     }
 

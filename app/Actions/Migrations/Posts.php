@@ -43,14 +43,31 @@ class Posts
 
     private function uploadPostMedia($postMedia, $newPost): void
     {
+        if (empty($postMedia) || !$newPost) {
+            \Log::warning("Skipping media upload: postMedia is empty or newPost is null");
+            return;
+        }
+
         foreach ($postMedia as $file) {
             $parsedUrl = parse_url($file);
             $path = $parsedUrl['path'] ?? null;
-            if($path && file_exists(public_path($path))) {
-                $filepath = public_path($parsedUrl['path']);
-                $newPost->addMedia($filepath)
-                    ->toMediaCollection('post_media');
 
+            if (!$path) {
+                \Log::warning("Invalid media URL: {$file}");
+                continue;
+            }
+
+            $filepath = public_path($path);
+
+            if (!file_exists($filepath)) {
+                \Log::warning("File not found: {$filepath}");
+                continue;
+            }
+
+            try {
+                $newPost->addMedia($filepath)->toMediaCollection('post_media');
+            } catch (\Exception $e) {
+                \Log::error("Failed to upload media for post {$newPost->id}: " . $e->getMessage());
             }
         }
     }
