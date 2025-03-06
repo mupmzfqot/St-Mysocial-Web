@@ -300,7 +300,7 @@ function isActiveNav(path) {
 
 <style scoped>
 .bg-gradient-blue {
-    background: rgb(181,95,200);
-    background: linear-gradient(90deg, rgba(181,95,200,1) 0%, rgba(0,31,241,1) 100%);
+    background: rgb(89,27,75);
+    background: linear-gradient(90deg, rgba(89,27,75,1) 0%, rgba(46,137,228,1) 100%);
 }
 </style>
