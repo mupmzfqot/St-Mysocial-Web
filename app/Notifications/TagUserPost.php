@@ -40,7 +40,7 @@ class TagUserPost extends Notification
     public function toArray(object $notifiable): array
     {
         $message = $this->isAdmin ? "Administrator created new post."
-            : "You were tag you in {$this->user->name} post.";
+            : "You were tag in {$this->user->name} post.";
 
         return [
             'id'        => $this->post->id,

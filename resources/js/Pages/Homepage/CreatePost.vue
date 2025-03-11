@@ -353,7 +353,7 @@ const addBulletList = () => {
                                     class="appearance-none h-[40px] pl-4 pr-10 min-w-[120px] rounded-lg border border-gray-200 text-sm dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 focus:border-blue-500 focus:ring-blue-500 bg-gray-50 dark:bg-neutral-700"
                                 >
                                     <option value="st">Team ST</option>
-                                    <option value="public">Public</option>
+                                    <option value="public" v-if="defaultType !== 'st'">Public</option>
                                 </select>
                                 <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-500 dark:text-neutral-400">
                                     <ChevronDown class="size-4" />

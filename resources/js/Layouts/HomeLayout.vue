@@ -1,7 +1,7 @@
 <script setup>
 import {onMounted, ref, watch, onUnmounted, computed} from 'vue';
 import {Link, router, usePage} from "@inertiajs/vue3";
-import {CircleCheckBig, Heart, Images, Video, LogOut, MessageSquareMore, Newspaper, Star, UserIcon, LayoutGrid} from "lucide-vue-next";
+import {CircleCheckBig, Heart, Images, Video, LogOut, MessageSquareMore, Newspaper, Star, UserIcon, LayoutGrid, SquareArrowUpRight} from "lucide-vue-next";
 import {debounce} from "lodash";
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
@@ -259,12 +259,20 @@ function isActiveNav(path) {
                 </div>
                 <div class="col-span-3">
                     <div class="max-w-xs flex flex-col bg-white shadow-sm rounded-lg" v-if="isST">
-                        <div class="bg-gray-100 border-b rounded-t-xl py-3 px-3 dark:bg-neutral-900 dark:border-neutral-700">
-                            <h1 class="font-semibold text-xl">
-                                #TeamST
-                            </h1>
+                        <div type="button" class="hs-collapse-toggle bg-gray-100 border-b rounded-t-xl py-3 px-3 dark:bg-neutral-900 dark:border-neutral-700"
+                             id="hs-basic-collapse" aria-expanded="true" aria-controls="hs-basic-collapse-heading" data-hs-collapse="#hs-basic-collapse-heading">
+                            <div class="flex flex-row justify-between items-center">
+                                <h1 class="font-bold text-lg">
+                                    <span class="text-gray-400">#</span>
+                                    <span class="text-indigo-800">Team</span>
+                                    <span class="text-red-700">ST</span>
+                                </h1>
+                                <SquareArrowUpRight class="hs-collapse-open:rotate-180 shrink-0 size-5" />
+                            </div>
                         </div>
-                        <div class="p-1 gap-y-3 max-h-[70vh] overflow-y-auto
+                        <div id="hs-basic-collapse-heading" aria-labelledby="hs-basic-collapse" class="
+                            hs-collapse w-full overflow-hidden transition-[height] duration-300
+                            p-1 gap-y-3 max-h-[70vh] overflow-y-auto
                             [&::-webkit-scrollbar]:w-1
                             [&::-webkit-scrollbar-track]:rounded-full
                             [&::-webkit-scrollbar-track]:bg-gray-100
