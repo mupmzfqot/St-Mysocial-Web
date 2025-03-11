@@ -103,7 +103,7 @@ const otherMedia = computed(() => {
                 <img v-else-if="inside_modal === true"
                      :src="filteredMedia[0].original_url"
                      :alt="filteredMedia[0].name"
-                     :class="['hover:opacity-90 cursor-pointer object-cover', small === true ? 'h-32' : 'w-full h-80']"
+                     :class="['hover:opacity-90 cursor-pointer object-cover', small === true ? 'h-32' : 'w-full']"
                      @click.stop="previewMedia(filteredMedia[0])"
                 />
             </div>
@@ -115,7 +115,7 @@ const otherMedia = computed(() => {
             <div class="col-span-1">
                 <div v-for="(media, index) in [filteredImages[0]]" :key="index">
                     <img
-                        :src="media.preview_url"
+                        :src="media.original_url"
                         alt="Media"
                         class="w-full h-80 object-cover"
                         @click.stop="previewMedia(filteredMedia, index)"
@@ -138,7 +138,7 @@ const otherMedia = computed(() => {
                         ></video>
                     </div>
                     <img v-else
-                         :src="media.preview_url"
+                         :src="media.original_url"
                          :alt="media.name"
                          :class="['hover:opacity-90 cursor-pointer object-cover', small === true ? 'h-32' : 'w-full h-40']"
                          @click.stop="previewMedia(filteredMedia, index+1)"
@@ -162,7 +162,7 @@ const otherMedia = computed(() => {
                     ></video>
                 </div>
                 <img v-else
-                    :src="media.preview_url"
+                    :src="media.original_url"
                     :alt="media.name"
                      :class="['hover:opacity-90 cursor-pointer object-cover', small === true ? 'h-32 w-24' : 'w-full h-40']"
                     @click.stop="previewMedia(filteredMedia, index)"

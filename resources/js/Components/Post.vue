@@ -644,46 +644,60 @@ const handleLinkClick = (event) => {
                         leave-to="opacity-0 scale-95"
                     >
                         <DialogPanel
-                            class="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white dark:bg-neutral-800 p-6 text-left align-middle shadow-xl transition-all relative max-h-[90vh] flex flex-col"
+                            class="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white dark:bg-neutral-800 py-2 ps-4 pe-1 text-left align-middle shadow-xl transition-all relative max-h-[90vh] flex flex-col"
                         >
                             <!-- Modal Header -->
                             <DialogTitle
                                 as="h3"
                                 class="text-lg font-medium leading-6 text-gray-900 dark:text-white pb-2 sticky top-0 bg-white dark:bg-neutral-800"
                             >
+                                <div class="absolute z-10 -top-1 -right-0">
+                                    <button type="button" @click="showPostModal = false"  class="size-8 inline-flex justify-center items-center gap-x-2 rounded-full border border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200 focus:outline-none focus:bg-gray-200 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-700 dark:hover:bg-neutral-600 dark:text-neutral-400 dark:focus:bg-neutral-600" aria-label="Close" data-hs-overlay="#hs-basic-modal">
+                                        <span class="sr-only">Close</span>
+                                        <svg class="shrink-0 size-4 text-red-600" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M18 6 6 18"></path>
+                                            <path d="m6 6 12 12"></path>
+                                        </svg>
+                                    </button>
+                                </div>
                                 <!-- Post Content -->
-                                <div v-if="postDetails" class="space-y-2">
 
-                                    <!-- Post Header -->
-                                    <div class="flex items-center">
-                                        <Link :href="route('profile.show', postDetails.author.id)" class="shrink-0">
-                                            <img class="size-10 rounded-full" :src="postDetails.author.avatar" alt="Avatar">
-                                        </Link>
-                                        <div class="ms-4">
-                                            <div class="flex items-center">
-                                                <Link :href="route('profile.show', postDetails.author.id)" class="text-base font-semibold text-gray-800 dark:text-neutral-400 hover:text-blue-700 me-1">{{ content.author.name }}</Link>
-                                                <div class="flex flex-wrap gap-x-1" v-if="postDetails.tags && postDetails.tags.length > 0">
-                                                    <p class="text-sm text-gray-800 dark:text-gray-200">with </p>
-                                                    <p class="text-sm text-blue-700 dark:text-gray-200">
-                                                        {{ formatTags(postDetails.tags.map(tag => tag.name)) }}
-                                                    </p>
+                            </DialogTitle>
+
+                            <!-- Scrollable Content -->
+                            <div class="flex-grow overflow-y-auto custom-scrollbar pe-2 [&::-webkit-scrollbar]:w-1
+                                    [&::-webkit-scrollbar-track]:rounded-full
+                                    [&::-webkit-scrollbar-track]:bg-gray-100
+                                    [&::-webkit-scrollbar-thumb]:rounded-full
+                                    [&::-webkit-scrollbar-thumb]:bg-gray-300
+                                    hover:[&::-webkit-scrollbar-thumb]:bg-gray-200">
+                                <div>
+                                    <div v-if="postDetails" class="space-y-2">
+
+                                        <!-- Post Header -->
+                                        <div class="flex items-center">
+                                            <Link :href="route('profile.show', postDetails.author.id)" class="shrink-0">
+                                                <img class="size-10 rounded-full" :src="postDetails.author.avatar" alt="Avatar">
+                                            </Link>
+                                            <div class="ms-4">
+                                                <div class="flex items-center">
+                                                    <Link :href="route('profile.show', postDetails.author.id)" class="text-base font-semibold text-gray-800 dark:text-neutral-400 hover:text-blue-700 me-1">{{ content.author.name }}</Link>
+                                                    <div class="flex flex-wrap gap-x-1" v-if="postDetails.tags && postDetails.tags.length > 0">
+                                                        <p class="text-sm text-gray-800 dark:text-gray-200">with </p>
+                                                        <p class="text-sm text-blue-700 dark:text-gray-200">
+                                                            {{ formatTags(postDetails.tags.map(tag => tag.name)) }}
+                                                        </p>
+                                                    </div>
                                                 </div>
+                                                <div class="text-xs text-gray-500 dark:text-neutral-500">{{ postDetails.created_at }}</div>
                                             </div>
-                                            <div class="text-xs text-gray-500 dark:text-neutral-500">{{ postDetails.created_at }}</div>
-                                        </div>
 
-                                        <div class="absolute z-10 -top-4 -right-4">
-                                            <button type="button" @click="showPostModal = false"  class="size-8 inline-flex justify-center items-center gap-x-2 rounded-full border border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200 focus:outline-none focus:bg-gray-200 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-700 dark:hover:bg-neutral-600 dark:text-neutral-400 dark:focus:bg-neutral-600" aria-label="Close" data-hs-overlay="#hs-basic-modal">
-                                                <span class="sr-only">Close</span>
-                                                <svg class="shrink-0 size-4 text-red-600" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M18 6 6 18"></path>
-                                                    <path d="m6 6 12 12"></path>
-                                                </svg>
-                                            </button>
+
                                         </div>
+                                        <div @click="handleLinkClick" class="text-gray-800 text-wrap text-justify text-sm dark:text-neutral-400 pt-1" v-html="styledTag(postDetails.post)"></div>
+
+
                                     </div>
-                                    <div @click="handleLinkClick" class="text-gray-800 text-wrap text-justify text-sm dark:text-neutral-400 pt-1" v-html="styledTag(postDetails.post)"></div>
-
                                     <!-- Post Media -->
                                     <PostMedia
                                         v-if="postDetails.media && postDetails.media.length > 0"
@@ -709,8 +723,8 @@ const handleLinkClick = (event) => {
 
                                     </div>
 
-                                    <hr class="border-1 -mx-6">
-                                    <div class="flex items-center justify-between">
+                                    <hr class="border-1 mt-2">
+                                    <div class="flex items-center justify-between py-2">
                                         <div class="inline-flex items-center gap-x-1 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600">
                                             <a href="#" v-if="content.is_liked" @click.prevent="unlike(content.id)">
                                                 <Heart class="shrink-0 size-5 fill-red-500 text-transparent" v-if="content.is_liked" />
@@ -743,14 +757,10 @@ const handleLinkClick = (event) => {
                                             <XCircle class="shrink-0 size-5 text-gray-800" />Delete post
                                         </a>
                                     </div>
-                                    <hr class="border-1 -mx-6">
+                                    <hr class="border-1">
                                 </div>
-                            </DialogTitle>
-
-                            <!-- Scrollable Content -->
-                            <div class="flex-grow overflow-y-auto custom-scrollbar">
                                 <!-- Comments Section -->
-                                <div class="mt-1">
+                                <div class="mt-3">
                                     <p class="text-md font-semibold mb-3 text-gray-800 dark:text-white">
                                         Comments
                                     </p>
