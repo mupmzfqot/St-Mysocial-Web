@@ -24,7 +24,7 @@ class DashboardController extends Controller
         $totalLikes = (int) PostLiked::whereHas('post')->count();
         $totalPhotos = (int) Media::count();
         $totalMessages = (int) Message::count();
-        $totalAccounts = (int) User::query()->where('is_active', 1)->count();
+        $totalAccounts = (int) User::query()->count();
         $totalActiveAccounts = (int) User::query()->whereNull('deleted_at')->where('is_active', 1)->count();
         $totalBlockedAccounts = (int) User::query()->where('is_active', 0)->whereNull('deleted_at')->count();
 

@@ -49,7 +49,7 @@ const props = defineProps({
                             </p>
                             <div class="mt-1 flex items-center gap-x-2">
                                 <h3 class="text-xl sm:text-xl font-medium text-gray-800 dark:text-neutral-200">
-                                    {{ totalAccounts }}
+                                    {{ users.user_count }}
                                 </h3>
                             </div>
                         </div>
