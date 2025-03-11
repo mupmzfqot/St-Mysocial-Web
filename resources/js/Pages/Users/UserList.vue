@@ -161,7 +161,7 @@ const setAdmin = (user) => {
                                         </span>
                                     </div>
                                 </th>
-                                <th scope="col" class="px-6 py-3 text-start w-4/6">
+                                <th scope="col" class="px-6 py-3 text-start">
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                           User
@@ -169,7 +169,7 @@ const setAdmin = (user) => {
                                     </div>
                                 </th>
 
-                                <th scope="col" class="px-6 py-3 text-start w-1/6">
+                                <th scope="col" class="px-6 py-3 text-start">
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                           Account State
@@ -177,7 +177,7 @@ const setAdmin = (user) => {
                                     </div>
                                 </th>
 
-                                <th scope="col" class="px-6 py-3 text-start w-2/6">
+                                <th scope="col" class="px-6 py-3 text-start">
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                           Signup Date
@@ -193,7 +193,7 @@ const setAdmin = (user) => {
                                     </div>
                                 </th>
 
-                                <th scope="col" class="px-6 py-3 text-start w-1/6">
+                                <th scope="col" class="px-6 py-3 text-start">
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                             User Category
@@ -231,7 +231,7 @@ const setAdmin = (user) => {
                                         </div>
                                     </a>
                                 </td>
-                                <td class="h-px w-72 min-w-72 align-top">
+                                <td class="h-px align-top">
                                     <a class="block p-6" href="#">
                                         <span v-if="user.is_active" class="py-1 px-3 inline-flex items-center gap-x-1 text-xs font-medium bg-teal-100 text-teal-800 rounded-full dark:bg-teal-500/10 dark:text-teal-500">
                                           <CheckCircle class="size-3" />Active
