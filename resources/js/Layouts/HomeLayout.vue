@@ -261,16 +261,17 @@ function isActiveNav(path) {
                     <div class="max-w-xs flex flex-col bg-white shadow-sm rounded-lg" v-if="isST">
                         <div class="bg-gray-100 border-b rounded-t-xl py-3 px-3 dark:bg-neutral-900 dark:border-neutral-700">
                             <h1 class="font-semibold text-xl">
-                                ST Team
+                                #TeamST
                             </h1>
                         </div>
                         <div class="p-1 gap-y-3 max-h-[70vh] overflow-y-auto
-    [&::-webkit-scrollbar]:w-2
-    [&::-webkit-scrollbar-track]:rounded-full
-    [&::-webkit-scrollbar-track]:bg-gray-100
-    [&::-webkit-scrollbar-thumb]:rounded-full
-    [&::-webkit-scrollbar-thumb]:bg-gray-300
-    hover:[&::-webkit-scrollbar-thumb]:bg-gray-400">
+                            [&::-webkit-scrollbar]:w-1
+                            [&::-webkit-scrollbar-track]:rounded-full
+                            [&::-webkit-scrollbar-track]:bg-gray-100
+                            [&::-webkit-scrollbar-thumb]:rounded-full
+                            [&::-webkit-scrollbar-thumb]:bg-gray-300
+                            dark:[&::-webkit-scrollbar-track]:bg-neutral-700
+                            dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500">
                             <Link :href="route('profile.show', team.id)" v-for="team in teams" class="shrink-0 group block p-2 hover:bg-blue-100 rounded-lg">
                                 <div class="flex items-center">
                                     <div class="hs-tooltip inline-block">

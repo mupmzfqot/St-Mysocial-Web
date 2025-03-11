@@ -631,7 +631,7 @@ const handleLinkClick = (event) => {
                 <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" />
             </TransitionChild>
 
-            <div class="fixed inset-0 overflow-y-auto">
+            <div class="fixed inset-0 overflow-y-auto ">
                 <div class="flex min-h-full items-center justify-center p-4 text-center">
 
                     <TransitionChild
@@ -666,11 +666,12 @@ const handleLinkClick = (event) => {
 
                             <!-- Scrollable Content -->
                             <div class="flex-grow overflow-y-auto custom-scrollbar pe-2 [&::-webkit-scrollbar]:w-1
-                                    [&::-webkit-scrollbar-track]:rounded-full
-                                    [&::-webkit-scrollbar-track]:bg-gray-100
-                                    [&::-webkit-scrollbar-thumb]:rounded-full
-                                    [&::-webkit-scrollbar-thumb]:bg-gray-300
-                                    hover:[&::-webkit-scrollbar-thumb]:bg-gray-200">
+                      [&::-webkit-scrollbar-track]:rounded-full
+                      [&::-webkit-scrollbar-track]:bg-gray-100
+                      [&::-webkit-scrollbar-thumb]:rounded-full
+                      [&::-webkit-scrollbar-thumb]:bg-gray-300
+                      dark:[&::-webkit-scrollbar-track]:bg-neutral-700
+                      dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500">
                                 <div>
                                     <div v-if="postDetails" class="space-y-2">
 
