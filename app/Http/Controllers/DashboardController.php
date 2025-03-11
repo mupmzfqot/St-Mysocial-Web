@@ -25,7 +25,7 @@ class DashboardController extends Controller
         $totalPhotos = (int) Media::count();
         $totalMessages = (int) Message::count();
         $totalAccounts = (int) User::query()->count();
-        $totalActiveAccounts = (int) User::query()->whereNull('deleted_at')->where('is_active', 1)->count();
+        $totalActiveAccounts = (int) User::query()->count();
         $totalBlockedAccounts = (int) User::query()->where('is_active', 0)->whereNull('deleted_at')->count();
 
         return Inertia::render('Dashboard', compact(
