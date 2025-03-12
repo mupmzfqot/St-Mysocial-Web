@@ -15,8 +15,10 @@ import {HSStaticMethods} from "preline";
 
 const props = defineProps({
     user: Object,
+    allPosts: Number,
     totalPost: Number,
-    totalActivePost: Number
+    totalLikes: Number,
+    totalComments: Number,
 })
 
 const form = useForm({
@@ -257,56 +259,41 @@ onMounted(() => {
                                         </td>
                                     </tr>
 
-                                    <tr class="bg-white hover:bg-gray-50 dark:bg-neutral-900 dark:hover:bg-neutral-800">
-                                        <td class="size-px whitespace-nowrap">
-                                            <div class="px-6 py-2">
-                                                <p class="block text-sm text-gray-800 dark:text-neutral-200">Account Verified</p>
-                                            </div>
-                                        </td>
-                                        <td class="h-px w-72 min-w-72">
-                                            <div class="px-6 py-2">
-                                                <span v-if="user.verified_account" class="py-1 px-3 inline-flex items-center gap-x-1 text-xs font-medium bg-teal-100 text-teal-800 rounded-full dark:bg-teal-500/10 dark:text-teal-500">
-                                                    <CheckCircle class="size-3" />Verified
-                                                </span>
-                                                <span v-else-if="!user.verified_account" class="py-1 px-3 inline-flex items-center gap-x-1 text-xs font-medium bg-red-100 text-red-800 rounded-full dark:bg-red-500/10 dark:text-red-500">
-                                                    <MinusCircle class="size-3" />Not Verified
-                                                </span>
-                                            </div>
-                                        </td>
-                                        <td class="h-px w-72 min-w-72">
-                                            <a href="#" v-if="user.verified_account" @click="verifyAccount" class="text-sm text-red-400 dark:text-red-800"  aria-haspopup="dialog" aria-expanded="false" aria-controls="hs-scale-animation-modal" data-hs-overlay="#confirm-dialog">
-                                                Set as Unverified Account
-                                            </a>
-                                            <a href="#" v-if="!user.verified_account" @click="verifyAccount" class="text-sm text-green-600 dark:text-green-800"  aria-haspopup="dialog" aria-expanded="false" aria-controls="hs-scale-animation-modal" data-hs-overlay="#confirm-dialog">
-                                                Set as Verified Account
-                                            </a>
-                                        </td>
-                                    </tr>
+<!--                                    <tr class="bg-white hover:bg-gray-50 dark:bg-neutral-900 dark:hover:bg-neutral-800">-->
+<!--                                        <td class="size-px whitespace-nowrap">-->
+<!--                                            <div class="px-6 py-2">-->
+<!--                                                <p class="block text-sm text-gray-800 dark:text-neutral-200">Account Verified</p>-->
+<!--                                            </div>-->
+<!--                                        </td>-->
+<!--                                        <td class="h-px w-72 min-w-72">-->
+<!--                                            <div class="px-6 py-2">-->
+<!--                                                <span v-if="user.verified_account" class="py-1 px-3 inline-flex items-center gap-x-1 text-xs font-medium bg-teal-100 text-teal-800 rounded-full dark:bg-teal-500/10 dark:text-teal-500">-->
+<!--                                                    <CheckCircle class="size-3" />Verified-->
+<!--                                                </span>-->
+<!--                                                <span v-else-if="!user.verified_account" class="py-1 px-3 inline-flex items-center gap-x-1 text-xs font-medium bg-red-100 text-red-800 rounded-full dark:bg-red-500/10 dark:text-red-500">-->
+<!--                                                    <MinusCircle class="size-3" />Not Verified-->
+<!--                                                </span>-->
+<!--                                            </div>-->
+<!--                                        </td>-->
+<!--                                        <td class="h-px w-72 min-w-72">-->
+<!--                                            <a href="#" v-if="user.verified_account" @click="verifyAccount" class="text-sm text-red-400 dark:text-red-800"  aria-haspopup="dialog" aria-expanded="false" aria-controls="hs-scale-animation-modal" data-hs-overlay="#confirm-dialog">-->
+<!--                                                Set as Unverified Account-->
+<!--                                            </a>-->
+<!--                                            <a href="#" v-if="!user.verified_account" @click="verifyAccount" class="text-sm text-green-600 dark:text-green-800"  aria-haspopup="dialog" aria-expanded="false" aria-controls="hs-scale-animation-modal" data-hs-overlay="#confirm-dialog">-->
+<!--                                                Set as Verified Account-->
+<!--                                            </a>-->
+<!--                                        </td>-->
+<!--                                    </tr>-->
 
                                     <tr class="bg-white hover:bg-gray-50 dark:bg-neutral-900 dark:hover:bg-neutral-800">
                                         <td class="size-px whitespace-nowrap">
                                             <div class="px-6 py-2">
-                                                <p class="block text-sm text-gray-800 dark:text-neutral-200">Total User Posts</p>
+                                                <p class="block text-sm text-gray-800 dark:text-neutral-200">Total User Posts (Published)</p>
                                             </div>
                                         </td>
                                         <td class="h-px w-72 min-w-72">
                                             <div class="px-6 py-2">
-                                                <p class="block text-sm text-gray-800 dark:text-neutral-200">0</p>
-                                            </div>
-                                        </td>
-                                        <td class="h-px w-72 min-w-72">
-                                        </td>
-                                    </tr>
-
-                                    <tr class="bg-white hover:bg-gray-50 dark:bg-neutral-900 dark:hover:bg-neutral-800">
-                                        <td class="size-px whitespace-nowrap">
-                                            <div class="px-6 py-2">
-                                                <p class="block text-sm text-gray-800 dark:text-neutral-200">User Active Posts (not removed)</p>
-                                            </div>
-                                        </td>
-                                        <td class="h-px w-72 min-w-72">
-                                            <div class="px-6 py-2">
-                                                <p class="block text-sm text-gray-800 dark:text-neutral-200">0</p>
+                                                <p class="block text-sm text-gray-800 dark:text-neutral-200">{{ totalPost }}</p>
                                             </div>
                                         </td>
                                         <td class="h-px w-72 min-w-72">
@@ -316,17 +303,18 @@ onMounted(() => {
                                     <tr class="bg-white hover:bg-gray-50 dark:bg-neutral-900 dark:hover:bg-neutral-800">
                                         <td class="size-px whitespace-nowrap">
                                             <div class="px-6 py-2">
-                                                <p class="block text-sm text-gray-800 dark:text-neutral-200">User Active Chat (not removed)</p>
+                                                <p class="block text-sm text-gray-800 dark:text-neutral-200">User Posts</p>
                                             </div>
                                         </td>
                                         <td class="h-px w-72 min-w-72">
                                             <div class="px-6 py-2">
-                                                <p class="block text-sm text-gray-800 dark:text-neutral-200">0</p>
+                                                <p class="block text-sm text-gray-800 dark:text-neutral-200">{{ allPosts }}</p>
                                             </div>
                                         </td>
                                         <td class="h-px w-72 min-w-72">
                                         </td>
                                     </tr>
+
                                     </tbody>
                                 </table>
                                 <!-- End Table -->
@@ -524,14 +512,18 @@ onMounted(() => {
                         <p class="text-center text-gray-500 dark:text-neutral-400">
                             {{ user.email }}
                         </p>
-                        <div class="flex items-center gap-x-28 mt-5">
+                        <div class="flex items-center gap-x-20 mt-5">
                             <div class="text-center">
                                 <p class="font-semibold text-gray-800 dark:text-neutral-400">{{ totalPost }}</p>
-                                <p class="text-sm text-gray-600 dark:text-neutral-400">Total Posts</p>
+                                <p class="text-sm text-gray-600 dark:text-neutral-400">Posts</p>
                             </div>
                             <div class="text-center">
-                                <p class="font-semibold text-gray-800 dark:text-neutral-400">{{ totalActivePost }}</p>
-                                <p class="text-sm text-gray-600 dark:text-neutral-400">Active Posts</p>
+                                <p class="font-semibold text-gray-800 dark:text-neutral-400">{{ totalLikes }}</p>
+                                <p class="text-sm text-gray-600 dark:text-neutral-400">Likes</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="font-semibold text-gray-800 dark:text-neutral-400">{{ totalComments }}</p>
+                                <p class="text-sm text-gray-600 dark:text-neutral-400">Comments</p>
                             </div>
                         </div>
                     </div>

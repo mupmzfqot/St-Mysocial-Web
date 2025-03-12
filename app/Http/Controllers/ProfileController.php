@@ -23,15 +23,17 @@ class ProfileController extends Controller
     public function index($id = null)
     {
         $user = User::query()->find($id);
-        $totalPost = Post::query()->where('user_id', $id)->count();
-        $totalActivePost = Post::query()->published()->where('user_id', $id)->count();
-        return Inertia::render('Profile/Index', compact('user', 'totalPost', 'totalActivePost'));
+        $totalPost = Post::query()->where('user_id', $id)->where('published', 1)->count();
+        $allPosts = Post::query()->where('user_id', $id)->count();
+        $totalLikes = $user->likes()->count();
+        $totalComments = $user->comments()->count();
+        return Inertia::render('Profile/Index', compact('user', 'totalPost', 'totalLikes', 'totalComments', 'allPosts'));
     }
 
     public function show($id = null)
     {
         $user = User::query()->find($id);
-        $totalPosts = $user->posts()->count();
+        $totalPosts = $user->posts()->where('published', 1)->count();
         $totalLikes = $user->likes()->count();
         $totalComments = $user->comments()->count();
         $requestUrl = route('user-post.tag-post', ['user_id' => $id]);
