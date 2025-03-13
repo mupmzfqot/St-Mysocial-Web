@@ -49,7 +49,7 @@ const props = defineProps({
                             </p>
                             <div class="mt-1 flex items-center gap-x-2">
                                 <h3 class="text-xl sm:text-xl font-medium text-gray-800 dark:text-neutral-200">
-                                    {{ users.user_count + users.admin_count + users.public_user_count }}
+                                    {{ users.user_count }}
                                 </h3>
                             </div>
                         </div>
@@ -201,7 +201,7 @@ const props = defineProps({
                             <Link :href="route('account', 1)" class="hover:text-blue-600">Registered Accounts</Link>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">
-                            <Link :href="route('account', 1)" class="hover:text-blue-600">{{ totalActiveAccounts }}</Link>
+                            <Link :href="route('account', 1)" class="hover:text-blue-600">{{ users.user_count }}</Link>
                         </td>
                     </tr>
                     <tr>
