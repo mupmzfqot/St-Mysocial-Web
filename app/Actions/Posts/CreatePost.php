@@ -56,7 +56,7 @@ class CreatePost
                 $post = Post::query()->create($data);
             }
 
-            if(!empty($request->userTags) && !auth()->user()->hasRole('admin')) {
+            if(!empty($request->userTags)) {
                 PostTag::query()->where('post_id', $post->id)->delete();
                 foreach ($request->userTags as $tag) {
                     PostTag::query()->create([
