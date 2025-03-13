@@ -171,6 +171,13 @@ class UserController extends Controller
         return redirect()->back()->with('success', 'User successfully been admin.');
     }
 
+    public function setAsUser(Request $request, $id)
+    {
+        $user = User::query()->find($id);
+        $user->syncRoles('user');
+        return redirect()->back()->with('success', 'User successfully been ST User.');
+    }
+
     public function resetPassword(Request $request, $id)
     {
         $request->validate([

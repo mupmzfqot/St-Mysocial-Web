@@ -102,6 +102,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         Route::post('delete/{id}', [UserController::class, 'destroy'])->name('delete');
         Route::get('profile/{id?}', [ProfileController::class, 'index'])->name('profile');
         Route::post('set-admin/{id}', [UserController::class, 'setAsAdmin'])->name('set-admin');
+        Route::post('set-user/{id}', [UserController::class, 'setAsUser'])->name('set-user');
         Route::post('reset-password/{id}', [UserController::class, 'resetPassword'])->name('reset-password');
         Route::post('update/{id}', [UserController::class, 'update'])->name('update');
         Route::post('verify/{id}', [UserController::class, 'verifyAccount'])->name('verify');
