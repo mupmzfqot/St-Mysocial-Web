@@ -78,7 +78,7 @@ const handleKeydown = (e) => {
                     ></video>
                 </div>
                 <img v-else
-                     :src="media.preview_url"
+                     :src="media.original_url"
                      :alt="media.name"
                      :class="['hover:opacity-90 cursor-pointer object-cover w-full h-40']"
                      @click.stop="previewMedia(medias, index)"
