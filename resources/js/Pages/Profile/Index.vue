@@ -512,20 +512,21 @@ onMounted(() => {
                         <p class="text-center text-gray-500 dark:text-neutral-400">
                             {{ user.email }}
                         </p>
-                        <div class="flex items-center gap-x-20 mt-5">
-                            <div class="text-center">
+                        <div class="flex flex-row gap-x-8 mt-5">
+                            <div class="text-center justify-self-auto">
                                 <p class="font-semibold text-gray-800 dark:text-neutral-400">{{ totalPost }}</p>
                                 <p class="text-sm text-gray-600 dark:text-neutral-400">Posts</p>
                             </div>
-                            <div class="text-center">
+                            <div class="text-center justify-self-auto">
                                 <p class="font-semibold text-gray-800 dark:text-neutral-400">{{ totalLikes }}</p>
                                 <p class="text-sm text-gray-600 dark:text-neutral-400">Likes</p>
                             </div>
-                            <div class="text-center">
+                            <div class="text-center justify-self-auto">
                                 <p class="font-semibold text-gray-800 dark:text-neutral-400">{{ totalComments }}</p>
                                 <p class="text-sm text-gray-600 dark:text-neutral-400">Comments</p>
                             </div>
                         </div>
+
                     </div>
                 </div>
             </div>
