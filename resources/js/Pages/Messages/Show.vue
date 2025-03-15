@@ -75,7 +75,10 @@ const sendMessage = async (conversationId) => {
             quillEditor.value.setHTML('');
         }
 
-        handleNewMessage(response.data);
+        if(isWebSocketConnected.value === false) {
+            handleNewMessage(response.data);
+        }
+
         content.value = "";
         form.reset();
         previews.value = [];
@@ -134,10 +137,31 @@ const stopPolling = () => {
     }
 };
 
+const markAsReadOnInteraction = async () => {
+    if (props.conversation && props.conversation.id) {
+        markAsRead()
+        fetchUnreadMessageCount();
+    }
+};
+
+const setupInteractionListeners = () => {
+    if (quillEditor.value) {
+        const quillElement = quillEditor.value.$el;
+        quillElement.addEventListener('click', markAsReadOnInteraction);
+    }
+
+    const messageContainer = document.querySelector('.message-container');
+    if (messageContainer) {
+        messageContainer.addEventListener('click', markAsReadOnInteraction);
+    }
+};
+
+
 onMounted(() => {
     setupWebSocket();
     scrollToBottom();
     markAsRead();
+    setupInteractionListeners();
 });
 
 onBeforeUnmount(() => {
@@ -243,7 +267,7 @@ const styledTag = (value) => {
             </Link>
         </div>
 
-        <div class="flex flex-col bg-white border shadow-sm rounded-xl p-1 h-[calc(100vh-180px)]">
+        <div class="flex flex-col bg-white border shadow-sm rounded-xl p-1 h-[calc(100vh-180px)] message-container">
             <!-- Header -->
             <div class="shrink-0 group block p-3 bg-gray-100 rounded-lg">
                 <div class="flex items-center">

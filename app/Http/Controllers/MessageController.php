@@ -106,7 +106,7 @@ class MessageController extends Controller
 
             $message->load('sender', 'media');
 
-//            broadcast(new MessageSent($message));
+           broadcast(new MessageSent($message));
 
             return response()->json([
                 'id' => $message->id,
