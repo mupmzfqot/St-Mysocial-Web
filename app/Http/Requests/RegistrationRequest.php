@@ -24,11 +24,12 @@ class RegistrationRequest extends FormRequest
     {
         return [
             'name'  => 'required|string',
+            'username' => 'required|string|unique:users,username',
             'email' => 'required|string|email|unique:users,email',
             'password' => [
                 'required', Password::min(8)->mixedCase()->numbers()->symbols()->letters(),
                 'confirmed'
-            ],
+            ]
         ];
     }
 }

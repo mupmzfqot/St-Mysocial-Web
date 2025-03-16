@@ -9,7 +9,6 @@ use App\Models\CommentLiked;
 use App\Models\Post;
 use App\Models\PostLiked;
 use App\Models\User;
-use App\Notifications\NewComment;
 use App\Notifications\NewCommentLike;
 use App\Notifications\NewLike;
 use Illuminate\Http\Request;
@@ -21,74 +20,45 @@ class HomeController extends Controller
 {
     public function index()
     {
-        $posts = Post::query()
-            ->with('author', 'media', 'comments.user', 'tags')
-            ->orderBy('created_at', 'desc')
-            ->published()
-            ->where('type', 'st')
-            ->paginate(30)
-            ->through(function ($post) {
-                // Ensure we have all necessary data loaded
-                $post->load('likes');
-                return $post;
-            })
-            ->withQueryString();
-
-        $title = 'ST Post';
-        $description = 'Post from ST Team';
-
         return Inertia::render('Home', [
-            'posts' => $posts,
-            'title' => $title,
-            'description' => $description
+            'title' =>'Home',
+            'description' => 'Post from Team ST',
+            'requestUrl' => route('user-post.get', ['type' => 'st']),
         ]);
     }
 
     public function publicPost()
     {
-        $posts = Post::query()
-        ->with('author', 'media', 'comments.user')
-        ->orderBy('created_at', 'desc')
-        ->published()
-        ->where('type', 'public')
-        ->paginate(30);
-
-        $title = 'Public Post';
-        $description = 'Post for Public';
-
         return Inertia::render('Home', [
-            'posts' => $posts,
-            'title' => $title,
-            'description' => $description
+            'title' =>'Public Post',
+            'description' => 'Post for Public',
+            'type'  => 'public',
+            'requestUrl' => route('user-post.get', ['type' => 'public']),
+        ]);
+    }
+
+    public function showTopPosts()
+    {
+        return Inertia::render('Homepage/TopPost', [
+            'requestUrl' => route('user-post.get-top-post')
         ]);
     }
 
     public function showLikedPosts()
     {
-        $posts = Post::query()
-            ->with('author', 'media', 'comments.user')
-            ->orderBy('created_at', 'desc')
-            ->whereHas('likes', function ($query) {
-                $query->where('user_id', auth()->id());
-            })
-            ->published()
-            ->paginate(30)
-            ->through(function ($post) {
-                // Ensure we have all necessary data loaded
-                $post->load('likes');
-                return $post;
-            })
-            ->withQueryString();
-
         return Inertia::render('Homepage/LikedPost', [
-            'posts' => $posts
+            'requestUrl' => route('user-post.liked-post')
         ]);
     }
 
     public function showPost($id)
     {
+        if(auth()->user()->hasRole('admin')) {
+            return redirect()->route('post.show', $id);
+        }
+
         $post = Post::query()
-            ->with('author', 'media', 'comments.user', 'comments.media')
+            ->with('author', 'media', 'tags', 'comments.user', 'comments.media', 'repost.author', 'repost.media')
             ->orderBy('created_at', 'desc')
             ->published()
             ->where('id', $id)
@@ -99,18 +69,6 @@ class HomeController extends Controller
 
     public function createPost()
     {
-        $posts = Post::query()
-            ->with('author', 'media', 'comments.user')
-            ->orderBy('created_at', 'desc')
-            ->where('user_id', auth()->id())
-            ->paginate(30)
-            ->through(function ($post) {
-                // Ensure we have all necessary data loaded
-                $post->load('likes');
-                return $post;
-            })
-            ->withQueryString();
-
         $stUsers = User::query()->whereHas('roles', function ($query) {
                 $query->where('name', 'user');
             })
@@ -124,9 +82,9 @@ class HomeController extends Controller
         $defaultType = $isPrivilegedUser ? 'st' : 'public';
 
         return Inertia::render('Homepage/CreatePost', [
-            'posts' => $posts,
             'stUsers' => $stUsers,
-            'defaultType' => $defaultType
+            'defaultType' => $defaultType,
+            'requestUrl' => route('user-post.recent-post')
         ]);
     }
 
@@ -196,7 +154,7 @@ class HomeController extends Controller
     {
         DB::beginTransaction();
         try {
-            $comment = Comment::query()->find($request->comment_id);
+            $comment = Comment::query()->find($request->content_id);
             $comment->likes()->delete();
             $comment->delete();
             DB::commit();
@@ -205,34 +163,42 @@ class HomeController extends Controller
         }
     }
 
-    public function showTopPosts()
-    {
-        $posts = Post::query()
-            ->with('author', 'media', 'comments.user')
-            ->orderBy(DB::raw('comment_count + like_count'), 'desc')
-            ->where('comment_count', '>', 0)
-            ->where('like_count', '>', 0)
-            ->published()
-            ->paginate(30)
-            ->through(function ($post) {
-                // Ensure we have all necessary data loaded
-                $post->load('likes');
-                return $post;
-            })
-            ->withQueryString();
-
-
-        return Inertia::render('Homepage/TopPost', [
-            'posts' => $posts
-        ]);
-    }
-
     public function notifications()
     {
         auth()->user()->unreadNotifications->markAsRead();
         $notifications = auth()->user()->notifications()->paginate(20);
 
+        if(auth()->user()->hasRole('admin')) {
+            return Inertia::render('Dashboard/Notification', compact('notifications'));
+        }
+
         return Inertia::render('Homepage/Notifications', compact('notifications'));
+    }
+
+    public function deletePost(Request $request)
+    {
+        $post = Post::query()->where('user_id', auth()->id())->whereId($request->content_id)->first();
+        $post->comments()->delete();
+        $post->likes()->delete();
+        $post->delete();
+    }
+
+    public function postLikedBy(Request $request, $postId)
+    {
+        $user = User::whereHas('likes', function ($query) use ($postId) {
+            $query->where('post_id', $postId);
+        })
+            ->get()
+            ->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'avatar' => $user->avatar
+                ];
+            });
+
+        return response()->json($user);
     }
 
 }

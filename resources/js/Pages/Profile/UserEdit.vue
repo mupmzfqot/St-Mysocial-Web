@@ -2,11 +2,10 @@
 import DeleteUserForm from './Partials/DeleteUserForm.vue';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm.vue';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm.vue';
-import {Head, Link, usePage} from '@inertiajs/vue3';
+import {Head, usePage} from '@inertiajs/vue3';
 import HomeLayout from "@/Layouts/HomeLayout.vue";
 import ImageCropper from "@/Components/ImageCropper.vue";
 import {ref} from "vue";
-import {MessageSquareMore} from "lucide-vue-next";
 import { Dialog, DialogPanel, DialogTitle, TransitionRoot } from '@headlessui/vue';
 
 defineProps({
@@ -145,9 +144,6 @@ const showCoverCropper = ref(false);
                     <UpdatePasswordForm class="max-w-xl" />
                 </div>
 
-                <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
-                    <DeleteUserForm class="max-w-xl" />
-                </div>
             </div>
         </div>
     </HomeLayout>

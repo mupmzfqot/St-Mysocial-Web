@@ -1,7 +1,7 @@
 <script setup>
 import {Head, Link, router} from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import {CheckCircle, ChevronRight, MinusCircle, Search, UserCircle} from "lucide-vue-next";
+import {CheckCircle, ChevronRight, MessageSquareMore, MinusCircle, Search, UserCircle} from "lucide-vue-next";
 import Breadcrumbs from "@/Components/Breadcrumbs.vue";
 import {ref, watch} from "vue";
 import {debounce} from "lodash";
@@ -57,19 +57,24 @@ watch(
                                     Search results:
                                 </p>
                             </div>
-                            <div class="p-1 gap-y-3">
+                            <div class="p-1 gap-y-3 ">
                                 <Link :href="route('profile.show', user.id)" v-for="user in users.data" class="shrink-0 group block p-2 hover:bg-gray-100 rounded-lg">
-                                    <div class="flex items-center">
-                                        <div class="hs-tooltip inline-block">
-                                            <a class="hs-tooltip-toggle relative inline-block" href="#">
-                                                <img class="inline-block size-[40px] rounded-full" :src="user.avatar" alt="Avatar">
-                                                <!--                                            <span class="absolute bottom-0 end-0 block size-3 rounded-full ring-2 ring-white bg-green-700"></span>-->
-                                            </a>
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <div class="hs-tooltip inline-block">
+                                                <a class="hs-tooltip-toggle relative inline-block" href="#">
+                                                    <img class="inline-block size-[40px] rounded-full" :src="user.avatar" alt="Avatar">
+                                                    <!--                                            <span class="absolute bottom-0 end-0 block size-3 rounded-full ring-2 ring-white bg-green-700"></span>-->
+                                                </a>
+                                            </div>
+                                            <div class="ms-3">
+                                                <h3 class="font-semibold text-sm text-gray-800 dark:text-white">{{ user.name }}</h3>
+                                                <p class="text-sm text-gray-600 dark:text-neutral-500">{{ user.email }}</p>
+                                            </div>
                                         </div>
-                                        <div class="ms-3">
-                                            <h3 class="font-semibold text-sm text-gray-800 dark:text-white">{{ user.name }}</h3>
-                                            <p class="text-sm text-gray-600 dark:text-neutral-500">{{ user.email }}</p>
-                                        </div>
+                                        <Link :href="route('message.show', user.id)" type="button" class="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
+                                            <MessageSquareMore class="shrink-0 size-4" /> Message
+                                        </Link>
                                     </div>
                                 </Link>
                             </div>
@@ -79,12 +84,13 @@ watch(
                         <!-- End search results -->
 
                         <!-- Footer -->
-                        <div class="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-t border-gray-200 dark:border-neutral-700">
+                        <div class="px-6 pt-4 grid gap-3 md:flex md:justify-between md:items-center border-t border-gray-200 dark:border-neutral-700">
                             <Pagination :links="users.links" />
-                            <p class="text-sm text-gray-500 dark:text-neutral-500 dark:hover:text-blue-500 dark:focus:text-blue-500">
-                                Showing {{ users.from }} to {{ users.to }} of {{ users.total }} results
-                            </p>
+
                         </div>
+                        <p class="text-sm px-6 pb-4 pt-1 text-gray-500 dark:text-neutral-500 dark:hover:text-blue-500 dark:focus:text-blue-500">
+                            Showing {{ users.from }} to {{ users.to }} of {{ users.total }} results
+                        </p>
                         <!-- End Footer -->
                     </div>
                 </div>

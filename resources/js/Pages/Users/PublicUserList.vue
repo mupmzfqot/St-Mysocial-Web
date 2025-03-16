@@ -5,9 +5,9 @@ import { ChevronRight, Search, UserCircle, CheckCircle, MinusCircle, UsersRound 
 import Breadcrumbs from "@/Components/Breadcrumbs.vue";
 import ConfirmDialog from "@/Components/ConfirmDialog.vue";
 import {reactive, ref, watch} from "vue";
-import moment from "moment/moment.js";
 import {debounce} from "lodash";
 import Pagination from "@/Components/Pagination.vue";
+import {usePendingApprovals} from "@/Composables/usePendingApprovals.js";
 
 const props = defineProps({
     users: Object,
@@ -17,6 +17,7 @@ const props = defineProps({
 });
 
 const search = ref(props.searchTerm);
+const { fetchPendingApprovals } = usePendingApprovals();
 
 watch(
     search,
@@ -33,6 +34,9 @@ const removeUser = (user) => {
     confirmData.id = user.id;
     confirmData.message = `Do you want to remove user <b>${user.name}</b>?`;
     confirmData.url = route('user.delete', user.id);
+    confirmData.onSuccess = async () => {
+        await fetchPendingApprovals();
+    };
 }
 
 const setActive = (user) => {
@@ -40,6 +44,9 @@ const setActive = (user) => {
     confirmData.message = `Do you want to activate user <b>${user.name}</b>?`;
     confirmData.url = route('admin.update-status', user.id);
     confirmData.data = { is_active: true };
+    confirmData.onSuccess = async () => {
+        await fetchPendingApprovals();
+    };
 }
 
 const reject = (user) => {
@@ -47,6 +54,9 @@ const reject = (user) => {
     confirmData.message = `Do you want to activate user <b>${user.name}</b>?`;
     confirmData.url = route('admin.update-status', user.id);
     confirmData.data = { is_active: false };
+    confirmData.onSuccess = async () => {
+        await fetchPendingApprovals();
+    };
 }
 
 </script>
@@ -56,9 +66,9 @@ const reject = (user) => {
     <AuthenticatedLayout>
         <Breadcrumbs>
             <li class="inline-flex items-center">
-                <a class="flex items-center text-sm text-gray-500 hover:text-blue-600 focus:outline-none focus:text-blue-600 dark:text-neutral-500 dark:hover:text-blue-500 dark:focus:text-blue-500" href="#">
+                <Link :href="route('dashboard')" class="flex items-center text-sm text-gray-500 hover:text-blue-600 focus:outline-none focus:text-blue-600 dark:text-neutral-500 dark:hover:text-blue-500 dark:focus:text-blue-500" href="#">
                     Home
-                </a>
+                </Link>
                 <ChevronRight class="shrink-0 mx-2 size-4 text-gray-400 dark:text-neutral-600" />
             </li>
             <li class="inline-flex items-center text-sm font-semibold text-gray-800 truncate" aria-current="page">
@@ -98,6 +108,13 @@ const reject = (user) => {
                                 <th scope="col" class="px-6 py-3 text-start">
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
+                                          No.
+                                        </span>
+                                    </div>
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-start w-2/4">
+                                    <div class="flex items-center gap-x-2">
+                                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                           User
                                         </span>
                                     </div>
@@ -130,11 +147,18 @@ const reject = (user) => {
                             </thead>
 
                             <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
-                            <tr v-for="user in users.data" key="user.id" class="bg-white hover:bg-gray-50 dark:bg-neutral-900 dark:hover:bg-neutral-800">
+                            <tr v-for="(user, index) in users.data" key="user.id" class="bg-white hover:bg-gray-50 dark:bg-neutral-900 dark:hover:bg-neutral-800">
+                                <td class="size-px whitespace-nowrap">
+                                    <a class="block p-6" href="#">
+                                        <span class="text-sm text-gray-600 dark:text-neutral-400">
+                                            {{users.from+index}}
+                                        </span>
+                                    </a>
+                                </td>
                                 <td class="size-px whitespace-nowrap align-top">
                                     <a class="block p-6" href="#">
                                         <div class="flex items-center gap-x-3">
-                                            <UserCircle class="shrink-0 size-10" />
+                                            <img :src="user.avatar" class="size-10 shrink-0 rounded-full" alt="avatar">
                                             <div class="grow">
                                                 <span class="block text-sm font-semibold text-gray-800 dark:text-neutral-200">{{ user.name }}</span>
                                                 <span class="block text-sm text-gray-500 dark:text-neutral-500">{{ user.email }}</span>

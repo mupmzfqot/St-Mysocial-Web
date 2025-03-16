@@ -1,41 +1,36 @@
 <script setup>
-import {onMounted, ref, watch, onUnmounted} from 'vue';
+import {onMounted, ref, watch, onUnmounted, computed} from 'vue';
 import {Link, router, usePage} from "@inertiajs/vue3";
-import {CircleCheckBig, Heart, Images, LogOut, MessageSquareMore, Rss, Star, StickyNote, UserIcon} from "lucide-vue-next";
+import {CircleCheckBig, Heart, Images, Video, LogOut, MessageSquareMore, Newspaper, Star, UserIcon, LayoutGrid} from "lucide-vue-next";
 import {debounce} from "lodash";
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 import { useUnreadMessages } from '@/Composables/useUnreadMessages';
+import { TeamStore } from '@/Composables/useTeamStore';
+import {toast, ToastifyContainer} from "vue3-toastify";
+import 'vue3-toastify/dist/index.css';
 
 const { auth: { roles: userRoles } } = usePage().props;
 const { unreadNotifications: notifications } = usePage().props;
+const teams = ref([]);
 
 const isPublic = userRoles.includes("public_user");
 const isST = userRoles.includes("user");
+const { unreadMessageCount, fetchUnreadMessageCount } = useUnreadMessages();
 
 const readNotification = (item) => {
-    router.post(route('read-notification', item.id), {}, {preserveScroll: true})
     router.visit(route('read-notification', item.id), {
         preserveScroll: true,
         method: 'post',
-        onFinish: visit => {
+        onSuccess: visit => {
             router.get(item.data.url)
         }
     })
 }
 
-const teams = ref([]);
 const fetchTeams = async () => {
-    let response = await axios.get(route('team.get'));
-    teams.value = response.data;
+    teams.value = await TeamStore.fetchTeams();
 }
-
-const { unreadMessageCount, fetchUnreadMessageCount } = useUnreadMessages();
-
-// Add navigation event listener
-router.on('finish', () => {
-    fetchUnreadMessageCount();
-});
 
 // Poll for unread messages every 30 seconds
 let pollInterval;
@@ -55,14 +50,12 @@ onMounted(() => {
     fetchTeams();
     fetchUnreadMessageCount();
 
-    // Start polling
     pollInterval = setInterval(fetchUnreadMessageCount, 30000);
 
-    // Set up real-time listener for new messages
-    window.Echo.private(`App.Models.User.${usePage().props.auth.user.id}`)
+    window.Echo.private(`conversation.${usePage().props.auth.user?.id}`)
         .notification((notification) => {
             if (notification.type === 'NewMessage') {
-                fetchUnreadMessageCount(); // Fetch the updated count when new message arrives
+                fetchUnreadMessageCount();
             }
         });
 })
@@ -73,7 +66,7 @@ onUnmounted(() => {
         clearInterval(pollInterval);
     }
     if (window.Echo) {
-        window.Echo.leave(`App.Models.User.${usePage().props.auth.user.id}`);
+        window.Echo.leave(`App.Models.User.${usePage().props.auth.user?.id}`);
     }
 })
 
@@ -146,7 +139,7 @@ function isActiveNav(path) {
                                 <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
                                 <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path>
                             </svg>
-                            <span class="absolute top-0 end-0 inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium transform -translate-y-1/2 translate-x-1/2 bg-red-500 text-white">{{ notifications.length }}</span>
+                            <span class="absolute top-0 end-0 inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium transform -translate-y-1/2 translate-x-1/2 bg-red-500 text-white">{{ notifications.length > 99 ? '99+' : notifications.length }}</span>
                         </button>
 
                         <div class="hs-dropdown-menu transition-[opacity,margin] w-[350px] duration hs-dropdown-open:opacity-100 opacity-0 hidden min-w-60 bg-white shadow-md border border-gray-200 rounded-lg mt-2 divide-y divide-gray-200 dark:bg-neutral-800 dark:border dark:border-neutral-700 dark:divide-neutral-700" role="menu" aria-orientation="vertical" aria-labelledby="hs-dropdown-with-dividers">
@@ -156,7 +149,7 @@ function isActiveNav(path) {
                                 </p>
                             </div>
                             <div class="p-1 space-y-0.5">
-                                <a href="#" @click="readNotification(notif)" v-for="notif in notifications" class="flex items-center gap-x-1 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100">
+                                <a href="#" @click="readNotification(notif)" v-for="notif in notifications.slice(0, 9)" class="flex items-center gap-x-1 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100">
                                     {{ notif.data.message }}
                                 </a>
                                 <a href="#" v-if="notifications.length === 0" class="flex items-center gap-x-3.5 py-2 px-3 font-light italic text-gray-800">
@@ -204,7 +197,7 @@ function isActiveNav(path) {
 
     <!-- ========== MAIN CONTENT ========== -->
     <main id="content">
-        <div class="max-w-[85rem] min-h-screen mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-[85rem] max-h-screen mx-auto py-6 px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-12 gap-4">
                 <div class="col-span-3">
                     <div class="max-w-xs flex flex-col bg-white shadow-sm rounded-lg">
@@ -222,30 +215,34 @@ function isActiveNav(path) {
                                 </div>
                             </div>
                         </Link>
-                        <Link v-if="isST" :href="route('homepage')" type="button" :class="['inline-flex items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/home') ? 'text-blue-600' : '']">
-                            <Rss class="shrink-0 size-4" />
-                            ST Posts
+                        <Link v-if="isST" :href="route('homepage')" type="button" :class="['inline-flex hover:bg-blue-100 items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/home') ? 'text-blue-600' : '']">
+                            <LayoutGrid class="shrink-0 size-5 text-blue-800 fill-blue-200" />
+                            Home
                         </Link>
-                        <Link :href="route('public')" type="button" :class="['inline-flex items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/public') ? 'text-blue-600' : '']">
-                            <StickyNote class="shrink-0 size-4" />
-                            Public Posts
-                        </Link>
-                        <Link v-if="isST" :href="route('message.index')" type="button" :class="['inline-flex items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/message') ? 'text-blue-600' : '']">
-                            <MessageSquareMore class="shrink-0 size-4" />
+<!--                        <Link :href="route('public')" type="button" :class="['inline-flex hover:bg-blue-100 items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/public') ? 'text-blue-600' : '']">-->
+<!--                            <Newspaper class="shrink-0 size-5 text-purple-800 fill-purple-200" />-->
+<!--                            Public Posts-->
+<!--                        </Link>-->
+                        <Link v-if="isST" :href="route('message.index')" type="button" :class="['inline-flex hover:bg-blue-100 items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/message') ? 'text-blue-600' : '']">
+                            <MessageSquareMore class="shrink-0 size-5 text-green-800 fill-green-100" />
                             Messages
-                            <span class="inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium bg-red-500 text-white ms-auto">{{ unreadMessageCount }}</span>
+                            <span v-if="unreadMessageCount > 0" class="inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium bg-red-500 text-white ms-auto">{{ unreadMessageCount }}</span>
                         </Link>
-                        <Link :href="route('liked-posts')" type="button" :class="['inline-flex items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/liked-posts') ? 'text-blue-600' : '']">
-                            <Heart class="shrink-0 size-4 text-red-600 fill-red-600" />
+                        <Link :href="route('liked-posts')" type="button" :class="['inline-flex hover:bg-blue-100 items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/liked-posts') ? 'text-blue-600' : '']">
+                            <Heart class="shrink-0 size-5 text-red-600 fill-red-600" />
                             My Likes
                         </Link>
-                        <Link :href="route('top-posts')" type="button" :class="['inline-flex items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/top-posts') ? 'text-blue-600' : '']">
-                            <Star class="shrink-0 size-4 text-yellow-600 fill-yellow-500" />
+                        <Link :href="route('top-posts')" type="button" :class="['inline-flex hover:bg-blue-100 items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/top-posts') ? 'text-blue-600' : '']">
+                            <Star class="shrink-0 size-5 text-yellow-600 fill-yellow-500" />
                             Top Posts
                         </Link>
-                        <Link :href="route('photoAlbum.index')" type="button" :class="['inline-flex items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/photo-album') ? 'text-blue-600' : '']">
-                            <Images class="shrink-0 size-4" />
-                            My Photo Albums
+                        <Link :href="route('photoAlbum.index')" type="button" :class="['inline-flex hover:bg-blue-100 items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/photo-album') ? 'text-blue-600' : '']">
+                            <Images class="shrink-0 size-5 text-amber-800" />
+                            My Photos
+                        </Link>
+                        <Link :href="route('videos.index')" type="button" :class="['inline-flex hover:bg-blue-100 items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/videos') ? 'text-blue-600' : '']">
+                            <Video class="shrink-0 size-5 text-pink-900 fill-pink-200" />
+                            My Videos
                         </Link>
                     </div>
                 </div>
@@ -261,24 +258,44 @@ function isActiveNav(path) {
                     <slot />
                 </div>
                 <div class="col-span-3">
-                    <div class="max-w-xs flex flex-col bg-white shadow-sm rounded-lg" v-if="isST">
-                        <div class="bg-gray-100 border-b rounded-t-xl py-3 px-4 md:py-4 md:px-5 dark:bg-neutral-900 dark:border-neutral-700">
-                            <p class="mt-1 font-semibold text-sm">
-                                ST Team
-                            </p>
+                    <div class="max-w-xs flex flex-col bg-white shadow-sm rounded-lg hs-accordion active" v-if="isST">
+                        <div type="button" id="hs-basic" class="hs-accordion-toggle bg-gray-100 border-b hover:cursor-pointer rounded-t-xl py-3 px-3 dark:bg-neutral-900 dark:border-neutral-700"
+                            aria-expanded="true" aria-controls="hs-basic">
+                            <div class="flex flex-row justify-between items-center">
+                                <h1 class="font-bold text-lg">
+                                    <span class="text-gray-400">#</span>
+                                    <span class="text-indigo-800">Team</span>
+                                    <span class="text-red-700">ST</span>
+                                </h1>
+                                <svg class="hs-accordion-active:hidden block size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="m6 9 6 6 6-6"></path>
+                                </svg>
+                                <svg class="hs-accordion-active:block hidden size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="m18 15-6-6-6 6"></path>
+                                </svg>
+                            </div>
                         </div>
-                        <div class="p-1 gap-y-3">
-                            <Link :href="route('profile.show', team.id)" v-for="team in teams" class="shrink-0 group block p-2 hover:bg-gray-100 rounded-lg">
+                        <div id="hs-basic" aria-labelledby="hs-basic" class="hs-accordion-content
+                            w-full overflow-hidden transition-[height] duration-300
+                            p-1 gap-y-3 max-h-[70vh] overflow-y-auto
+                            [&::-webkit-scrollbar]:w-1
+                            [&::-webkit-scrollbar-track]:rounded-full
+                            [&::-webkit-scrollbar-track]:bg-gray-100
+                            [&::-webkit-scrollbar-thumb]:rounded-full
+                            [&::-webkit-scrollbar-thumb]:bg-gray-300
+                            dark:[&::-webkit-scrollbar-track]:bg-neutral-700
+                            dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500">
+                            <Link :href="route('profile.show', team.id)" v-for="team in teams" class="shrink-0 group block p-2 hover:bg-blue-100 rounded-lg">
                                 <div class="flex items-center">
                                     <div class="hs-tooltip inline-block">
                                         <a class="hs-tooltip-toggle relative inline-block" href="#">
-                                            <img class="inline-block size-[40px] rounded-full" :src="team.avatar" alt="Avatar">
+                                            <img class="inline-block size-[40px] object-cover rounded-full" :src="team.avatar" alt="Avatar">
 <!--                                            <span class="absolute bottom-0 end-0 block size-3 rounded-full ring-2 ring-white bg-green-700"></span>-->
                                         </a>
                                     </div>
                                     <div class="ms-3">
                                         <h3 class="font-semibold text-sm text-gray-800 dark:text-white">{{ team.name }}</h3>
-                                        <p class="text-sm text-gray-600 dark:text-neutral-500">{{ team.email }}</p>
+<!--                                        <p class="text-sm text-gray-600 dark:text-neutral-500">{{ team.email }}</p>-->
                                     </div>
                                 </div>
                             </Link>
@@ -291,11 +308,13 @@ function isActiveNav(path) {
         </div>
     </main>
     <!-- ========== END MAIN CONTENT ========== -->
+
+    <ToastifyContainer />
 </template>
 
 <style scoped>
 .bg-gradient-blue {
-    background: rgb(181,95,200);
-    background: linear-gradient(90deg, rgba(181,95,200,1) 0%, rgba(0,31,241,1) 100%);
+    background: rgb(89,27,75);
+    background: linear-gradient(90deg, rgba(89,27,75,1) 0%, rgba(46,137,228,1) 100%);
 }
 </style>

@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Spatie\Permission\Models\Role;
 
@@ -20,11 +21,13 @@ class UserController extends Controller
             })
             ->when($searchTerm, function ($query, $search) {
                 $query->where('name', 'like', '%' . $search . '%')
-                    ->orWhere('email', 'like', '%' . $search . '%');
+                    ->orWhere('email', 'like', '%' . $search . '%')
+                    ->whereHas('roles', function ($query) {
+                        $query->where('name', 'admin');
+                    });
             })
             ->orderBy('created_at', 'desc')
-            ->paginate(10)
-            ->withQueryString();
+            ->paginate(10);
 
         return Inertia::render('Users/AdminList', compact('users', 'searchTerm'));
     }
@@ -60,6 +63,9 @@ class UserController extends Controller
             ->with(['roles' => function ($query) {
                 $query->select('name', 'display_name');
             }])
+            ->whereHas('roles', function ($query) {
+                $query->where('name', 'user');
+            })
             ->orderBy('created_at', 'desc')
             ->paginate(10)
             ->withQueryString();
@@ -68,11 +74,15 @@ class UserController extends Controller
                 $query->where('name', 'user');
             })->count();
 
+        $adminCount = User::query()->whereHas('roles', function ($query) {
+            $query->where('name', 'admin');
+        })->count();
+
         $publicUserCount = User::query()->whereHas('roles', function ($query) {
             $query->where('name', 'public_user');
         })->count();
 
-        return Inertia::render('Users/UserList', compact('users', 'userCount', 'publicUserCount', 'searchTerm'));
+        return Inertia::render('Users/UserList', compact('users', 'adminCount', 'userCount', 'publicUserCount', 'searchTerm'));
     }
 
     public function publicAccountIndex(Request $request)
@@ -82,6 +92,9 @@ class UserController extends Controller
             ->where('is_active', false)
             ->when($searchTerm, function ($query, $search) {
                 $query->where('name', 'like', '%' . $search . '%');
+            })
+            ->whereHas('roles', function ($query) {
+                $query->where('name', 'public_user');
             })
             ->with(['roles' => function ($query) {
                 $query->select('name', 'display_name');
@@ -167,8 +180,21 @@ class UserController extends Controller
         return redirect()->back()->with('success', 'User successfully been admin.');
     }
 
+    public function setAsUser(Request $request, $id)
+    {
+        $user = User::query()->find($id);
+        $user->syncRoles('user');
+        return redirect()->back()->with('success', 'User successfully been ST User.');
+    }
+
     public function resetPassword(Request $request, $id)
     {
+        $request->validate([
+            'password' => [
+                'required', Password::min(8)->mixedCase()->numbers()->symbols()->letters(),
+                'confirmed'
+            ],
+        ]);
         $user = User::query()->find($id);
         $user->password = Hash::make($request->password);
         $user->save();

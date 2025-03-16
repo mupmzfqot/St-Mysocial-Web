@@ -3,7 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\User;
-use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Queue\Queueable;
@@ -25,7 +25,7 @@ class SendEmailVerificationJob implements ShouldQueue
      */
     public function handle(): void
     {
-        $this->user->notify(new VerifyEmail);
+        event(new Registered($this->user));
     }
 
     public function failed(\Throwable $exception): void

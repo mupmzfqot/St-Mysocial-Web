@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\MediaResource;
 use App\Http\Resources\UserResource;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class UserController extends Controller
@@ -31,7 +31,8 @@ class UserController extends Controller
                     ->orWhere('email', 'like', '%' . $searchTerm . '%')
                     ->orWhere('username', 'like', '%' . $searchTerm . '%');
             })
-            ->whereNot('id', $request->user()->id)
+            ->exceptId($request->user()->id)
+            ->isActive()
             ->orderBy('name', 'asc')
             ->paginate(20);
 
@@ -41,71 +42,109 @@ class UserController extends Controller
         ], 200);
     }
 
+    public function getTeams(Request $request)
+    {
+        $authId = $request->user()->id;
+        $searchTerm = $request->search;
+        $cacheKey = 'team_users_' . $authId . '_' . md5($searchTerm);
+        $cacheDuration = now()->addMinutes(1);
+
+        return \Cache::remember($cacheKey, $cacheDuration, function() use ($authId, $searchTerm) {
+            $query = User::query()
+                ->when($searchTerm, function ($query, $searchTerm) {
+                    $query->where(function ($q) use ($searchTerm) {
+                        $q->where('name', 'like', "%$searchTerm%")
+                            ->orWhere('email', 'like', "%$searchTerm%")
+                            ->orWhere('username', 'like', "%$searchTerm%");
+                    });
+                })
+                ->whereHas('roles', function ($query) {
+                    $query->where('name', 'user');
+                })
+                ->whereNotNull('email_verified_at')
+                ->isActive()
+                ->where('id', '!=', $authId)
+                ->get();
+
+            return response()->json([
+                'error' => 0,
+                'data' => UserResource::collection($query)
+            ]);
+        });
+    }
+
     public function getMedia(Request $request)
     {
-        $user = $request->user()->id;
-
-        $userMedia = User::find($user)->getMedia('*')->toArray();
-        $postMedia = Post::find($user)->getMedia('*')->toArray();
-
-        $mergedArray = array_merge($userMedia, $postMedia);
-        $media = collect($mergedArray)->map(function ($item) {
-             return [
-                 'id' => $item['id'],
-                 'name' => $item['name'],
-                 'file_name' => $item['file_name'],
-                 'mime_type' => $item['mime_type'],
-                 'size' => $item['size'],
-                 'collection_name' => $item['collection_name'],
-                 'url' => $item['original_url'],
-             ];
-        });
-
-        return response()->json([
-            'error' => 0,
-            'data' => $media
-        ]);
-
-    }
-
-    public function updateProfileImage(Request $request)
-    {
-        DB::beginTransaction();
         try {
-            $request->validate(['image' => 'required|image']);
-            Media::query()->where('model_id', $request->user()->id)
-                ->where('model_type', User::class)
-                ->where('collection_name', 'avatar')
-                ->delete();
+            $user = $request->user()->id;
+            $post_id = Post::where('user_id', $user)->get()->pluck('id');
 
-            User::find($request->user()->id)->addMediaFromRequest('image')->toMediaCollection('avatar');
+            $medias = Media::query()
+                ->whereIn('model_id', $post_id)
+                ->where('model_type', Post::class)
+                ->whereLike('mime_type', 'image/%')
+                ->get();
 
-            DB::commit();
-            return response()->json(['message' => 'Profile image updated successfully', 'error' => 0]);
+            $groupedMedias = $this->groupMedia($medias, 'image');
 
+            return response()->json([
+                'error' => 0,
+                'data' => $groupedMedias
+            ]);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage(), 'error' => 1]);
+            return response()->json([
+                'error' => 1,
+                'message' => $e->getMessage()
+            ]);
         }
 
     }
 
-    public function updateProfileCover(Request $request)
+    public function getVideo(Request $request)
     {
-        DB::beginTransaction();
         try {
-            $request->validate(['image' => 'required|image']);
-            Media::query()->where('model_id', $request->user()->id)
-                ->where('model_type', User::class)
-                ->where('collection_name', 'cover_image')
-                ->delete();
+            $user = $request->user()->id;
+            $post_id = Post::where('user_id', $user)->get()->pluck('id');
 
-            User::find($request->user()->id)->addMediaFromRequest('image')->toMediaCollection('cover_image');
+            $medias = Media::query()
+                ->whereIn('model_id', $post_id)
+                ->where('model_type', Post::class)
+                ->whereLike('mime_type', 'video/%')
+                ->get();
 
-            DB::commit();
-            return response()->json(['message' => 'Profile cover updated successfully', 'error' => 0]);
+            $groupedMedias = $this->groupMedia($medias, 'video');
 
+            return response()->json([
+                'error' => 0,
+                'data' => $groupedMedias
+            ]);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage(), 'error' => 1]);
+            return response()->json([
+                'error' => 1,
+                'message' => $e->getMessage()
+            ]);
         }
+
+    }
+
+    private function groupMedia($medias, $type)
+    {
+        return $medias->map(fn ($item) => [
+            'id'            => $item->id,
+            'filename'      => $item->file_name,
+            'preview_url'   => $item->preview_url,
+            'original_url'  => $item->original_url,
+            'extension'     => $item->extension,
+            'mime_type'     => $item->mime_type,
+        ])->groupBy(function ($item) use($type) {
+            if (str_starts_with($item['mime_type'], "{$type}/")) {
+                return $type;
+            }
+        })->map(function ($items, $type) {
+            return [
+                'type' => $type,
+                'content' => $items->pluck('original_url')->all(),
+            ];
+        })->values();
     }
 }

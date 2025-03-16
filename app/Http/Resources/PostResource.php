@@ -30,18 +30,36 @@ class PostResource extends JsonResource
                 'id'            => $this->author->id,
                 'name'          => $this->author->name,
                 'email'         => $this->author->email,
-                'profile_img'   => null,
+                'profile_img'   => $this->author->avatar,
             ],
             'media'         => $this->getMedia('*')->map(fn ($item) => [
-                'id'            => $item->id,
-                'filename'      => $item->file_name,
-                'preview_url'   => $item->preview_url,
-                'original_url'  => $item->original_url,
-                'extension'     => $item->extension,
-            ]),
+                    'id'            => $item->id,
+                    'filename'      => $item->file_name,
+                    'preview_url'   => $item->preview_url,
+                    'original_url'  => $item->original_url,
+                    'extension'     => $item->extension,
+                    'mime_type'     => $item->mime_type,
+                ])->groupBy(function ($item) {
+                    if (str_starts_with($item['mime_type'], 'video/')) {
+                        return 'video';
+                    } elseif (str_starts_with($item['mime_type'], 'image/')) {
+                        return 'image';
+                    } elseif ($item['mime_type'] === 'application/pdf') {
+                        return 'document';
+                    }
+                    return 'other';
+                })->map(function ($items, $type) {
+                    return [
+                        'type' => $type,
+                        'content' => $items->pluck('original_url')->all(),
+                    ];
+                })->values(),
+            'link'          => $this->link,
             'comments'      => CommentResource::collection($this->whenLoaded('comments')),
-            'liked'      => (bool) $this->is_liked,
-            'commented'  => (bool) $this->commented,
+            'repost'        => new PostResource($this->whenLoaded('repost')),
+            'liked'         => (bool) $this->is_liked,
+            'commented'     => (bool) $this->commented,
+            'published'     => (bool) $this->published,
         ];
     }
 }

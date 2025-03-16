@@ -21,12 +21,13 @@ class CreatePost
         try {
 
             $validated = $request->validate([
-                'content' => 'required|string|max:1000',
+                'content' => 'required|string',
                 'files' => 'nullable|array',
                 'files.*' => [
                     'file',
-                    'mimetypes:image/jpeg,image/png,image/gif,video/mp4,video/quicktime',
-                    'max:20480' // 20MB
+                    'mimetypes:image/jpeg,image/png,image/gif,video/mp4,
+                        video/quicktime,video/mpeg,video/ogg,video/webm,video/avi,application/pdf',
+                    'max:10240' // 10MB
                 ],
                 'type' => 'required|in:st,public'
             ], [
@@ -35,7 +36,7 @@ class CreatePost
             ]);
 
             $published = (bool) Auth::user()->hasAnyRole(['admin', 'user']);
-            if($request->post('type') == 'public') {
+            if($request->post('type') == 'public' && !Auth::user()->hasRole('admin')) {
                 $published = false;
             }
 
@@ -55,7 +56,7 @@ class CreatePost
                 $post = Post::query()->create($data);
             }
 
-            if(!empty($request->userTags) && !auth()->user()->hasRole('admin')) {
+            if(!empty($request->userTags)) {
                 PostTag::query()->where('post_id', $post->id)->delete();
                 foreach ($request->userTags as $tag) {
                     PostTag::query()->create([
@@ -98,7 +99,7 @@ class CreatePost
             return $post;
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error($e->getMessage());
+            Log::error($e);
             return $e->getMessage();
         }
     }

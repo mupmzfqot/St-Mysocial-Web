@@ -1,14 +1,26 @@
 <script setup>
 import { AlertCircle } from "lucide-vue-next";
 import { router } from "@inertiajs/vue3";
+import { usePendingApprovals } from "@/Composables/usePendingApprovals.js";
 
 const { data } = defineProps({
     data: Object,
 })
+const { fetchPendingApprovals } = usePendingApprovals();
+const isConfirmed = async () => {
+    router.post(data.url, data.data || {}, {
+        onSuccess: async () => {
+            await fetchPendingApprovals();
 
-const isConfirmed = () => {
-    router.post(data.url, data.data || {})
-    HSOverlay.close('#confirm-dialog');
+            // Call any additional onSuccess callback if provided
+            if (data.onSuccess && typeof data.onSuccess === 'function') {
+                await data.onSuccess();
+            }
+
+            HSOverlay.close('#confirm-dialog');
+        },
+    });
+
 }
 
 </script>

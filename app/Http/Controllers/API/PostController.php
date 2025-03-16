@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\API;
 
 use App\Actions\Posts\CreateComment;
-use App\Actions\Posts\CreatePost;
+use App\Actions\Posts\CreatePostAPI;
+use App\Actions\Posts\Repost;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\CommentResource;
 use App\Http\Resources\PostResource;
+use App\Http\Resources\UserResource;
 use App\Models\Comment;
 use App\Models\CommentLiked;
 use App\Models\Post;
@@ -22,18 +25,34 @@ class PostController extends Controller
 {
     public function index(Request $request)
     {
-        $searchTerm = $request->query('search');
-        $perPage = $request->query('per_page', 20);
-        $posts = Post::query()
-            ->when($searchTerm, function ($query, $search) {
-                $query->where('post', 'like', '%' . $search . '%');
-            })
-            ->where('type', $request->query('type'))
-            ->published()
-            ->with(['author', 'media'])
-            ->paginate($perPage);
+        try {
+            $type = $request->query('type');
+            if($request->user()->hasRole('public_user')) {
+                $type = 'public';
+            }
+            $searchTerm = $request->query('search');
+            $perPage = $request->query('per_page', 20);
+            $posts = Post::query()
+                ->when($searchTerm, function ($query, $search) {
+                    $query->where('post', 'like', '%' . $search . '%');
+                })
+                ->where('type', $type)
+                ->published()
+                ->orderBy('created_at', 'desc')
+                ->with(['author', 'media'])
+                ->paginate($perPage)
+                ->withQueryString();
 
-        return PostResource::collection($posts);
+            return response()->json([
+                'error' => 0,
+                'data' => PostResource::collection($posts->load('repost'))
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 1,
+                'message' => $e->getMessage()
+            ]);
+        }
     }
 
     public function show($id)
@@ -41,28 +60,39 @@ class PostController extends Controller
         $post = Post::find($id);
         if (!$post) {
             return response()->json([
-                'message' => 'Post not found',
+                'error'     => 1,
+                'message'   => 'Post not found',
             ], 404);
         }
 
-        return new PostResource($post->load('comments'));
+        return response()->json([
+            'error' => 0,
+            'data' => new PostResource($post->load('comments'))
+        ]);
     }
 
-    public function store(Request $request, CreatePost $createPost)
+    public function store(Request $request, CreatePostAPI $createPost)
     {
         $created = $createPost->handle($request);
-        return new PostResource($created);
+        return response()->json([
+            'error' => 0,
+            'data' => new PostResource($created)
+        ]);
     }
 
-    public function update(Request $request, $id, CreatePost $createPost)
+    public function update(Request $request, $id, CreatePostAPI $createPost)
     {
         try {
             $post = Post::find($id);
             Gate::authorize('modify', $post);
             $updatedPost = $createPost->handle($request, $id);
-            return new PostResource($updatedPost);
+            return response()->json([
+                'error' => 0,
+                'data' => new PostResource($updatedPost->load('repost'))
+            ]);
         } catch (\Exception $e) {
             return response()->json([
+                'error' => 1,
                 'message' => $e->getMessage(),
             ], 403);
         }
@@ -95,7 +125,10 @@ class PostController extends Controller
             ->where('like_count', '>', 0)
             ->paginate(10);
 
-        return PostResource::collection($posts);
+        return response()->json([
+            'error' => 0,
+            'data' => PostResource::collection($posts->load('repost'))
+        ]);
     }
 
     public function storeComments(Request $request, CreateComment $createComment)
@@ -116,12 +149,39 @@ class PostController extends Controller
 
     }
 
+    public function getComments(Request $request, $postId)
+    {
+        $comments = Comment::query()->where('post_id', $postId)
+            ->with('media')
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        return response()->json([
+            'error' => 0,
+            'data'  => CommentResource::collection($comments)
+        ]);
+    }
+
+    public function likedBy(Request $request, $id)
+    {
+        $user = User::whereHas('likes', function ($query) use ($id) {
+                    $query->where('post_id', $id);
+                })->get();
+
+        $code = !$user ? '404' : 200;
+
+        return response()->json([
+            'error' => 0,
+            'data' => UserResource::collection($user)
+        ], $code);
+    }
+
     public function storeLike(Request $request)
     {
-        $liked = PostLiked::query()->where('post_id', $request->post_id)->where('user_id', auth()->id())->first();
+        $liked = PostLiked::query()->where('post_id', $request->post_id)->where('user_id', $request->user()->id)->first();
 
         if(!$liked) {
-            PostLiked::query()->create([
+            $postLiked = PostLiked::query()->create([
                 'post_id' => $request->post_id,
                 'user_id' => $request->user()->id
             ]);
@@ -178,5 +238,93 @@ class PostController extends Controller
             'error'     => 0,
             'message'   => 'Comment has been unliked',
         ], 201);
+    }
+
+    public function repost(Request $request, Repost $repost)
+    {
+        try {
+            $repostResult = $repost->handle($request->user()->id, $request);
+            return response()->json([
+                'error'     => 0,
+                'data'      => $repostResult,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error'     => 1,
+                'message' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    public function getUserPosts(Request $request)
+    {
+        try {
+            $request->validate([
+                'user_id' => 'required|integer|exists:users,id'
+            ]);
+
+            $perPage = $request->query('per_page', 20);
+            $query = Post::query()
+                ->orderBy('created_at', 'desc')
+                ->where('user_id', $request->user_id)
+                ->with(['author', 'media']);
+
+            if($request->user()->hasRole('public_user')) {
+                $query->where('type', 'public');
+            }
+
+            $posts = $query->paginate($perPage)
+                ->withQueryString();
+
+            return response()->json([
+                'error' => 0,
+                'data'  => PostResource::collection($posts->load('repost'))
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 1,
+                'message' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    public function deleteComment(Request $request, $id)
+    {
+        DB::beginTransaction();
+        try {
+            $comment = Comment::query()->find($id);
+
+            if(!$comment) {
+                return response()->json([
+                    'error' => 1,
+                    'message' => 'Comment not found',
+                ], 404);
+            }
+            if($request->user()->id === $comment->user_id) {
+
+                $comment->getMedia()->each(function ($media) {
+                    $media->delete();
+                });
+                $comment->delete();
+                DB::commit();
+                return response()->json([
+                    'error' => 0,
+                    'message' => 'Comment has been deleted'
+                ], 202);
+            }
+
+            return response()->json([
+                'error' => 0,
+                'message' => "You don't have permission to delete this comment"
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'error' => 1,
+                'message' => $e->getMessage(),
+            ]);
+        }
+
     }
 }

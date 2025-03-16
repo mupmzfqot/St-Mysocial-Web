@@ -69,11 +69,12 @@ onMounted(() => {
 
 <style scoped>
 .bg-gradient-blue {
-    background: rgb(181,95,200);
-    background: linear-gradient(90deg, rgba(181,95,200,1) 0%, rgba(0,31,241,1) 100%);
+    background: rgb(89,27,75);
+    background: linear-gradient(90deg, rgba(89,27,75,1) 0%, rgba(46,137,228,1) 100%);
 }
+
 .bg-gradient-blue-reverse {
-    background: rgb(0,31,241);
-    background: linear-gradient(90deg, rgba(0,31,241,1) 0%, rgba(181,95,200,1) 100%);
+    background: rgb(46,137,228);
+    background: linear-gradient(90deg, rgba(46,137,228,1) 0%, rgba(89,27,75,1) 100%);
 }
 </style>

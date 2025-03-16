@@ -15,6 +15,7 @@ const props = defineProps({
 
 const search = ref(props.searchTerm);
 
+
 watch(
     search, debounce(
         (q) => router.get(route('post-moderation.index'), { search: q }, { preserveState: true }), 500
@@ -27,9 +28,15 @@ const confirmData = reactive({
 
 const changeStatus = (post, status) => {
     confirmData.id = post.id;
-    confirmData.message = `Do you want to activate user <b>${post.post}</b>?`;
+    confirmData.message = `Do you want to publish/unpublish this post?`;
     confirmData.url = route('post-moderation.update-status', post.id);
     confirmData.data = { is_active: status };
+}
+const styledTag = (value) => {
+    return value.replace(
+        /<a /g,
+        '<a class="text-blue-500 underline hover:text-red-500 hover:no-underline" '
+    );
 }
 
 
@@ -40,14 +47,14 @@ const changeStatus = (post, status) => {
     <AuthenticatedLayout>
         <Breadcrumbs>
             <li class="inline-flex items-center">
-                <a class="flex items-center text-sm text-gray-500 hover:text-blue-600 focus:outline-none focus:text-blue-600 dark:text-neutral-500 dark:hover:text-blue-500 dark:focus:text-blue-500" href="#">
+                <Link :href="route('dashboard')" class="flex items-center text-sm text-gray-500 hover:text-blue-600 focus:outline-none focus:text-blue-600 dark:text-neutral-500 dark:hover:text-blue-500 dark:focus:text-blue-500" href="#">
                     Home
-                </a>
+                </Link>
                 <ChevronRight class="shrink-0 mx-2 size-4 text-gray-400 dark:text-neutral-600" />
             </li>
 
             <li class="inline-flex items-center text-sm font-semibold text-gray-800 truncate" aria-current="page">
-                Post Moderation's
+                Public User Posts
             </li>
         </Breadcrumbs>
 
@@ -83,15 +90,30 @@ const changeStatus = (post, status) => {
                                 <th scope="col" class="px-6 py-3 text-start">
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
+                                            No.
+                                        </span>
+                                    </div>
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-start">
+                                    <div class="flex items-center gap-x-2">
+                                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                             User
                                         </span>
                                     </div>
                                 </th>
 
-                                <th scope="col" class="px-6 py-3 text-start">
+                                <th scope="col" class="px-6 py-3 text-start w-96">
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                           Posted Item
+                                        </span>
+                                    </div>
+                                </th>
+
+                                <th scope="col" class="px-6 py-3 text-center">
+                                    <div class="flex items-center gap-x-2">
+                                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
+                                          Posted Media
                                         </span>
                                     </div>
                                 </th>
@@ -112,7 +134,7 @@ const changeStatus = (post, status) => {
                                     </div>
                                 </th>
 
-                                <th scope="col" class="px-6 py-3 text-start">
+                                <th scope="col" class="px-6 py-3 text-center">
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                             Action
@@ -123,16 +145,43 @@ const changeStatus = (post, status) => {
                             </thead>
 
                             <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
-                            <tr v-for="post in posts.data" key="user.id" class="bg-white hover:bg-gray-50 dark:bg-neutral-900 dark:hover:bg-neutral-800">
+                            <tr v-for="(post, index) in posts.data" key="user.id" class="bg-white hover:bg-gray-50 dark:bg-neutral-900 dark:hover:bg-neutral-800">
+                                <td class="size-px whitespace-nowrap align-top">
+                                    <a class="block p-6" href="#">
+                                        <span class="text-sm text-gray-600 dark:text-neutral-400">{{ posts.from+index }}</span>
+                                    </a>
+                                </td>
                                 <td class="size-px whitespace-nowrap align-top">
                                     <a class="block p-6" href="#">
                                         <span class="text-sm text-gray-600 dark:text-neutral-400">{{ post.author.name }}</span>
                                     </a>
                                 </td>
-                                <td class="size-px whitespace-nowrap align-top">
-                                    <a class="block p-6" href="#">
-                                        <span class="text-sm text-gray-600 dark:text-neutral-400">{{ post.post }}</span>
-                                    </a>
+                                <td class="size-px whitespace-nowrap p-6 align-top">
+                                    <span class="text-sm text-gray-600 dark:text-neutral-400 text-wrap" v-html="styledTag(post.post)"></span>
+                                </td>
+                                <td class="size-px whitespace-nowrap text-center">
+                                    <div v-if="post.media && post.media.length > 0" class="flex -space-x-2">
+                                        <template v-for="(media, index) in post.media.filter(m => m.mime_type.startsWith('image/') || m.mime_type === 'application/pdf').slice(0, 3)" :key="media.id">
+                                            <img v-if="media.mime_type === 'application/pdf'"
+                                                 src="../../../images/pdf-icon.svg"
+                                                 :alt="media.name"
+                                                 class="inline-block size-[46px]"
+                                            />
+                                            <img v-else
+                                                 :src="media.preview_url"
+                                                 :alt="media.name"
+                                                 class="inline-block size-[46px]"
+                                            />
+                                        </template>
+                                        <div v-if="post.media.filter(m => m.mime_type.startsWith('image/') || m.mime_type === 'application/pdf').length > 3" class="hs-dropdown [--placement:top-left] relative inline-flex">
+                                            <button class="inline-flex items-center justify-center size-[46px] rounded-full bg-gray-100 border-2 border-white font-medium text-gray-700 shadow-sm align-middle hover:bg-gray-200 focus:outline-none focus:bg-gray-300 text-sm dark:bg-neutral-700 dark:text-white dark:hover:bg-neutral-600 dark:focus:bg-neutral-600 dark:border-neutral-800">
+                                                <span class="font-medium leading-none">+{{ post.media.filter(m => m.mime_type.startsWith('image/') || m.mime_type === 'application/pdf').length - 3 }}</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div v-else class="text-sm text-gray-500 p-6">
+                                        <span class="text-sm text-gray-600 dark:text-neutral-400">No Media</span>
+                                    </div>
                                 </td>
                                 <td class="size-px whitespace-nowrap align-top">
                                     <a class="block p-6" href="#">
@@ -140,7 +189,7 @@ const changeStatus = (post, status) => {
                                     </a>
                                 </td>
 
-                                <td class="h-px w-72 min-w-72 text-start">
+                                <td class="h-px w-72 min-w-72 text-start align-top">
                                     <a class="block p-6" href="#">
                                         <span v-if="post.published === 1" class="py-1 px-3 inline-flex items-center gap-x-1 text-xs font-medium bg-teal-100 text-teal-800 rounded-full dark:bg-teal-500/10 dark:text-teal-500">
                                           <CheckCircle class="size-3" /> Approved
@@ -151,7 +200,7 @@ const changeStatus = (post, status) => {
                                     </a>
                                 </td>
 
-                                <td class="size-px whitespace-nowrap align-top">
+                                <td class="size-px whitespace-nowrap align-top text-center">
                                     <div class="p-6">
                                         <div class="hs-dropdown [--placement:bottom-right] relative inline-block">
                                             <button id="hs-table-dropdown-1" type="button" class="hs-dropdown-toggle py-1.5 px-2 inline-flex justify-center items-center gap-2 rounded-lg text-gray-700 align-middle disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-blue-600 transition-all text-sm dark:text-neutral-400 dark:hover:text-white dark:focus:ring-offset-gray-800" aria-haspopup="menu" aria-expanded="false" aria-label="Dropdown">

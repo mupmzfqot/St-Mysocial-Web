@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Actions\Messages\OpenConversation;
 use App\Events\MessageSent;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
@@ -21,7 +22,11 @@ class MessageController extends Controller
             ->whereHas('users', function ($query) use ($currentUserId) {
                 $query->where('user_id', $currentUserId);
             })
+            ->whereHas('messages')
             ->withCount('users')
+            ->withCount(['messages' => function ($query) {
+                $query->where('is_read', false);
+            }])
             ->having('users_count', 2)
             ->with([
                 'users' => function ($query) use ($currentUserId) {
@@ -29,7 +34,7 @@ class MessageController extends Controller
                         ->select('users.id', 'name');
                 },
                 'messages' => function ($query) {
-                    $query->latest()->first();
+                    $query->latest()->limit(1);
                 }
             ])
             ->get();
@@ -41,60 +46,70 @@ class MessageController extends Controller
                 'name' => $conversation->users->first()->name,
                 'avatar' => $conversation->users->first()->avatar,
                 'latest_message' => $conversation->messages,
+                'unread_message_count' => $conversation->messages_count,
             ];
         });
 
         return response()->json([
+            'error' => 0,
+            'unread_conversation_count' => $conversation->filter(function ($value) {
+                return $value['unread_message_count'] > 0;
+            })->count(),
             'data' => $conversation
         ]);
     }
 
-    public function getConversation(Request $request)
+    public function getConversation(Request $request, OpenConversation $openConversation)
     {
-        $authUserId = $request->user()->id;
-        $recipientId = $request->recipient_id;
+        try {
+            $request->validate([
+                'recipient_id' => 'required|integer|exists:users,id'
+            ], [
+                'recipient_id.exists' => 'User not exists'
+            ]);
 
-        $conversation = Conversation::query()
-            ->where('type', 'private')
-            ->whereHas('users', function ($query) use ($authUserId, $recipientId) {
-                $query->whereIn('user_id', [$authUserId, $recipientId]);
-            }, '=', 2)
-            ->first();
+            $authUserId = $request->user()->id;
+            $recipientId = $request->recipient_id;
 
-        if (!$conversation) {
-            $conversation = Conversation::query()->create(['type' => 'private']);
-            $conversation->users()->attach([$authUserId, $recipientId], ['joined_at' => now()]);
+            $results = $openConversation->handle($recipientId, $authUserId);
+
+            return response()->json([
+                'error' => 0,
+                'conversation_id' => $results['conversation']->id,
+                'data' => $results['messages']
+            ]);
+        } Catch (\Exception $e) {
+            return response()->json([
+                'error' => 1,
+                'message' => $e->getMessage()
+            ]);
         }
-
-        $messages = $conversation->messages()
-            ->with('sender')
-            ->orderBy('created_at')
-            ->get()
-            ->map(function ($message) use($recipientId) {
-                return $this->formatResult($message, $recipientId);
-            });
-
-        return response()->json([
-            'data' => $messages
-        ]);
 
     }
 
     public function sendMessage(Request $request)
     {
-        $conversation = Conversation::query()->find($request->conversation_id);
-        Gate::authorize('send', $conversation);
+        try {
+            $conversation = Conversation::query()->find($request->conversation_id);
+            Gate::authorize('send', $conversation);
 
-        $message = $conversation->messages()->create([
-            'sender_id' => auth()->id(),
-            'content' => $request->message,
-        ]);
+            $message = $conversation->messages()->create([
+                'sender_id' => auth()->id(),
+                'content' => $request->message,
+            ]);
 
-        broadcast(new MessageSent($message));
+//            broadcast(new MessageSent($message));
 
-        return response()->json([
-            'data' => $this->formatResult($message, $request->recipient_id),
-        ]);
+            return response()->json([
+                'error' => 0,
+                'data' => $this->formatResult($message, $request->recipient_id),
+            ]);
+        } Catch (\Exception $exception) {
+            return response()->json([
+                'error' => 1,
+                'message' => $exception->getMessage(),
+            ]);
+        }
 
     }
 

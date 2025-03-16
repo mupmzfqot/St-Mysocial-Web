@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Auth;
 
 use Illuminate\Auth\Events\Lockout;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -29,6 +30,14 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
+            'captcha' => ['required', 'captcha']
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'captcha' => 'Captcha not match',
         ];
     }
 
@@ -42,11 +51,34 @@ class LoginRequest extends FormRequest
         $this->ensureIsNotRateLimited();
 
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
-            RateLimiter::hit($this->throttleKey());
+            $maxAttempts = 3;
+            $lockoutMinutes = 5;
+
+            // Hit the rate limiter
+            Limit::perMinute($maxAttempts)->by($this->throttleKey());
+            RateLimiter::hit($this->throttleKey(), $lockoutMinutes * 60);
+
+            // Calculate remaining attempts
+            $remainingAttempts = RateLimiter::remaining($this->throttleKey(), $maxAttempts);
+
+            $retryAfter = RateLimiter::availableIn($this->throttleKey());
+            $minutes = floor($retryAfter / 60);
+            $remainingSeconds = $retryAfter % 60;
+
+            $errorMessage = $remainingAttempts > 0
+                ? "Invalid credentials. You have {$remainingAttempts} attempt(s) left before being locked out."
+                : "Too many login attempts. Please try again in {$minutes} minutes {$remainingSeconds} seconds.";
 
             throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
+                'email' => [
+                    'message' => $errorMessage,
+                    'remain_attempts' => max(0, $remainingAttempts),
+                    'max_attempts' => $maxAttempts,
+                    'retry_after' => $retryAfter,
+                    'unlock_at' => now()->addSeconds($retryAfter)->toIso8601String()
+                ]
             ]);
+
         }
 
         RateLimiter::clear($this->throttleKey());
@@ -59,7 +91,9 @@ class LoginRequest extends FormRequest
      */
     public function ensureIsNotRateLimited(): void
     {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        $maxAttempts = 3;
+
+        if (! RateLimiter::tooManyAttempts($this->throttleKey(), $maxAttempts)) {
             return;
         }
 
@@ -67,11 +101,19 @@ class LoginRequest extends FormRequest
 
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
+        $minutes = floor($seconds / 60);
+        $remainingSeconds = $seconds % 60;
+
         throw ValidationException::withMessages([
-            'email' => trans('auth.throttle', [
-                'seconds' => $seconds,
-                'minutes' => ceil($seconds / 60),
-            ]),
+            'email' => [
+                'message' => "Too many login attempts. Please try again in {$minutes} minutes and {$remainingSeconds} seconds.",
+                'remain_attempts' => 0,
+                'max_attempts' => $maxAttempts,
+                'retry_after' => $seconds,
+                'unlock_minutes' => $minutes,
+                'unlock_seconds' => $remainingSeconds,
+                'unlock_at' => now()->addSeconds($seconds)->toIso8601String()
+            ]
         ]);
     }
 

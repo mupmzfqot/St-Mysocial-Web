@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Messages\OpenConversation;
 use App\Events\MessageSent;
 use App\Models\Conversation;
 use App\Models\User;
@@ -28,9 +29,12 @@ class MessageController extends Controller
                         ->select('users.id', 'name');
                 },
                 'messages' => function ($query) {
-                    $query->latest()->first();
+                    $query->latest()->take(1);
                 }
             ])
+            ->withMax('messages', 'created_at')
+            ->orderByDesc('messages_max_created_at')
+            ->whereHas('messages')
             ->get();
 
         $conversations = $results->map(function ($conversation) {
@@ -40,45 +44,21 @@ class MessageController extends Controller
                 'name' => $conversation->users->first()->name,
                 'avatar' => $conversation->users->first()->avatar,
                 'latest_message' => $conversation->messages,
+                'unread_messages_count' => $conversation->messages->where('is_read', false)->where('sender_id', '!=', auth()->id())->count(),
             ];
         });
 
         return Inertia::render('Messages/Index', compact('conversations'));
     }
 
-    public function openConversation(Request $request, $user_id)
+    public function openConversation(Request $request, $user_id, OpenConversation $openConversation)
     {
         $authUserId = auth()->id();
         $user = User::find($user_id);
 
-        $conversation = Conversation::query()
-            ->where('type', 'private')
-            ->whereHas('users', function ($query) use ($authUserId, $user_id) {
-                $query->whereIn('user_id', [$authUserId, $user_id]);
-            }, '=', 2)
-            ->first();
-
-        if (!$conversation) {
-            $conversation = Conversation::query()->create(['type' => 'private']);
-            $conversation->users()->attach([$authUserId, $user_id], ['joined_at' => now()]);
-        }
-
-        $messages = $conversation->messages()
-            ->with('sender')
-            ->orderBy('created_at')
-            ->get()
-            ->map(function ($message) {
-                return [
-                    'id' => $message->id,
-                    'conversation_id' => $message->conversation_id,
-                    'content' => $message->content,
-                    'sender_id' => $message->sender_id,
-                    'sender_name' => $message->sender->name,
-
-                ];
-            });
-
-        Gate::authorize('view', $conversation);
+        $results = $openConversation->handle($user_id, $authUserId);
+        $conversation = $results['conversation'];
+        $messages = $results['messages'];
 
         return inertia('Messages/Show', compact('conversation', 'messages', 'user'));
     }
@@ -98,23 +78,49 @@ class MessageController extends Controller
 
     public function sendMessage(Request $request, $conversation_id)
     {
-        $conversation = Conversation::query()->find($conversation_id);
-        Gate::authorize('send', $conversation);
+        try {
+            $request->validate([
+                'message' => 'required',
+                'files' => 'nullable|array',
+                'files.*' => [
+                    'file',
+                    'mimetypes:image/jpeg,image/png,image/gif,video/mp4,
+                        video/quicktime,video/mpeg,video/ogg,video/webm,video/avi,application/pdf',
+                    'max:10240' // 10MB
+                ],
+            ]);
+            $conversation = Conversation::query()->find($conversation_id);
+            Gate::authorize('send', $conversation);
 
-        $message = $conversation->messages()->create([
-            'sender_id' => auth()->id(),
-            'content' => $request->message,
-        ]);
+            $message = $conversation->messages()->create([
+                'sender_id' => auth()->id(),
+                'content' => $request->message,
+            ]);
 
-        broadcast(new MessageSent($message));
+            if ($request->hasFile('files')) {
+                foreach ($request->file('files') as $file) {
+                    $message->addMedia($file)
+                        ->toMediaCollection('message_media');
+                }
+            }
 
-        return response()->json([
-            'id' => $message->id,
-            'conversation_id' => $message->conversation_id,
-            'content' => $message->content,
-            'sender_id' => $message->sender_id,
-            'sender_name' => $message->sender->name,
-        ]);
+            $message->load('sender', 'media');
+
+           broadcast(new MessageSent($message));
+
+            return response()->json([
+                'id' => $message->id,
+                'conversation_id' => $message->conversation_id,
+                'content' => $message->content,
+                'sender_id' => $message->sender_id,
+                'sender_name' => $message->sender->name,
+                'media' => array_values($message->getMedia('message_media')->toArray())
+            ]);
+        } catch (\Exception $exception) {
+            return response()->json([
+                'message' => $exception->getMessage(),
+            ]);
+        }
 
     }
 
@@ -140,7 +146,7 @@ class MessageController extends Controller
 
         return response()->json([
             'conversations' => $unreadCount,
-            'total' => array_sum(array_column($unreadCount->toArray(), 'messages_count')),
+            'total' => $unreadCount->count(),
         ]);
     }
 }

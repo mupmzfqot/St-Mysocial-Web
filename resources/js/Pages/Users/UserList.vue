@@ -1,7 +1,7 @@
 <script setup>
-import {Head, Link, router, usePage} from "@inertiajs/vue3";
+import {Head, Link, router} from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import { ChevronRight, Search, UserCircle, CheckCircle, MinusCircle, UsersRound } from "lucide-vue-next";
+import { ChevronRight, Search, CheckCircle, MinusCircle, UsersRound } from "lucide-vue-next";
 import Breadcrumbs from "@/Components/Breadcrumbs.vue";
 import ConfirmDialog from "@/Components/ConfirmDialog.vue";
 import { reactive, ref, watch } from "vue";
@@ -10,8 +10,9 @@ import Pagination from "@/Components/Pagination.vue";
 
 const props = defineProps({
     users: Object,
-    userCount: '',
-    publicUserCount: '',
+    userCount: Number,
+    adminCount: Number,
+    publicUserCount: Number,
     searchTerm: String
 });
 
@@ -46,9 +47,9 @@ const setAdmin = (user) => {
     <AuthenticatedLayout>
         <Breadcrumbs>
             <li class="inline-flex items-center">
-                <a class="flex items-center text-sm text-gray-500 hover:text-blue-600 focus:outline-none focus:text-blue-600 dark:text-neutral-500 dark:hover:text-blue-500 dark:focus:text-blue-500" href="#">
+                <Link :href="route('dashboard')" class="flex items-center text-sm text-gray-500 hover:text-blue-600 focus:outline-none focus:text-blue-600 dark:text-neutral-500 dark:hover:text-blue-500 dark:focus:text-blue-500" href="#">
                     Home
-                </a>
+                </Link>
                 <ChevronRight class="shrink-0 mx-2 size-4 text-gray-400 dark:text-neutral-600" />
             </li>
             <li class="inline-flex items-center text-sm font-semibold text-gray-800 truncate" aria-current="page">
@@ -69,7 +70,7 @@ const setAdmin = (user) => {
                             </p>
                             <div class="mt-1 flex items-center gap-x-2">
                                 <h3 class="text-xl sm:text-2xl font-medium text-gray-800 dark:text-neutral-200">
-                                    {{ userCount + publicUserCount }}
+                                    {{ userCount+adminCount + publicUserCount }}
                                 </h3>
                             </div>
                         </div>
@@ -128,7 +129,7 @@ const setAdmin = (user) => {
         <!-- Card -->
         <div class="flex flex-col">
             <div class="-m-1.5 overflow-x-auto">
-                <div class="p-1.5 min-w-full inline-block align-middle">
+                <div class="p-1.5 w-full inline-block align-middle">
                     <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden dark:bg-neutral-900 dark:border-neutral-700">
                         <!-- Header -->
                         <div class="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-b border-gray-200 dark:border-neutral-700">
@@ -157,6 +158,13 @@ const setAdmin = (user) => {
                                 <th scope="col" class="px-6 py-3 text-start">
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
+                                          No.
+                                        </span>
+                                    </div>
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-start">
+                                    <div class="flex items-center gap-x-2">
+                                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                           User
                                         </span>
                                     </div>
@@ -181,6 +189,14 @@ const setAdmin = (user) => {
                                 <th scope="col" class="px-6 py-3 text-start">
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
+                                          Last Login
+                                        </span>
+                                    </div>
+                                </th>
+
+                                <th scope="col" class="px-6 py-3 text-start">
+                                    <div class="flex items-center gap-x-2">
+                                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                             User Category
                                         </span>
                                     </div>
@@ -197,11 +213,18 @@ const setAdmin = (user) => {
                             </thead>
 
                             <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
-                            <tr v-for="user in users.data" key="user.id" class="bg-white hover:bg-gray-50 dark:bg-neutral-900 dark:hover:bg-neutral-800">
+                            <tr v-for="(user, index) in users.data" key="user.id" class="bg-white hover:bg-gray-50 dark:bg-neutral-900 dark:hover:bg-neutral-800">
+                                <td class="size-px whitespace-nowrap">
+                                    <a class="block p-6" href="#">
+                                        <span class="text-sm text-gray-600 dark:text-neutral-400">
+                                            {{ users.from+index }}
+                                        </span>
+                                    </a>
+                                </td>
                                 <td class="size-px whitespace-nowrap align-top">
                                     <a class="block p-6" href="#">
                                         <div class="flex items-center gap-x-3">
-                                            <UserCircle class="shrink-0 size-10" />
+                                            <img :src="user.avatar" class="size-10 shrink-0 rounded-full" alt="avatar">
                                             <div class="grow">
                                                 <span class="block text-sm font-semibold text-gray-800 dark:text-neutral-200">{{ user.name }}</span>
                                                 <span class="block text-sm text-gray-500 dark:text-neutral-500">{{ user.email }}</span>
@@ -209,7 +232,7 @@ const setAdmin = (user) => {
                                         </div>
                                     </a>
                                 </td>
-                                <td class="h-px w-72 min-w-72 align-top">
+                                <td class="h-px align-top">
                                     <a class="block p-6" href="#">
                                         <span v-if="user.is_active" class="py-1 px-3 inline-flex items-center gap-x-1 text-xs font-medium bg-teal-100 text-teal-800 rounded-full dark:bg-teal-500/10 dark:text-teal-500">
                                           <CheckCircle class="size-3" />Active
@@ -222,6 +245,11 @@ const setAdmin = (user) => {
                                 <td class="size-px whitespace-nowrap align-top">
                                     <a class="block p-6" href="#">
                                         <span class="text-sm text-gray-600 dark:text-neutral-400">{{ user.created_date }}</span>
+                                    </a>
+                                </td>
+                                <td class="size-px whitespace-nowrap align-top">
+                                    <a class="block p-6" href="#">
+                                        <span class="text-sm text-gray-600 dark:text-neutral-400">{{ user.last_login }}</span>
                                     </a>
                                 </td>
                                 <td class="size-px whitespace-nowrap align-top">

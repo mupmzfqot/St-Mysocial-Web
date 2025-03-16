@@ -4,20 +4,23 @@ import HomeLayout from "@/Layouts/HomeLayout.vue";
 import PostContent from "@/Components/PostContent.vue";
 
 const props = defineProps({
-    posts: Object,
+    requestUrl: {
+        type: String,
+        required: true,
+    },
 });
 
 </script>
 
 <template>
-    <Head title="Top Posts" />
+    <Head title="Top Posts"/>
     <HomeLayout>
 
         <div class="pb-3">
             <h1 class="font-semibold text-xl dark:text-white">Top Posts</h1>
         </div>
 
-        <PostContent :posts="posts" />
+        <PostContent :requestUrl="requestUrl"/>
     </HomeLayout>
 </template>
 

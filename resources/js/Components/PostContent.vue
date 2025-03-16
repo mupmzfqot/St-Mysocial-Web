@@ -1,170 +1,255 @@
 <script setup>
-import {Link, router} from "@inertiajs/vue3";
-import {MessageSquareText, Heart, MinusCircle, CheckCircle } from "lucide-vue-next";
-import PostMedia from "@/Components/PostMedia.vue";
-import { onMounted, onUnmounted, ref, watch } from 'vue';
+import {computed, nextTick, onMounted, onUnmounted, ref} from 'vue';
+import Post from "@/Components/Post.vue";
+import axios from 'axios';
+import {throttle} from 'lodash-es';
 
 const props = defineProps({
-    posts: {
-        type: Object,
-        required: true
-    },
     likedColor: String,
     postStatus: {
         type: Boolean,
         default: false
     },
+    requestUrl: {
+        type: String,
+        required: true
+    }
 });
 
+const posts = ref([]);
 const loading = ref(false);
-const posts = ref(props.posts.data || []);
+const error = ref(null);
+const page = ref(1);
+const hasMorePosts = ref(true);
+const retryCount = ref(0);
+const MAX_RETRIES = 3;
 
-// Watch for changes in props.posts and update local posts
-watch(() => props.posts.data, (newPosts) => {
-    if (newPosts) {
-        posts.value = newPosts;
-    }
-}, { deep: true });
+// check if we can load more posts
+const canLoadMore = computed(() => {
+    return !loading.value && hasMorePosts.value;
+});
 
-const handleScroll = () => {
-    if (loading.value) return;
-
-    const scrollPosition = window.scrollY;
-    const windowHeight = window.innerHeight;
-    const documentHeight = document.documentElement.scrollHeight;
-
-    // Load more when user scrolls to 80% of the page
-    if (scrollPosition + windowHeight >= documentHeight * 0.8) {
-        loadMore();
-    }
-};
-
-const loadMore = () => {
-    if (loading.value || !props.posts.next_page_url) return;
+const loadMore = async () => {
+    if (!canLoadMore.value) return;
 
     loading.value = true;
-    console.log('Loading more posts...'); // Debug log
+    error.value = null;
 
-    const nextPage = props.posts.current_page + 1;
-    router.get(
-        window.location.pathname,
-        { page: nextPage },
-        {
-            preserveState: true,
-            preserveScroll: true,
-            onSuccess: (page) => {
-                console.log('New posts loaded:', page.props.posts.data); // Debug log
-                loading.value = false;
-            },
-            onError: (error) => {
-                console.error('Error loading posts:', error); // Debug log
-                loading.value = false;
-            }
+    try {
+        const retryDelay = Math.pow(2, retryCount.value) * 1000;
+        const url = new URL(props.requestUrl);
+        url.searchParams.set('page', page.value + 1);
+        const response = await axios.get(url.toString(), {
+            timeout: 10000,
+            cancelToken: new axios.CancelToken(c => {
+                window.cancelPostRequest = c;
+            })
+        });
+
+        const newPosts = response.data.data;
+        const postContainer = document.querySelector('.post-container');
+        if (postContainer) {
+            postContainer.classList.add('opacity-50', 'transition-opacity', 'duration-300');
+
+            setTimeout(() => {
+                const startIndex = posts.value.length;
+                posts.value = [...posts.value, ...newPosts];
+
+                nextTick(() => {
+                    const newPostElements = document.querySelectorAll('.post-container > div');
+                    newPostElements.forEach((el, index) => {
+                        if (index >= startIndex) {
+                            el.classList.add('animate-fade-in');
+                        }
+                    });
+                });
+
+                postContainer.classList.remove('opacity-50');
+            }, 300);
+        } else {
+            posts.value = [...posts.value, ...newPosts];
         }
-    );
+
+        retryCount.value = 0;
+        page.value = response.data.current_page;
+        hasMorePosts.value = !!response.data.next_page_url;
+    } catch (err) {
+        if (axios.isCancel(err)) {
+            return;
+        }
+
+        // Retry
+        if (retryCount.value < MAX_RETRIES) {
+            retryCount.value++;
+            error.value = `Loading failed. Retrying (${retryCount.value}/${MAX_RETRIES})...`;
+            await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount.value) * 1000));
+            await loadMore();
+        } else {
+            error.value = 'Failed to load more posts. Please try again later.';
+            retryCount.value = 0;
+        }
+    } finally {
+        loading.value = false;
+    }
 };
 
-const sendLike = (id) => {
-    router.post(route('user-post.send-like'), { post_id: id }, { preserveScroll: true });
-};
+const handleScroll = throttle(() => {
+    // Multiple scroll detection methods
+    const scrollTop =
+        window.pageYOffset ||
+        document.documentElement.scrollTop ||
+        document.body.scrollTop ||
+        0;
 
-const unlike = (id) => {
-    router.post(route('user-post.unlike'), { post_id: id }, { preserveScroll: true });
-};
+    const windowHeight =
+        window.innerHeight ||
+        document.documentElement.clientHeight ||
+        document.body.clientHeight;
 
-const showPost = (id) => {
-    router.visit(route('user-post.show-post', id));
-};
+    const documentHeight =
+        Math.max(
+            document.documentElement.scrollHeight,
+            document.body.scrollHeight,
+            document.documentElement.offsetHeight,
+            document.body.offsetHeight
+        );
+
+    const nearBottom = scrollTop + windowHeight >= documentHeight - 200;
+
+    if (nearBottom && !loading.value && canLoadMore.value) {
+        loadMore().catch(err => {
+            console.error('Scroll-triggered load error:', err);
+        });
+    }
+}, 300);
 
 onMounted(() => {
+    // Multiple scroll event listeners
     window.addEventListener('scroll', handleScroll);
-    console.log('Initial posts:', props.posts); // Debug log
+    document.addEventListener('scroll', handleScroll);
+
+    // Intersection Observer as a fallback
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && canLoadMore.value && !loading.value) {
+                loadMore().catch(err => {
+                    console.error('Intersection Observer load error:', err);
+                });
+            }
+        });
+    }, {
+        root: null,
+        rootMargin: '0px',
+        threshold: 0.1
+    });
+
+    // Optional: Add an observer to the last post if possible
+    const lastPost = document.querySelector('.post-container > :last-child');
+    if (lastPost) {
+        observer.observe(lastPost);
+    }
+
+    // Initial posts load
+    reloadPosts();
 });
 
 onUnmounted(() => {
     window.removeEventListener('scroll', handleScroll);
+    document.removeEventListener('scroll', handleScroll);
 });
+
+const reloadPosts = async () => {
+    loading.value = true;
+    error.value = null;
+
+    try {
+        const url = new URL(props.requestUrl);
+        url.searchParams.set('page', page.value);
+        const response = await axios.get(url.toString(), {
+            timeout: 10000,
+        });
+        posts.value = response.data.data;
+        page.value = response.data.current_page;
+        hasMorePosts.value = !!response.data.next_page_url;
+        loading.value = false;
+    } catch (err) {
+        loading.value = false;
+    }
+};
 </script>
 
 <template>
-    <div class="flex flex-col">
-        <div v-for="post in posts" :key="post.id" class="flex flex-col bg-white border shadow-sm rounded-xl py-3 px-4 mb-2 dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-700/70">
-            <div class="cursor-pointer" @click="showPost(post.id)">
-                <Link :href="route('profile.show', post.author.id)" class="flex items-center">
-                    <div class="shrink-0">
-                        <img class="size-10 rounded-full" :src="post.author.avatar" alt="Avatar">
-                    </div>
-                    <div class="ms-4">
-                        <div class="text-base font-semibold text-gray-800 dark:text-neutral-400 hover:text-blue-700">{{ post.author.name }}</div>
-                        <div class="text-xs text-gray-500 dark:text-neutral-500">{{ post.created_at }}</div>
-                    </div>
-                    <span v-if="!post.published && postStatus" class="py-1 px-3 inline-flex items-center gap-x-1 ms-auto text-xs font-medium bg-red-100 text-red-800 rounded-full dark:bg-red-500/10 dark:text-red-500">
-                      <MinusCircle class="size-3" />Not Published
-                    </span>
-                    <span v-if="post.published && postStatus" class="py-1 px-3 inline-flex items-center gap-x-1 ms-auto text-xs font-medium bg-teal-100 text-teal-800 rounded-full dark:bg-teal-500/10 dark:text-teal-500">
-                      <CheckCircle class="size-3" />Published
-                    </span>
-                </Link>
-                <div class="mt-2 text-gray-800 dark:text-neutral-400" v-html="post.post"></div>
-
-                <!-- Image Grid -->
-                <PostMedia :medias="post.media" v-if="post.media.length > 0" />
-                <!-- End Image Grid -->
-
-                <div class="flex flex-wrap mt-2 gap-x-1" v-if="post.tags && post.tags.length > 0">
-                    <p class="text-xs text-gray-800 dark:text-gray-200">Tags: </p>
-                    <p class="text-xs text-blue-700 italic dark:text-gray-200" v-for="tag in post.tags" :key="tag.id">
-                        {{ tag.name }},
-                    </p>
+    <div class="post-container flex flex-col">
+        <!-- Progressive Content Loading with Placeholder -->
+        <template v-if="posts.length === 0 && loading">
+            <div
+                v-for="n in 5"
+                :key="n"
+                class="bg-gray-100 dark:bg-neutral-800 h-40 mb-4 rounded-xl animate-pulse"
+            >
+                <div class="p-4 space-y-4">
+                    <div class="h-4 bg-gray-200 dark:bg-neutral-700 rounded w-3/4"></div>
+                    <div class="h-4 bg-gray-200 dark:bg-neutral-700 rounded w-1/2"></div>
                 </div>
             </div>
+        </template>
 
-            <div class="inline-flex gap-x-3">
-                <Link :href="route('user-post.show-post', post.id)" class="mt-3 inline-flex items-center gap-x-1 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600" href="#">
-                    <MessageSquareText class="shrink-0 size-4 text-blue-600" />
-                    {{ post.comment_count }} Comments
-
-                </Link>
-                <div class="mt-3 inline-flex items-center gap-x-1 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600">
-                    <a href="#" v-if="post.is_liked" @click.prevent="unlike(post.id)">
-                        <Heart class="shrink-0 size-4 fill-red-500 text-transparent" v-if="post.is_liked" />
-                    </a>
-                    <a href="#" @click.prevent="sendLike(post.id)" v-else>
-                        <Heart class="shrink-0 size-4 text-gray-500" />
-                    </a>
-
-                    {{ post.like_count }} Likes
-                </div>
-            </div>
+        <!-- Actual Posts -->
+        <div
+            v-for="(post, index) in posts"
+            :key="post.id"
+            class="flex flex-col text-wrap bg-white border shadow-sm rounded-xl py-3 px-4 mb-2 dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-700/70 transition-all duration-300 ease-in-out opacity-0 transform translate-y-10 animate-fade-in"
+            :style="`animation-delay: ${index * 10}ms`"
+        >
+            <Post @reload-posts="reloadPosts" :content="post" :status="postStatus"/>
         </div>
 
-        <!-- Debug info -->
-        <div class="text-sm text-gray-500 text-center my-2">
-            Current Page: {{ props.posts.current_page }} / Total Pages: {{ props.posts.last_page }}
-            <br>
-            Posts loaded: {{ posts.length }}
+        <!-- Retry and Error Handling -->
+        <div
+            v-if="error"
+            class="text-red-500 text-center my-4 bg-red-50 p-4 rounded-xl animate-bounce"
+        >
+            <p>{{ error }}</p>
+            <button
+                v-if="retryCount >= MAX_RETRIES"
+                @click="loadMore"
+                class="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+                Retry Loading
+            </button>
         </div>
 
-        <!-- Loading indicator -->
-        <div v-if="loading" class="flex justify-center my-4">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        </div>
-
-        <!-- End message -->
-        <div v-if="!loading && !props.posts.next_page_url" class="text-center text-gray-500 my-4">
+        <!-- End of Posts Indicator -->
+        <div
+            v-if="!loading && !hasMorePosts"
+            class="text-center text-gray-500 my-4 animate-fade-in"
+        >
             No more posts to load
+        </div>
+
+        <!-- Debug Info -->
+        <div class="text-sm text-gray-500 text-center my-2">
+            Current Page: {{ page }} | Posts loaded: {{ posts.length }}
+            <span v-if="retryCount > 0" class="ml-2 text-yellow-600">
+                Retry Attempts: {{ retryCount }}
+            </span>
         </div>
     </div>
 </template>
 
 <style scoped>
-.text-gray-800 :deep(a) {
-    color: #3b82f6; /* Tailwind blue-500 */
-    text-decoration: none;
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.text-gray-800 :deep(a:hover) {
-    color: #2563eb; /* Tailwind blue-600 */
-    text-decoration: underline;
+.animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
 }
 </style>

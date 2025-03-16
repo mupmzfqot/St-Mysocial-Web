@@ -1,25 +1,33 @@
-<script setup xmlns="http://www.w3.org/1999/html">
-import {ref} from "vue";
+<script setup>
+import {computed, ref, Teleport} from "vue";
+import {Download} from "lucide-vue-next";
 
-defineProps({
+const props = defineProps({
     medias: {
         type: Array,
         required: true,
     },
-    small: Boolean
+    small: Boolean,
+    inside_modal: {
+        type: Boolean,
+        default: false,
+    }
 });
+
+let filteredMedia = props.medias.filter((media) => media.mime_type !== "application/pdf");
+let docFiles = props.medias.filter((media) => media.mime_type === "application/pdf");
 
 const isModalOpen = ref(false);
 const carouselMedia = ref([]);
 const currentIndex = ref(0);
 
-const previewMedia = (media) => {
+const previewMedia = (media, initialIndex = 0) => {
     if (Array.isArray(media)) {
         carouselMedia.value = media;
     } else {
         carouselMedia.value = [media];
     }
-    currentIndex.value = 0;
+    currentIndex.value = initialIndex;
     isModalOpen.value = true;
 }
 
@@ -55,63 +63,144 @@ const handleKeydown = (e) => {
         closeModal();
     }
 }
+
+const usedIndex = ref(0);
+const filteredImages = computed(() => {
+    if(isVideo(filteredMedia[0])) {
+        usedIndex.value = 1;
+        filteredMedia.push(filteredMedia.shift())
+    }
+    usedIndex.value = 0;
+    return filteredMedia;
+
+});
+
+const otherMedia = computed(() => {
+    return filteredMedia.filter((media, index) => index !== usedIndex.value);
+});
 </script>
 
 <template>
-    <div :class="['rounded-lg overflow-hidden py-2', medias.length === 1 ? 'gallery full' : 'gallery grid']">
-        <!-- Jika hanya satu gambar -->
-        <template v-if="medias.length === 1" >
-            <div v-if="isVideo(medias[0])" class="video-container">
+    <div :class="['rounded-lg overflow-hidden py-2', filteredMedia.length === 1 ? 'gallery full' : 'gallery grid', small ? 'mb-2 gap-x-2 inline-gallery' : '']">
+        <template v-if="filteredMedia.length === 1" >
+            <div v-if="isVideo(filteredMedia[0])" class="video-container">
                 <video
                     controls
-                    :src="medias[0].original_url"
-                    class="w-full h-auto"
+                    :src="filteredMedia[0].original_url"
+                    class="w-full h-80"
+                    @click.stop="previewMedia(filteredMedia[0])"
                 ></video>
             </div>
 
-            <img v-else
-                :src="medias[0].original_url"
-                :alt="medias[0].name"
-                :class="['hover:opacity-90 cursor-pointer', small === true ? 'h-32' : 'w-full h-80']"
-                @click.stop="previewMedia(medias[0])"
-            />
+            <div v-else>
+                <img v-if="inside_modal === false"
+                     :src="filteredMedia[0].original_url"
+                     :alt="filteredMedia[0].name"
+                     :class="['hover:opacity-90 cursor-pointer object-cover', small === true ? 'h-32' : 'w-full']"
+                     @click.stop="previewMedia(filteredMedia[0])"
+                />
+
+                <img v-else-if="inside_modal === true"
+                     :src="filteredMedia[0].original_url"
+                     :alt="filteredMedia[0].name"
+                     :class="['hover:opacity-90 cursor-pointer object-cover', small === true ? 'h-32' : 'w-full']"
+                     @click.stop="previewMedia(filteredMedia[0])"
+                />
+            </div>
+
+
         </template>
 
-        <!-- Jika lebih dari satu gambar -->
-        <template v-else>
-            <div
-                v-for="(media, index) in medias.slice(0, 4)"
-                :key="media.id"
-                class="relative"
-            >
-                <div v-if="isVideo(media)" class="video-container">
-                    <video
-                        controls
-                        :src="media.preview_url"
-                        class="w-full h-full object-cover"
-                    ></video>
+        <template v-else-if="filteredMedia.length === 3" class="grid grid-cols-3 gap-y-0.5">
+            <div class="col-span-1">
+                <div v-for="(media, index) in [filteredImages[0]]" :key="index">
+                    <img
+                        :src="media.original_url"
+                        alt="Media"
+                        class="w-full h-80 object-cover"
+                        @click.stop="previewMedia(filteredMedia, index)"
+                    />
                 </div>
-                <img v-else
-                    :src="media.preview_url"
-                    :alt="media.name"
-                     :class="['hover:opacity-90 cursor-pointer', small === true ? 'h-32' : 'w-full h-40']"
-                    @click.stop="previewMedia(medias)"
-                />
-                <!-- Overlay untuk gambar lebih dari 4 -->
+            </div>
+
+            <div class="col-span-1 grid grid-rows-2 gap-y-0.5">
                 <div
-                    v-if="index === 3 && medias.length > 4"
-                    class="absolute inset-0 more-overlay hover:opacity-70 cursor-pointer"
-                    @click.stop="previewMedia(medias)"
+                    v-for="(media, index) in otherMedia"
+                    :key="index"
+                    class="relative"
                 >
-                    +{{ medias.length - 4 }}
+                    <div v-if="isVideo(media)" class="h-40">
+                        <video
+                            controls
+                            :src="media.original_url"
+                            class="w-full h-40 object-cover pb-0.5"
+                            @click.stop="previewMedia(filteredMedia, index+1)"
+                        ></video>
+                    </div>
+                    <img v-else
+                         :src="media.original_url"
+                         :alt="media.name"
+                         :class="['hover:opacity-90 cursor-pointer object-cover', small === true ? 'h-32' : 'w-full h-40']"
+                         @click.stop="previewMedia(filteredMedia, index+1)"
+                    />
                 </div>
             </div>
         </template>
+
+        <template v-else>
+            <div
+                v-for="(media, index) in filteredMedia.slice(0, 4)"
+                :key="media.id"
+                class="relative"
+            >
+                <div v-if="isVideo(media)" class="">
+                    <video
+                        controls
+                        :src="media.original_url"
+                        class="w-full h-40 object-cover"
+                        @click.stop="previewMedia(filteredMedia, index)"
+                    ></video>
+                </div>
+                <img v-else
+                    :src="media.original_url"
+                    :alt="media.name"
+                     :class="['hover:opacity-90 cursor-pointer object-cover', small === true ? 'h-32 w-24' : 'w-full h-40']"
+                    @click.stop="previewMedia(filteredMedia, index)"
+                />
+                <!-- Overlay untuk gambar lebih dari 4 -->
+                <div
+                    v-if="index === 3 && filteredMedia.length > 4"
+                    class="absolute inset-0 more-overlay hover:opacity-70 cursor-pointer bg-center bg-cover"
+                    @click.stop="previewMedia(filteredMedia)"
+                >
+                    +{{ filteredMedia.length - 4 }}
+                </div>
+            </div>
+        </template>
+
+
+    </div>
+    <div v-if="docFiles.length > 0" class="-mt-2 p-2 border bg-white border-gray-200 rounded-md" v-for="(file, index) in docFiles"
+         :key="index">
+        <div class="flex items-center gap-x-2">
+            <img src="../../images/pdf-icon.svg" class="shrink-0 size-6" alt="document" />
+            <a :href="file.original_url" @click.stop target="_blank" title="preview" class="text-sm flex-wrap">
+                <span>{{ file.file_name }}</span>
+            </a>
+            <div class="ms-auto">
+                <a :href="file.original_url" @click.stop download type="button" title="download" class="button flex gap-x-1 text-sm hover:text-blue-600">
+                    <Download class="shrink-0 size-4"/>
+                </a>
+            </div>
+
+        </div>
     </div>
 
-    <div
+
+    <Teleport to="body">
+        <div
         v-if="isModalOpen"
-        class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+        class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center" style="position: absolute; z-index: 9999"
         @click.stop="(e) => {
             if (e.target === e.currentTarget) {
                 closeModal();
@@ -180,6 +269,9 @@ const handleKeydown = (e) => {
             </div>
         </div>
     </div>
+    </Teleport>
+
+
 </template>
 
 <style scoped>
@@ -187,11 +279,21 @@ const handleKeydown = (e) => {
     display: grid;
     gap: 4px;
 }
+
+.inline-gallery {
+    display: flex !important;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
 .gallery.full {
     grid-template-columns: 1fr;
 }
 .gallery.grid {
     grid-template-columns: repeat(2, 1fr);
+}
+.gallery.grid-auto {
+    grid-template-columns: repeat(4, 1fr);
 }
 .gallery .more-overlay {
     display: flex;
@@ -210,8 +312,7 @@ const handleKeydown = (e) => {
 
 .video-container video {
     width: 100%;
-    height: auto;
-    border-radius: 8px;
+    height: 100%;
 }
 
 .hs-overlay {

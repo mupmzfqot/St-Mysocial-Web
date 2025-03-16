@@ -1,7 +1,7 @@
 <script setup>
 import {Head, Link, router} from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import {CheckCircle, ChevronRight, MinusCircle, Search, UserCircle} from "lucide-vue-next";
+import {ChevronRight, Search} from "lucide-vue-next";
 import Breadcrumbs from "@/Components/Breadcrumbs.vue";
 import {ref, watch} from "vue";
 import {debounce} from "lodash";
@@ -16,9 +16,19 @@ const search = ref(props.searchTerm);
 
 watch(
     search, debounce(
-        (q) => router.get(route('post.index'), { search: q }, { preserveState: true }), 500
+        (q) => router.get(route('post.index'), { search: q }, {
+            preserveState: true,
+            preserveScroll: true,
+        }), 500
     )
 );
+
+const styledTag = (value) => {
+    return value.replace(
+        /<a /g,
+        '<a class="text-blue-500 underline hover:text-red-500 hover:no-underline" '
+    );
+}
 </script>
 
 <template>
@@ -26,14 +36,14 @@ watch(
     <AuthenticatedLayout>
         <Breadcrumbs>
             <li class="inline-flex items-center">
-                <a class="flex items-center text-sm text-gray-500 hover:text-blue-600 focus:outline-none focus:text-blue-600 dark:text-neutral-500 dark:hover:text-blue-500 dark:focus:text-blue-500" href="#">
+                <Link :href="route('dashboard')" class="flex items-center text-sm text-gray-500 hover:text-blue-600 focus:outline-none focus:text-blue-600 dark:text-neutral-500 dark:hover:text-blue-500 dark:focus:text-blue-500" href="#">
                     Home
-                </a>
+                </Link>
                 <ChevronRight class="shrink-0 mx-2 size-4 text-gray-400 dark:text-neutral-600" />
             </li>
 
             <li class="inline-flex items-center text-sm font-semibold text-gray-800 truncate" aria-current="page">
-                Posts
+                Admin Post
             </li>
         </Breadcrumbs>
 
@@ -73,12 +83,19 @@ watch(
                                 <th scope="col" class="px-6 py-3 text-start">
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
+                                          No
+                                        </span>
+                                    </div>
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-start">
+                                    <div class="flex items-center gap-x-2">
+                                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                           Posted By
                                         </span>
                                     </div>
                                 </th>
 
-                                <th scope="col" class="px-6 py-3 text-start">
+                                <th scope="col" class="px-6 py-3 text-start w-2/5">
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                           Posted Item
@@ -113,35 +130,43 @@ watch(
                             </thead>
 
                             <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
-                            <tr v-for="post in posts.data" key="user.id" class="bg-white hover:bg-gray-50 dark:bg-neutral-900 dark:hover:bg-neutral-800">
+                            <tr v-for="(post, index) in posts.data" key="user.id" class="bg-white hover:bg-gray-50 dark:bg-neutral-900 dark:hover:bg-neutral-800">
+                                <td class="size-px whitespace-nowrap">
+                                    <a class="block p-6" href="#">
+                                        <span class="text-sm text-gray-600 dark:text-neutral-400">
+                                            {{ posts.from+index }}
+                                        </span>
+                                    </a>
+                                </td>
                                 <td class="size-px whitespace-nowrap align-top">
                                     <a class="block p-6" href="#">
                                         <span class="text-sm text-gray-600 dark:text-neutral-400">{{ post.author.name }}</span>
                                     </a>
                                 </td>
-                                <td class="size-px whitespace-nowrap align-top">
-                                    <a class="block p-6" href="#">
-                                        <span class="text-sm text-gray-600 dark:text-neutral-400" v-html="post.post"></span>
-                                    </a>
+                                <td class="size-px whitespace-nowrap py-2 w-96">
+                                    <span class="text-sm text-gray-600 dark:text-neutral-400 text-wrap" v-html="styledTag(post.post)"></span>
                                 </td>
-                                <td class="size-px whitespace-nowrap align-top">
-                                    <div class="p-6">
-                                        <div v-if="post.media && post.media.length > 0" class="flex -space-x-2">
-                                            <template v-for="(media, index) in post.media.slice(0, 3)" :key="media.id">
-                                                <img
-                                                    :src="media.preview_url"
-                                                    :alt="media.name"
-                                                    class="inline-block size-[46px]"
-                                                />
-                                            </template>
-                                            <div v-if="post.media.length > 3" class="hs-dropdown [--placement:top-left] relative inline-flex">
-                                                <button class="inline-flex items-center justify-center size-[46px] rounded-full bg-gray-100 border-2 border-white font-medium text-gray-700 shadow-sm align-middle hover:bg-gray-200 focus:outline-none focus:bg-gray-300 text-sm dark:bg-neutral-700 dark:text-white dark:hover:bg-neutral-600 dark:focus:bg-neutral-600 dark:border-neutral-800">
-                                                    <span class="font-medium leading-none">+{{ post.media.length - 3 }}</span>
-                                                </button>
-                                            </div>
+                                <td class="size-px whitespace-nowrap">
+                                    <div v-if="post.media && post.media.length > 0" class="flex -space-x-2">
+                                        <template v-for="(media, index) in post.media.filter(m => m.mime_type.startsWith('image/') || m.mime_type === 'application/pdf').slice(0, 3)" :key="media.id">
+                                            <img v-if="media.mime_type === 'application/pdf'"
+                                                src="../../../images/pdf-icon.svg"
+                                                :alt="media.name"
+                                                class="inline-block size-[46px]"
+                                            />
+                                            <img v-else
+                                                :src="media.original_url"
+                                                :alt="media.name"
+                                                class="inline-block size-[46px]"
+                                            />
+                                        </template>
+                                        <div v-if="post.media.filter(m => m.mime_type.startsWith('image/') || m.mime_type === 'appication/pdf').length > 3" class="hs-dropdown [--placement:top-left] relative inline-flex">
+                                            <button class="inline-flex items-center justify-center size-[46px] rounded-full bg-gray-100 border-2 border-white font-medium text-gray-700 shadow-sm align-middle hover:bg-gray-200 focus:outline-none focus:bg-gray-300 text-sm dark:bg-neutral-700 dark:text-white dark:hover:bg-neutral-600 dark:focus:bg-neutral-600 dark:border-neutral-800">
+                                                <span class="font-medium leading-none">+{{ post.media.filter(m => m.mime_type.startsWith('image/') || m.mime_type === 'application/pdf').length - 3 }}</span>
+                                            </button>
                                         </div>
-                                        <div v-else class="text-sm text-gray-500">No media</div>
                                     </div>
+                                    <div v-else class="text-sm text-gray-500">No media</div>
                                 </td>
                                 <td class="size-px whitespace-nowrap align-top">
                                     <a class="block p-6" href="#">
@@ -157,10 +182,15 @@ watch(
                                             </button>
                                             <div class="hs-dropdown-menu transition-[opacity,margin] duration hs-dropdown-open:opacity-100 opacity-0 hidden divide-y divide-gray-200 min-w-40 z-20 bg-white shadow-2xl rounded-lg p-2 mt-2 dark:divide-neutral-700 dark:bg-neutral-800 dark:border dark:border-neutral-700" role="menu" aria-orientation="vertical" aria-labelledby="hs-table-dropdown-1">
                                                 <div class="py-2 first:pt-0 last:pb-0">
-                                                    <a href="#" class="flex items-center gap-x-3 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700 dark:focus:text-neutral-300" aria-haspopup="dialog" aria-expanded="false" aria-controls="hs-scale-animation-modal" data-hs-overlay="#confirm-dialog">
+                                                    <Link :href="route('post.edit', post.id)" class="flex items-center gap-x-3 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700 dark:focus:text-neutral-300" href="#">
                                                         Edit
-                                                    </a>
+                                                    </Link>
                                                 </div>
+                                               <div class="py-2 first:pt-0 last:pb-0">
+                                                   <Link :href="route('post.show', post.id)" class="flex items-center gap-x-3 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700 dark:focus:text-neutral-300" href="#" >
+                                                       View
+                                                   </Link>
+                                               </div>
                                                 <div class="py-2 first:pt-0 last:pb-0">
                                                     <a href="#" class="flex items-center gap-x-3 py-2 px-3 rounded-lg text-sm text-red-600 hover:bg-gray-100 focus:ring-2 focus:ring-blue-500 dark:text-red-500 dark:hover:bg-neutral-700 dark:hover:text-neutral-300" aria-haspopup="dialog" aria-expanded="false" aria-controls="hs-scale-animation-modal" data-hs-overlay="#confirm-dialog">
                                                         Remove

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use DateTimeInterface;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -53,6 +54,9 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'created_at' => 'datetime:d F Y H:i A',
+            'updated_at' => 'datetime:d F Y H:i A',
+            'last_login' => 'datetime:d F Y H:i A'
         ];
     }
 
@@ -66,17 +70,20 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
         return $query->where('is_active', true);
     }
 
+    public function scopeExceptId($query, $id)
+    {
+        return $query->whereNot('id', $id);
+    }
+
     public function getAvatarAttribute(): ?string
     {
         return $this->getMedia('avatar')
-            ->where('is_verified', true)
-            ->first()?->original_url ?? asset('default-avatar.png');
+            ->first()?->original_url ?? asset('default-avatar.webp');
     }
 
     public function getCoverImageAttribute(): ?string
     {
         return $this->getMedia('cover_image')
-            ->where('is_verified', true)
             ->first()?->original_url ?? asset('background.png');
     }
 
@@ -102,9 +109,19 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
         return $this->hasMany(PostLiked::class, 'user_id', 'id');
     }
 
+    public function tags(): HasMany
+    {
+        return $this->hasMany(PostTag::class, 'user_id', 'id');
+    }
+
     public function comments(): HasMany
     {
         return $this->hasMany(Comment::class, 'user_id', 'id');
+    }
+
+    protected function serializeDate(DateTimeInterface $date)
+    {
+        return $date->timezone(config('app.timezone'));
     }
 
 }

@@ -23,24 +23,23 @@ class ProfileController extends Controller
     public function index($id = null)
     {
         $user = User::query()->find($id);
-        return Inertia::render('Profile/Index', compact('user'));
+        $totalPost = Post::query()->where('user_id', $id)->where('published', 1)->count();
+        $allPosts = Post::query()->where('user_id', $id)->count();
+        $totalLikes = $user->likes()->count();
+        $totalComments = $user->comments()->count();
+        return Inertia::render('Profile/Index', compact('user', 'totalPost', 'totalLikes', 'totalComments', 'allPosts'));
     }
 
     public function show($id = null)
     {
         $user = User::query()->find($id);
-        $totalPosts = $user->posts()->count();
+        $totalPosts = $user->posts()->where('published', 1)->count();
         $totalLikes = $user->likes()->count();
         $totalComments = $user->comments()->count();
-        $posts = Post::query()
-            ->with('author', 'media', 'comments.user', 'tags')
-            ->orderBy('created_at', 'desc')
-            ->published()
-            ->where('user_id', $id)
-            ->paginate(30);
+        $requestUrl = route('user-post.tag-post', ['user_id' => $id]);
 
         return Inertia::render('Homepage/UserProfile',
-            compact('user', 'totalPosts', 'totalLikes', 'totalComments', 'posts')
+            compact('user', 'totalPosts', 'totalLikes', 'totalComments', 'requestUrl')
         );
     }
 

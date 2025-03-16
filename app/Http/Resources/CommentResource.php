@@ -22,7 +22,7 @@ class CommentResource extends JsonResource
                 'id'            => $this->user->id,
                 'name'          => $this->user->name,
                 'email'         => $this->user->email,
-                'profile_img'   => null
+                'profile_img'   => $this->user->avatar
             ],
             'media'         => $this->getMedia('comment_media')->map(fn ($item) => [
                 'id'            => $item->id,
@@ -33,6 +33,7 @@ class CommentResource extends JsonResource
             ]),
             'created_at'    => $this->created_at,
             'liked'         => (bool) $this->is_liked,
+            'like_count'    => (int) $this->like_count
         ];
     }
 }
