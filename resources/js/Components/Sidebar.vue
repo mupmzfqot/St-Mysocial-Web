@@ -17,7 +17,7 @@ watch(() => page.props.pendingApprovals, (newApprovals) => {}, { immediate: true
 
 <template>
     <!-- Sidebar -->
-    <div id="hs-application-sidebar" class="hs-overlay  [--auto-close:lg] bg-gradient-blue-reverse
+    <div id="hs-application-sidebar" class="hs-overlay  [--auto-close:lg] bg-gradient-blue
       hs-overlay-open:translate-x-0
       -translate-x-full transition-all duration-300 transform
       w-[260px] h-full
