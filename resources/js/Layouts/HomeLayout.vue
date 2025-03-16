@@ -1,7 +1,7 @@
 <script setup>
 import {onMounted, ref, watch, onUnmounted, computed} from 'vue';
 import {Link, router, usePage} from "@inertiajs/vue3";
-import {CircleCheckBig, Heart, Images, Video, LogOut, MessageSquareMore, Newspaper, Star, UserIcon, LayoutGrid, SquareArrowUpRight} from "lucide-vue-next";
+import {CircleCheckBig, Heart, Images, Video, LogOut, MessageSquareMore, Newspaper, Star, UserIcon, LayoutGrid} from "lucide-vue-next";
 import {debounce} from "lodash";
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
@@ -52,7 +52,7 @@ onMounted(() => {
 
     pollInterval = setInterval(fetchUnreadMessageCount, 30000);
 
-    window.Echo.private(`App.Models.User.${usePage().props.auth.user?.id}`)
+    window.Echo.private(`conversation.${usePage().props.auth.user?.id}`)
         .notification((notification) => {
             if (notification.type === 'NewMessage') {
                 fetchUnreadMessageCount();
@@ -258,20 +258,25 @@ function isActiveNav(path) {
                     <slot />
                 </div>
                 <div class="col-span-3">
-                    <div class="max-w-xs flex flex-col bg-white shadow-sm rounded-lg" v-if="isST">
-                        <div type="button" class="hs-collapse-toggle bg-gray-100 border-b rounded-t-xl py-3 px-3 dark:bg-neutral-900 dark:border-neutral-700"
-                             id="hs-basic-collapse" aria-expanded="true" aria-controls="hs-basic-collapse-heading" data-hs-collapse="#hs-basic-collapse-heading">
+                    <div class="max-w-xs flex flex-col bg-white shadow-sm rounded-lg hs-accordion active" v-if="isST">
+                        <div type="button" id="hs-basic" class="hs-accordion-toggle bg-gray-100 border-b hover:cursor-pointer rounded-t-xl py-3 px-3 dark:bg-neutral-900 dark:border-neutral-700"
+                            aria-expanded="true" aria-controls="hs-basic">
                             <div class="flex flex-row justify-between items-center">
                                 <h1 class="font-bold text-lg">
                                     <span class="text-gray-400">#</span>
                                     <span class="text-indigo-800">Team</span>
                                     <span class="text-red-700">ST</span>
                                 </h1>
-                                <SquareArrowUpRight class="hs-collapse-open:rotate-180 shrink-0 size-5" />
+                                <svg class="hs-accordion-active:hidden block size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="m6 9 6 6 6-6"></path>
+                                </svg>
+                                <svg class="hs-accordion-active:block hidden size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="m18 15-6-6-6 6"></path>
+                                </svg>
                             </div>
                         </div>
-                        <div id="hs-basic-collapse-heading" aria-labelledby="hs-basic-collapse" class="
-                            hs-collapse w-full overflow-hidden transition-[height] duration-300
+                        <div id="hs-basic" aria-labelledby="hs-basic" class="hs-accordion-content
+                            w-full overflow-hidden transition-[height] duration-300
                             p-1 gap-y-3 max-h-[70vh] overflow-y-auto
                             [&::-webkit-scrollbar]:w-1
                             [&::-webkit-scrollbar-track]:rounded-full

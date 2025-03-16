@@ -10,8 +10,9 @@ import Pagination from "@/Components/Pagination.vue";
 
 const props = defineProps({
     users: Object,
-    userCount: '',
-    publicUserCount: '',
+    userCount: Number,
+    adminCount: Number,
+    publicUserCount: Number,
     searchTerm: String
 });
 
@@ -69,7 +70,7 @@ const setAdmin = (user) => {
                             </p>
                             <div class="mt-1 flex items-center gap-x-2">
                                 <h3 class="text-xl sm:text-2xl font-medium text-gray-800 dark:text-neutral-200">
-                                    {{ userCount + publicUserCount }}
+                                    {{ userCount+adminCount + publicUserCount }}
                                 </h3>
                             </div>
                         </div>
