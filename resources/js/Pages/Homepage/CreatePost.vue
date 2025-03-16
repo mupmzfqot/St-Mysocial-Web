@@ -327,7 +327,8 @@ const addBulletList = () => {
                                     placeholder: 'What\'s on your mind?',
                                     modules: {
                                         toolbar: false
-                                    }
+                                    },
+                                    normalize: true
                                 }"
                             :style="{
                                     height: '150px',
