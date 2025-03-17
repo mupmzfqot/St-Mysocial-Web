@@ -1,13 +1,11 @@
 <script setup>
-import {onMounted, ref, watch, onUnmounted, computed} from 'vue';
+import {onMounted, ref, watch} from 'vue';
 import {Link, router, usePage} from "@inertiajs/vue3";
-import {CircleCheckBig, Heart, Images, Video, LogOut, MessageSquareMore, Newspaper, Star, UserIcon, LayoutGrid} from "lucide-vue-next";
+import {CircleCheckBig, Heart, Images, Video, LogOut, MessageSquareMore, Star, UserIcon, LayoutGrid} from "lucide-vue-next";
 import {debounce} from "lodash";
-import Echo from 'laravel-echo';
-import Pusher from 'pusher-js';
-import { useUnreadMessages } from '@/Composables/useUnreadMessages';
-import { TeamStore } from '@/Composables/useTeamStore';
-import {toast, ToastifyContainer} from "vue3-toastify";
+import {useUnreadMessages} from '@/Composables/useUnreadMessages';
+import {TeamStore} from '@/Composables/useTeamStore';
+import {ToastifyContainer} from "vue3-toastify";
 import 'vue3-toastify/dist/index.css';
 
 const { auth: { roles: userRoles } } = usePage().props;
@@ -32,42 +30,10 @@ const fetchTeams = async () => {
     teams.value = await TeamStore.fetchTeams();
 }
 
-// Poll for unread messages every 30 seconds
-let pollInterval;
-
-if (!window.Echo) {
-    window.Pusher = Pusher;
-    window.Echo = new Echo({
-        broadcaster: 'pusher',
-        key: import.meta.env.VITE_PUSHER_APP_KEY,
-        cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
-        forceTLS: true
-    });
-}
-
 onMounted(() => {
     window.HSStaticMethods.autoInit();
     fetchTeams();
     fetchUnreadMessageCount();
-
-    pollInterval = setInterval(fetchUnreadMessageCount, 30000);
-
-    window.Echo.private(`conversation.${usePage().props.auth.user?.id}`)
-        .notification((notification) => {
-            if (notification.type === 'NewMessage') {
-                fetchUnreadMessageCount();
-            }
-        });
-})
-
-onUnmounted(() => {
-    // Clean up polling interval and Echo listeners
-    if (pollInterval) {
-        clearInterval(pollInterval);
-    }
-    if (window.Echo) {
-        window.Echo.leave(`App.Models.User.${usePage().props.auth.user?.id}`);
-    }
 })
 
 const props = defineProps({
