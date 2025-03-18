@@ -34,6 +34,15 @@ onMounted(() => {
     window.HSStaticMethods.autoInit();
     fetchTeams();
     fetchUnreadMessageCount();
+
+    Echo.private(`message.notification`)
+        .listen('NewMessage', (event) => {
+            console.log(event)
+            fetchUnreadMessageCount();
+        })
+        .error((error) => {
+            console.log(error)
+        })
 })
 
 const props = defineProps({
@@ -52,6 +61,8 @@ const currentPath = ref(usePage().url)
 function isActiveNav(path) {
     return currentPath.value === path
 }
+
+
 
 </script>
 
