@@ -53,6 +53,7 @@ const submit = () => {
                     unlockAt: errorDetails.unlock_at ? new Date(errorDetails.unlock_at) : null
                 };
             }
+            form.reset('captcha');
         }
     });
 };
@@ -88,7 +89,7 @@ const formattedUnlockTime = computed(() => {
             </p>
         </div>
 
-        <div class="flex flex-row bg-white border-gray-200 shadow-2xs rounded-xl lg:h-[24rem] lg:w-[38rem] sm:min-h-[21vh] sm:w-[550px] dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400">
+        <div class="flex flex-row bg-white border-gray-200 shadow-2xs rounded-xl lg:min-h-[24rem] lg:w-[38rem] sm:min-h-[23vh] sm:w-[550px] dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400">
             <div class="shrink-0 relative lg:w-[19rem] sm:w-[250px] rounded-t-xl overflow-hidden pt-[40%] sm:rounded-s-xl sm:max-w-60 md:rounded-se-none md:max-w-xs">
                 <img class="size-full absolute top-0 start-0 object-cover" src="../../../images/background.png" alt="Card Image">
             </div>
@@ -109,7 +110,7 @@ const formattedUnlockTime = computed(() => {
                                     <h3 id="hs-with-description-label" class="text-sm font-semibold">
                                         Login Failed!
                                     </h3>
-                                    <div class="mt-1 text-sm text-gray-800">
+                                    <div class="mt-1 text-xs text-gray-800">
                                         {{ form.errors.email }}
                                     </div>
                                 </div>
