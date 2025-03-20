@@ -88,7 +88,7 @@ const formattedUnlockTime = computed(() => {
             </p>
         </div>
 
-        <div class="flex flex-row bg-white border-gray-200 shadow-2xs rounded-xl lg:h-[24rem] lg:w-[38rem] sm:min-h-[20vh] sm:w-[500px] dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400">
+        <div class="flex flex-row bg-white border-gray-200 shadow-2xs rounded-xl lg:h-[24rem] lg:w-[38rem] sm:min-h-[21vh] sm:w-[550px] dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400">
             <div class="shrink-0 relative lg:w-[19rem] sm:w-[250px] rounded-t-xl overflow-hidden pt-[40%] sm:rounded-s-xl sm:max-w-60 md:rounded-se-none md:max-w-xs">
                 <img class="size-full absolute top-0 start-0 object-cover" src="../../../images/background.png" alt="Card Image">
             </div>
@@ -161,7 +161,7 @@ const formattedUnlockTime = computed(() => {
                             </label>
                         </div>
 
-                        <div class="flex items-center justify-between lg:mt-4 sm:mt-3">
+                        <div class="flex items-center justify-between lg:mt-4 sm:mt-3 pb-2">
                             <PrimaryButton :class="{ 'opacity-25': form.processing }, 'text-xs'" :disabled="form.processing">
                                 Log in
                             </PrimaryButton>
@@ -177,103 +177,5 @@ const formattedUnlockTime = computed(() => {
                 </div>
             </div>
         </div>
-
-<!--        <div class="bg-white rounded-xl shadow-sm sm:flex dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-700/70">-->
-<!--            <div class="shrink-0 relative w-full rounded-t-xl overflow-hidden pt-[40%] sm:rounded-s-xl sm:max-w-60 md:rounded-se-none md:max-w-xs">-->
-<!--                <img class="size-full absolute top-0 start-0 object-cover" src="../../../images/background.png" alt="Card Image">-->
-<!--            </div>-->
-<!--            <div class="flex flex-wrap">-->
-<!--                <div class="p-4 flex flex-col h-full sm:p-7">-->
-<!--                    <h3 class="text-2xl text-center font-bold text-gray-800 dark:text-white">-->
-<!--                        Login-->
-<!--                    </h3>-->
-<!--                    <div :class="[form.errors.email ? 'mt-0': 'mt-4']">-->
-<!--                        <div class="py-3" v-if="form.errors.email">-->
-<!--                            <div class="bg-yellow-50 border border-red-400 text-sm text-red-800 rounded-lg p-4 dark:bg-yellow-800/10 dark:border-yellow-900 dark:text-yellow-500" role="alert" tabindex="-1" aria-labelledby="hs-with-description-label">-->
-<!--                                <div class="flex">-->
-<!--                                    <div class="shrink-0">-->
-<!--                                        <svg class="shrink-0 size-4 mt-0.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">-->
-<!--                                            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>-->
-<!--                                            <path d="M12 9v4"></path>-->
-<!--                                            <path d="M12 17h.01"></path>-->
-<!--                                        </svg>-->
-<!--                                    </div>-->
-<!--                                    <div class="ms-4">-->
-<!--                                        <h3 id="hs-with-description-label" class="text-sm font-semibold">-->
-<!--                                            Login Failed!-->
-<!--                                        </h3>-->
-<!--                                        <div class="mt-1 text-sm text-gray-800">-->
-<!--                                            {{ form.errors.email }}-->
-<!--                                        </div>-->
-<!--                                    </div>-->
-<!--                                </div>-->
-<!--                            </div>-->
-<!--                        </div>-->
-<!--                        <form @submit.prevent="submit">-->
-<!--                            <div>-->
-<!--                                <InputLabel for="email" value="Email" />-->
-<!--                                <TextInput-->
-<!--                                    id="email"-->
-<!--                                    type="email"-->
-<!--                                    class="mt-1 block w-full"-->
-<!--                                    v-model="form.email"-->
-<!--                                    required-->
-<!--                                    autofocus-->
-<!--                                    autocomplete="username"-->
-<!--                                />-->
-<!--                            </div>-->
-
-<!--                            <div class="mt-4">-->
-<!--                                <InputLabel for="password" value="Password" />-->
-<!--                                <TogglePassword v-model="form.password" />-->
-<!--                            </div>-->
-
-<!--                            <div class="block mt-4">-->
-<!--                                <img :src="captchaSrc" alt="" class="h-16">-->
-<!--                            </div>-->
-
-<!--                            <div class="block mt-4">-->
-<!--                                <TextInput-->
-<!--                                    id="captcha"-->
-<!--                                    type="text"-->
-<!--                                    class="mt-1 block w-full"-->
-<!--                                    v-model="form.captcha"-->
-<!--                                    placeholder="Captcha"-->
-<!--                                    required-->
-<!--                                    autofocus-->
-<!--                                />-->
-<!--                                <div class="text-red-600 text-xs mt-2" v-if="form.errors.captcha">-->
-<!--                                    {{ form.errors.captcha }}-->
-<!--                                </div>-->
-<!--                            </div>-->
-
-<!--                            <div class="block mt-4">-->
-<!--                                <label class="flex items-center">-->
-<!--                                    <Checkbox name="remember" v-model:checked="form.remember" />-->
-<!--                                    <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">Remember me</span>-->
-<!--                                </label>-->
-<!--                            </div>-->
-
-<!--                            <div class="flex items-center justify-between mt-4">-->
-<!--                                <PrimaryButton class="" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">-->
-<!--                                    Log in-->
-<!--                                </PrimaryButton>-->
-<!--                                <Link-->
-<!--                                    v-if="canResetPassword"-->
-<!--                                    :href="route('password.request')"-->
-<!--                                    class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"-->
-<!--                                >-->
-<!--                                    Forgot your password?-->
-<!--                                </Link>-->
-<!--                            </div>-->
-<!--                        </form>-->
-<!--                    </div>-->
-<!--                    <p class="mt-1 text-white">-->
-<!--                        Some quick example text to build on the card title and make up the bulk of the card's content.-->
-<!--                    </p>-->
-
-<!--                </div>-->
-<!--            </div>-->
-<!--        </div>-->
     </GuestLayout>
 </template>
