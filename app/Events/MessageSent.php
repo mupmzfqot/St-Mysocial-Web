@@ -40,6 +40,7 @@ class MessageSent implements ShouldBroadcastNow
             'content'           => $this->message->content,
             'sender_id'         => $this->message->sender_id,
             'sender_name'       => $this->message->sender->name,
+            'media'             => array_values($this->message->getMedia('message_media')->toArray())
         ];
     }
 }
