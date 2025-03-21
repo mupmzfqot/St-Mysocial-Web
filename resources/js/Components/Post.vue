@@ -200,7 +200,7 @@ const handleLinkClick = (event) => {
 </script>
 
 <template>
-    <div class="cursor-pointer" @click="showPost(content.id)" v-if="content.repost">
+    <div class="cursor-pointer" v-if="content.repost">
         <div class="flex items-center">
             <Link :href="route('profile.show', content.author.id)" class="shrink-0">
                 <img class="size-10 rounded-full" :src="content.author.avatar" alt="Avatar">
@@ -254,7 +254,7 @@ const handleLinkClick = (event) => {
     </div>
 
     <!-- if repost empty -->
-    <div class="cursor-pointer" @click="showPost(content.id)" v-else>
+    <div class="cursor-pointer" v-else>
         <div class="flex items-center">
             <Link :href="route('profile.show', content.author.id)" class="shrink-0">
                 <img class="size-10 rounded-full" :src="content.author.avatar" alt="Avatar">
