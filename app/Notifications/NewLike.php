@@ -5,8 +5,6 @@ namespace App\Notifications;
 use App\Models\PostLiked;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class NewLike extends Notification
@@ -41,7 +39,7 @@ class NewLike extends Notification
         return [
             'id'        => $this->post->post_id,
             'name'      => 'Post Liked',
-            'message'   => "{$this->user->name} like your post.",
+            'message'   => "{$this->user->name} likes your post.",
             'url'       => route('user-post.show-post', $this->post->post_id),
         ];
     }
