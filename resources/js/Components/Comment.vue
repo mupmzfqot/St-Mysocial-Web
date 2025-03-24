@@ -250,7 +250,7 @@ const onSelectEmoji = (emoji) => {
                             ref="fileInput"
                             @change="handleFiles"
                             multiple
-                            accept="image/*,video/*"
+                            accept="image/*,video/*,application/pdf"
                             class="hidden"
                         />
                         <button
@@ -279,8 +279,14 @@ const onSelectEmoji = (emoji) => {
                         :key="index"
                         class="relative"
                     >
-                        <img
+                        <img v-if="preview.type.startsWith('image/')"
                             :src="preview.url"
+                            :alt="preview.name"
+                            class="w-20 h-20 object-cover rounded-lg"
+                        />
+                        <img  v-else-if="preview.type === 'application/pdf'"
+                            src="../../images/pdf-icon.svg"
+                            :alt="preview.name"
                             class="w-20 h-20 object-cover rounded-lg"
                         />
                         <button
