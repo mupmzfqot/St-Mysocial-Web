@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\Messages\OpenConversation;
 use App\Events\MessageSent;
+use App\Events\NewMessage;
 use App\Models\Conversation;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -89,7 +90,8 @@ class MessageController extends Controller
                     'max:10240' // 10MB
                 ],
             ]);
-            $conversation = Conversation::query()->find($conversation_id);
+            $conversation = Conversation::find($conversation_id);
+                
             Gate::authorize('send', $conversation);
 
             $message = $conversation->messages()->create([
@@ -106,7 +108,8 @@ class MessageController extends Controller
 
             $message->load('sender', 'media');
 
-           broadcast(new MessageSent($message));
+            broadcast(new MessageSent($message));
+            broadcast(new NewMessage($conversation_id));
 
             return response()->json([
                 'id' => $message->id,

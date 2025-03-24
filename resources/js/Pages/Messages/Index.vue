@@ -2,17 +2,42 @@
 import {Head, Link} from "@inertiajs/vue3";
 import HomeLayout from "@/Layouts/HomeLayout.vue";
 import { useUnreadMessages } from '@/Composables/useUnreadMessages';
+import { onMounted, ref } from "vue";
 
 const props = defineProps({
     conversations: Object
 });
 
 const { getUnreadCountForConversation } = useUnreadMessages();
+const unreadCounts = ref({});
+
+const updateUnreadCount = (userId) => {
+    if(unreadCounts.value[userId] === undefined) {
+        unreadCounts.value[userId] = 0;
+    }
+
+    unreadCounts.value[userId] += 1;
+}
 
 const truncatedText = (originalText) => {
     return originalText.length > 50
         ? originalText.slice(0, 50) + "..."
         : originalText;
+}
+onMounted(() => {
+    Echo.private(`message.notification`)
+        .listen('NewMessage', (event) => {
+            $.each(event.user_ids, (index, userId) => {
+                updateUnreadCount(userId);
+            })
+        })
+        .error((error) => {
+            console.log(error)
+        })
+})
+
+const countUnread = (userId) => {
+    return unreadCounts.value[userId] || 0;
 }
 
 </script>
@@ -39,9 +64,9 @@ const truncatedText = (originalText) => {
                     <div class="ms-3 flex-grow">
                         <div class="flex justify-between items-center">
                             <h3 class="font-semibold text-sm text-gray-800 dark:text-white">{{ user.name }}</h3>
-                            <span v-if="getUnreadCountForConversation(user.user_id) > 0"
+                            <span v-if="countUnread(user.user_id) > 0"
                                   class="inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium bg-red-500 text-white">
-                                {{ getUnreadCountForConversation(user.user_id) }}
+                                {{ countUnread(user.user_id) }}
                             </span>
                         </div>
                         <div v-if="user.latest_message.length > 0"

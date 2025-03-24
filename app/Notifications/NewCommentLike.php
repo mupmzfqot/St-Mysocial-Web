@@ -41,7 +41,7 @@ class NewCommentLike extends Notification
         return [
             'id'        => $this->comment->id,
             'name'      => 'Comment Liked',
-            'message'   => "{$this->user->name} like your comment.",
+            'message'   => "{$this->user->name} likes your comment.",
             'url'       => route('user-post.show-post', $this->comment->post_id),
         ];
     }

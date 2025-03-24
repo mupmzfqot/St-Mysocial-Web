@@ -5,8 +5,6 @@ namespace App\Notifications;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class TagUserPost extends Notification
@@ -40,7 +38,7 @@ class TagUserPost extends Notification
     public function toArray(object $notifiable): array
     {
         $message = $this->isAdmin ? "Administrator created new post."
-            : "You were tag in {$this->user->name} post.";
+            : "{$this->user->name} mentioned you in a post.";
 
         return [
             'id'        => $this->post->id,

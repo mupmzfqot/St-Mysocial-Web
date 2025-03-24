@@ -130,6 +130,7 @@ const submit = () => {
     showSuccessMessage.value = false;
     showErrorMessage.value = false;
 
+    form.content = cleanDataBeforeSubmit()
     form.post(route('user-post.store'), {
         onSuccess: (page) => {
             const flash = page.props.flash;
@@ -156,6 +157,21 @@ const submit = () => {
         preserveScroll: true,
     });
 };
+
+const cleanDataBeforeSubmit = () => {
+    const q = quillEditor.value.getQuill();
+    let editorContent = q.root.innerHTML;
+
+    editorContent = editorContent.replace(/(<p><br><\/p>)+$/, '');
+    editorContent = editorContent.replace(/<script[^>]*>([\S\s]*?)<\/script>/g, '');
+    editorContent = editorContent.replace(/<iframe[^>]*>[\S\s]*?<\/iframe>/g, ''); 
+
+    if (!editorContent.trim()) {
+        console.error("Editor content is empty after cleaning.");
+    }
+
+    return editorContent;
+}
 
 const openLinkDialog = () => {
     selectedRange.value = quillEditor.value.getQuill().getSelection();
@@ -203,13 +219,14 @@ onMounted(() => {
                 const [line, ] = q.getLine(sel.index);
                 if (!line.children) { return }
 
-                const val = line.children.head.value();
-                if (val.length && val[0] === val[0].toLowerCase()) {
+                const val = line.children.head.text;
+                if (val && val[0] === val[0].toLowerCase()) {
                     q.updateContents(
                         new Delta().retain(q.getIndex(line.children.head)).delete(1).insert(val[0].toUpperCase())
                         , 'api')
                 }
             }
+            
         });
     }
 });
