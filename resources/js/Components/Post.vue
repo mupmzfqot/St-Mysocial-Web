@@ -617,8 +617,8 @@ const handleLinkClick = (event) => {
     </TransitionRoot>
 
     <!-- Post Details Modal -->
-    <TransitionRoot appear :show="showPostModal" as="template">
-        <Dialog as="div" @close="showPostModal = false" class="relative z-[9999]">
+    <TransitionRoot appear :show="showPostModal" as="template" :persistent="true" :close-on-click-modal="false">
+        <Dialog as="div" class="relative z-[100]">
             <TransitionChild
                 as="template"
                 enter="duration-300 ease-out"
