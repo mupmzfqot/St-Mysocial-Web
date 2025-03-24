@@ -216,7 +216,7 @@ const otherMedia = computed(() => {
                 <img v-else
                     :src="media.original_url"
                     :alt="media.name"
-                     :class="['hover:opacity-90 cursor-pointer object-cover', small === true ? 'h-32 w-24' : 'w-full h-40']"
+                     :class="['hover:opacity-90 cursor-pointer object-cover', small === true ? 'h-32 w-24' : 'w-full h-48']"
                     @click.stop="previewMedia(filteredMedia, index)"
                 />
                 <!-- Overlay untuk gambar lebih dari 4 -->
