@@ -119,7 +119,6 @@ const validateFile = (file) => {
 const handleFiles = (event) => {
     const files = event.target?.files || event.dataTransfer?.files;
     errors.value = {};
-
     
     if (files.length + previews.value.length > MAX_FILES) {
         errors.value.file = `Maximum ${MAX_FILES} files allowed`;
@@ -136,7 +135,6 @@ const handleFiles = (event) => {
                     name: file.name
                 });
             };
-            console.log(previews)
             form.files.push(file);
             fileReader.readAsDataURL(file);
         }
@@ -586,7 +584,7 @@ const addBulletList = () => {
                     @uploaded="handleCropImage"
                 />
                 <div class="flex justify-end gap-x-2 pt-4">
-                    <button @click="showCropModalVisible.value === false" type="button" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm 
+                    <button @click="showCropModalVisible = false" type="button" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm 
                         font-medium rounded-lg border border-gray-400 text-gray-700 hover:text-red-600 
                         focus:outline-hidden focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
                         Cancel
