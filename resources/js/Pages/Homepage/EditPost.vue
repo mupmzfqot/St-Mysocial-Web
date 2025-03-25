@@ -1,9 +1,8 @@
 <script setup>
 import {Head, useForm, Link, router} from "@inertiajs/vue3";
 import {AlertCircle, ChevronDown, Loader2, X, PencilLine, Paperclip, SmilePlus, SendHorizontal, LinkIcon, List, ListOrdered} from "lucide-vue-next";
-import {computed, onMounted, ref} from "vue";
+import {computed, onMounted, ref, watch} from "vue";
 import HomeLayout from "@/Layouts/HomeLayout.vue";
-import PostContent from "@/Components/PostContent.vue";
 import MultiSelect from "@/Components/MultiSelect.vue";
 import QuillEditor from '@/Components/QuillEditor.vue';
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue';
@@ -39,23 +38,45 @@ const cropImageIndex = ref(null);
 const cropper = ref(null);
 
 const props = defineProps({
+    post: Object,
     stUsers: Object,
     defaultType: String,
-    requestUrl: {
-        type: String,
-        required: true,
-    }
 });
 
 const form = useForm({
-    content: '',
-    files: [],
-    type: props.defaultType,
-    userTags: []
+    id: props.post?.id || null,
+    content: props.post?.post || '',
+    files: props.post?.media || [],
+    type: props.post?.type || props.defaultType,
+    userTags: props.post?.tags.map(tag => tag.user_id) || []
 });
 
 const isValid = computed(() => {
     return form.content.trim().length > 0 || form.files.length > 0;
+});
+
+// Initialize media previews for existing posts
+const initializeMediaPreviews = () => {
+    if (props.post && props.post.media && props.post.media.length > 0) {
+        previews.value = props.post.media.map(media => ({
+            url: media.preview_url || media.original_url,
+            type: media.mime_type,
+            name: media.file_name,
+            id: media.id
+        }));
+    }
+};
+
+onMounted(() => {
+    initializeMediaPreviews();
+    cropper.value = ref('cropper');
+    if (quillEditor.value) {
+        quillEditor.value.setContent(props.post?.post || '');
+    }
+})
+
+watch(() => props.post?.tags, (newTags) => {
+  form.userTags = newTags?.map(tag => tag.id) || [];
 });
 
 const triggerFileInput = () => {
@@ -182,7 +203,9 @@ const submit = () => {
     showErrorMessage.value = false;
     form.content = cleanDataBeforeSubmit();
 
-    form.post(route('user-post.store'), {
+    let url = props.post?.id ? route('user-post.update', props.post.id) : route('user-post.store');
+
+    form.post(url, {
         onSuccess: (page) => {
             const flash = page.props.flash;
 
@@ -272,13 +295,13 @@ const addBulletList = () => {
 </script>
 
 <template>
-    <Head title="Create New Post" />
+    <Head title="Edit Post" />
     <HomeLayout>
         <!-- Card section -->
         <div class="w-full">
             <div class="mx-auto p-4 bg-white border border-gray-300 rounded-lg shadow-sm">
                 <div class="mb-2">
-                    <label class="font-semibold text-gray-800 dark:text-neutral-200">New Post</label>
+                    <label class="font-semibold text-gray-800 dark:text-neutral-200">Edit Post</label>
                 </div>
                 <!-- Media Preview -->
                 <div class="mb-3" v-if="previews.length > 0">
@@ -456,7 +479,7 @@ const addBulletList = () => {
                             >
                                 <Loader2 v-if="isLoading" class="animate-spin size-4" />
                                 <SendHorizontal v-else class="shrink-0 size-4" />
-                                <span>{{ isLoading ? 'Posting...' : 'Create Post' }}</span>
+                                <span>{{ isLoading ? 'Posting...' : 'Update Post' }}</span>
                             </button>
                         </div>
                     </div>
@@ -480,15 +503,6 @@ const addBulletList = () => {
             </div>
         </div>
         <!-- End card section -->
-    
-        <!-- My Posts -->
-        <div>
-            <p class="relative py-4 mx-2 text-lg font-bold text-gray-800 dark:text-white">
-                My Recent Posts
-            </p>
-        </div>
-
-        <PostContent :post-status="true" :requestUrl="requestUrl" />
     </HomeLayout>
 
     <TransitionRoot appear :show="showLinkModal" as="template">

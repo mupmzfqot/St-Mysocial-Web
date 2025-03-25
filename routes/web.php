@@ -20,6 +20,7 @@ Route::middleware(['auth', 'verified', 'role:user|public_user'])->group(function
     Route::get('/home', [HomeController::class, 'index'])->name('homepage')->middleware('role:user');
     Route::get('/public', [HomeController::class, 'publicPost'])->name('public');
     Route::get('/posts', [HomeController::class, 'createPost'])->name('create-post');
+    Route::get('/posts/{id}', [HomeController::class, 'editPost'])->name('edit-post');
     Route::get('/liked-posts', [HomeController::class, 'showLikedPosts'])->name('liked-posts');
     Route::get('/top-posts', [HomeController::class, 'showTopPosts'])->name('top-posts');
     Route::prefix('user-post')->name('user-post.')->group(function () {
@@ -32,6 +33,7 @@ Route::middleware(['auth', 'verified', 'role:user|public_user'])->group(function
         Route::post('store', [PostController::class, 'store'])->name('store');
         Route::post('share', [PostController::class, 'share'])->name('share');
         Route::post('store', [PostController::class, 'store'])->name('store');
+        Route::post('update/{id}', [PostController::class, 'update'])->name('update');
         Route::get('liked-by/{id}', [HomeController::class, 'postLikedBy'])->name('liked-by');
         Route::post('delete', [HomeController::class, 'deletePost'])->name('delete');
         Route::post('comment', [HomeController::class, 'storeComment'])->name('store-comment');

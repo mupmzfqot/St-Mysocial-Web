@@ -64,6 +64,9 @@ onBeforeMount(() => {
 defineExpose({
     getContent,
     getSelection: () => quill.getSelection(),
+    setContent: (value) => {
+        quill.clipboard.dangerouslyPasteHTML(value);
+    },
     getLength: () => quill.getLength(),
     insertText: (index, text) => quill.insertText(index, text),
     deleteText: (index, length) => quill.deleteText(index, length),

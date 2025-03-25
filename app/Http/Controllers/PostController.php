@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Actions\Posts\CreatePost;
 use App\Actions\Posts\Repost;
 use App\Models\Post;
+use App\Models\PostTag;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -129,14 +130,32 @@ class PostController extends Controller
             $post->type = $request->type;
             $post->update();
 
+            if(!empty($request->userTags)) {
+                PostTag::query()->where('post_id', $post->id)->delete();
+                foreach ($request->userTags as $tag) {
+                    PostTag::query()->create([
+                        'post_id' => $post->id,
+                        'user_id'  => $tag,
+                        'name'     => User::query()->find($tag)?->name
+                    ]);
+                }
+            }
+
             if($request->hasFile('files')) {
                 foreach ($request->file('files') as $file) {
                     $post->addMedia($file)->toMediaCollection('post_media');
                 }
             }
 
-            return redirect()->route('post-moderation.index-st')->with('success', 'Post successfully updated.');
+            $message = 'Post successfully updated!';
+            if($request->type === 'public' && !auth()->user()->hasRole('admin')) {
+                $message = 'Your post will be available after admin approval.';
+                return redirect()->route('home')->with('success', $message);
+            }
 
+            if(auth()->user()->hasRole('admin')) {
+                return redirect()->route('post-moderation.index-st')->with('success', $message);
+            }
         } catch (\Exception $e) {
             return back()->withErrors(['error' => $e->getMessage()]);
         }
@@ -168,7 +187,7 @@ class PostController extends Controller
     {
         $defaultType = 'st';
         $title = 'Edit Post';
-        $stUsers = User::query()->whereHas('roles', function ($query) {
+        $stUsers = User::query()->select('id', 'name')->whereHas('roles', function ($query) {
                 $query->where('name', 'user');
             })
             ->where('is_active', true)

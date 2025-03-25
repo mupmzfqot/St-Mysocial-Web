@@ -1,7 +1,7 @@
 <script setup>
-import {Head, useForm, Link} from "@inertiajs/vue3";
+import {Head, useForm, Link, router} from "@inertiajs/vue3";
 import {
-    AlertCircle,
+    AlertCircle, PencilLine,
     ChevronDown,
     Loader2,
     X,
@@ -10,21 +10,21 @@ import {
     SendHorizontal,
     LinkIcon, ChevronRight, List, ListOrdered,
 } from "lucide-vue-next";
-import {computed, onMounted, ref} from "vue";
+import {computed, onMounted, reactive, ref, watch} from "vue";
 import MultiSelect from "@/Components/MultiSelect.vue";
-import {Delta, QuillEditor} from '@vueup/vue-quill'
-import '@vueup/vue-quill/dist/vue-quill.snow.css'
-import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from '@headlessui/vue'
-import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import Breadcrumbs from "@/Components/Breadcrumbs.vue";
+import QuillEditor from '@/Components/QuillEditor.vue';
+import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue';
 import EmojiPicker from 'vue3-emoji-picker';
 import 'vue3-emoji-picker/css';
+import {toast} from "vue3-toastify";
+import { Cropper } from 'vue-advanced-cropper'
+import 'vue-advanced-cropper/dist/style.css';
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
+import Breadcrumbs from "@/Components/Breadcrumbs.vue";
 
 const MAX_FILES = 10;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'video/mp4', 'video/quicktime', 'application/pdf'];
-const MAX_CONTENT_LENGTH = 1000;
-
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4', 'video/quicktime', 'application/pdf'];
 const fileInput = ref(null);
 const previews = ref([]);
 const dragOver = ref(false);
@@ -39,6 +39,13 @@ const showLinkModal = ref(false);
 const linkUrl = ref('');
 const linkText = ref('');
 const selectedRange = ref(null);
+const showCropModalVisible = ref(false);
+const cropImageUrl = ref('');
+const cropImageDefault = ref('');
+const croppedFile = ref(null);
+const cropImageType = ref('');
+const cropImageIndex = ref(null);
+const cropper = ref(null);
 
 const props = defineProps({
     post: Object,
@@ -52,7 +59,7 @@ const form = useForm({
     content: props.post?.post || '',
     files: props.post?.media || [],
     type: props.post?.type || props.defaultType,
-    userTags: props.post?.tags || []
+    userTags: props.post?.tags.map(tag => tag.user_id) || []
 });
 
 // Initialize media previews for existing posts
@@ -67,14 +74,6 @@ const initializeMediaPreviews = () => {
     }
 };
 
-onMounted(() => {
-    initializeMediaPreviews();
-});
-
-const remainingChars = computed(() => {
-    return MAX_CONTENT_LENGTH - form.content.length;
-});
-
 const isValid = computed(() => {
     return form.content.trim().length > 0 || form.files.length > 0;
 });
@@ -82,6 +81,56 @@ const isValid = computed(() => {
 const triggerFileInput = () => {
     fileInput.value.click();
 };
+
+const showCropModal = (file, index) => {
+    cropImageUrl.value = file.url
+    cropImageType.value = file.type
+    cropImageDefault.value = file
+    showCropModalVisible.value = true
+    cropImageIndex.value = index
+}
+
+const handleCropImage = (croppedImage) => {
+  croppedFile.value = croppedImage
+  showCropModalVisible.value = false
+}
+
+const handleCrop = (defaultImage, index) => {
+    const { coordinates, canvas, } = cropper.value.getResult();
+    const filename = defaultImage.name.split('.')[0];
+
+    coordinates.value = coordinates;
+    // use canvas.toDataURL with format PNG
+    const croppedImageDataURL = canvas.toDataURL('image/png'); 
+    const byteString = atob(croppedImageDataURL.split(',')[1]);
+    const arrayBuffer = new ArrayBuffer(byteString.length);
+    const uint8Array = new Uint8Array(arrayBuffer);
+
+    // convert byte string to array buffer
+    for (let i = 0; i < byteString.length; i++) {
+        uint8Array[i] = byteString.charCodeAt(i);
+    }
+
+    // remove previous image from list
+    removeMedia(index);
+
+    // create file MIME_TYPE image/png
+    const file = new File([uint8Array], `${filename}.png`, { type: 'image/png' });
+    handleFiles({ target: { files: [file] } });
+    showCropModalVisible.value = false;
+}
+
+watch(() => props.post?.tags, (newTags) => {
+  form.userTags = newTags?.map(tag => tag.id) || [];
+});
+
+onMounted(() => {
+    initializeMediaPreviews();
+    cropper.value = ref('cropper');
+    if (quillEditor.value) {
+        quillEditor.value.setContent(props.post?.post || '');
+    }
+})
 
 const validateFile = (file) => {
     if (!ALLOWED_TYPES.includes(file.type)) {
@@ -98,7 +147,7 @@ const validateFile = (file) => {
 const handleFiles = (event) => {
     const files = event.target?.files || event.dataTransfer?.files;
     errors.value = {};
-
+    
     if (files.length + previews.value.length > MAX_FILES) {
         errors.value.file = `Maximum ${MAX_FILES} files allowed`;
         return;
@@ -129,12 +178,6 @@ const removeMedia = (index) => {
     form.files.splice(index, 1);
 };
 
-const handleDrop = (e) => {
-    e.preventDefault();
-    dragOver.value = false;
-    handleFiles(e);
-};
-
 const handleDragOver = (e) => {
     e.preventDefault();
     dragOver.value = true;
@@ -145,6 +188,19 @@ const handleDragLeave = (e) => {
     dragOver.value = false;
 };
 
+const cleanDataBeforeSubmit = () => {
+    let editorContent = quillEditor.value.getContent();
+    editorContent = editorContent.replace(/(<p><br><\/p>)+$/, '');
+    editorContent = editorContent.replace(/<script[^>]*>([\S\s]*?)<\/script>/g, '');
+    editorContent = editorContent.replace(/<iframe[^>]*>[\S\s]*?<\/iframe>/g, ''); 
+
+    if (!editorContent.trim()) {
+        console.error("Editor content is empty after cleaning.");
+    }
+
+    return editorContent;
+}
+
 const submit = () => {
     if (!isValid.value) return;
 
@@ -152,6 +208,7 @@ const submit = () => {
     errors.value = {};
     showSuccessMessage.value = false;
     showErrorMessage.value = false;
+    form.content = cleanDataBeforeSubmit();
 
     let url = props.post?.id ? route('post.update', props.post.id) : route('post.store');
 
@@ -179,89 +236,62 @@ const submit = () => {
 };
 
 const openLinkDialog = () => {
-    selectedRange.value = quillEditor.value.getQuill().getSelection();
-    if (selectedRange.value && selectedRange.value.length > 0) {
-        linkText.value = quillEditor.value.getQuill().getText(selectedRange.value.index, selectedRange.value.length);
-    }
     showLinkModal.value = true;
+    if (selectedRange.value) {
+        const quillContent = quillEditor.value.getContent();
+        const selectedText = quillContent.ops[selectedRange.value.index].insert;
+        linkText.value = selectedText;
+    }
 };
 
 const insertLink = () => {
     if (linkUrl.value) {
         const displayText = linkText.value || linkUrl.value;
-        const quill = quillEditor.value.getQuill();
+
+        let finalUrl = linkUrl.value;
+        if(linkUrl.value.includes('.') && !linkUrl.value.startsWith('http://') && !linkUrl.value.startsWith('https://')) {
+            finalUrl = `https://${linkUrl.value}`;
+        }
 
         if (selectedRange.value) {
             if (selectedRange.value.length > 0) {
-                quill.deleteText(selectedRange.value.index, selectedRange.value.length);
+                quillEditor.value.deleteText(selectedRange.value.index, selectedRange.value.length);
             }
-            quill.insertText(selectedRange.value.index, displayText, {'link': linkUrl.value});
+            quillEditor.value.insertText(selectedRange.value.index, displayText);
+            quillEditor.value.formatText(selectedRange.value.index, displayText.length, 'link', finalUrl);
         } else {
-            quill.insertText(quill.getLength() - 1, displayText, {'link': linkUrl.value});
+            const currentIndex = quillEditor.value.getLength() - 1;
+            quillEditor.value.insertText(currentIndex, displayText);
+            quillEditor.value.formatText(currentIndex, displayText.length, 'link', finalUrl);
         }
     }
 
-    // Reset the form
     linkUrl.value = '';
     linkText.value = '';
     showLinkModal.value = false;
     selectedRange.value = null;
 };
 
-onMounted(() => {
-    if (quillEditor.value) {
-        const q = quillEditor.value.getQuill();
-        q.on('text-change', (d, _, source) => {
-            if (source !== 'api') {
-                const sel = q.getSelection();
-                if (!sel) return;
-
-                const [line,] = q.getLine(sel.index);
-                if (!line.children) {
-                    return
-                }
-
-                const val = line.children.head.value();
-                if (val.length && val[0] === val[0].toLowerCase()) {
-                    q.updateContents(
-                        new Delta().retain(q.getIndex(line.children.head)).delete(1).insert(val[0].toUpperCase())
-                        , 'api')
-                }
-            }
-        });
-    }
-});
-
 const showEmojiPicker = ref(false);
 const onSelectEmoji = (emoji) => {
     if (quillEditor.value) {
-        const quill = quillEditor.value.getQuill();
-        const range = quill.getSelection() || { index: quill.getLength() };
-        quill.insertText(range.index, emoji.i);
-        quill.setSelection(range.index + emoji.i.length);
+        const range = quillEditor.value.getSelection();
+        quillEditor.value.insertText(range ? range.index: 0, emoji.i);
     }
     showEmojiPicker.value = false;
 };
+
 const addNumberList = () => {
     if (quillEditor.value) {
-        const quill = quillEditor.value.getQuill();
-        const selection = quill.getSelection();
-
-        if (selection) {
-            quill.format('list', false);
-            quill.format('list', 'ordered');
-        }
+        quillEditor.value.format('list', false);
+        quillEditor.value.format('list', 'ordered');
     }
 };
+
 const addBulletList = () => {
     if (quillEditor.value) {
-        const quill = quillEditor.value.getQuill();
-        const selection = quill.getSelection();
-
-        if (selection) {
-            quill.format('list', false);
-            quill.format('list', 'bullet');
-        }
+        quillEditor.value.format('list', false);
+        quillEditor.value.format('list', 'bullet');
     }
 };
 
@@ -311,7 +341,7 @@ const addBulletList = () => {
                                 class="w-full h-full object-cover"
                                 :title="file.name"
                             >
-                                <source :src="file.url" :type="file.type"/>
+                                <source :src="file.url" :type="file.type" />
                                 Your browser does not support the video tag.
                             </video>
 
@@ -329,41 +359,32 @@ const addBulletList = () => {
                             <!-- Remove button -->
                             <button
                                 @click="removeMedia(index)"
-                                class="absolute top-2 right-2 p-1 bg-black bg-opacity-50 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                                class="absolute top-1 right-2 p-1 bg-red-500 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
                                 title="Remove media"
                             >
-                                <X class="size-4"/>
+                                <X class="size-4" />
+                            </button>
+                            <button
+                                v-if="file.type.startsWith('image/')"
+                                @click="showCropModal(file, index)"
+                                class="absolute top-1 right-9 p-1 bg-orange-400 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                                title="Crop Image"
+                            >
+                                <PencilLine class="size-4" />
                             </button>
                         </div>
                     </div>
                 </div>
-                <form @submit.prevent="submit" mt-2>
-                    <MultiSelect :stUsers="stUsers" v-model="form.userTags"
-                                 v-if="!$page.props.auth.user.roles.includes('public_user') && !post?.id"/>
 
-                    <!-- Quill Editor-->
-                    <div
-                        class="mb-0 relative"
+                <form @submit.prevent="submit">
+                    <MultiSelect :stUsers="stUsers" v-model="form.userTags" v-if="!$page.props.auth.user.roles.includes('public_user')" />
+
+                    <div class="mb-0 relative"
                         @drop="handleDrop"
                         @dragover="handleDragOver"
                         @dragleave="handleDragLeave"
                     >
-                        <QuillEditor
-                            ref="quillEditor"
-                            v-model:content="form.content"
-                            contentType="html"
-                            :options="{
-                                    placeholder: 'What\'s on your mind?',
-                                    modules: {
-                                        toolbar: false
-                                    }
-                                }"
-                            :style="{
-                                    height: '150px',
-                                    marginBottom: '5px'
-                                }"
-                            class="bg-white dark:bg-neutral-900 rounded-lg first-letter-cap"
-                        />
+                        <QuillEditor ref="quillEditor" @update:value="form.content = $event" class="min-h-[120px] text-sm border border-gray-200"/>
                         <div
                             v-if="dragOver"
                             class="absolute inset-0 bg-blue-500 bg-opacity-10 border-2 border-blue-500 border-dashed rounded-lg flex items-center justify-center"
@@ -371,9 +392,9 @@ const addBulletList = () => {
                             <p class="text-blue-500 font-medium">Drop files here</p>
                         </div>
                     </div>
-
+                    
                     <!-- Action Buttons -->
-                    <div class="flex items-center justify-between">
+                    <div class="flex items-center justify-between mt-1">
                         <!-- Left Icons -->
                         <div class="flex space-x-1 text-gray-00">
                             <div class="relative" v-if="defaultType === 'st'">
@@ -382,11 +403,10 @@ const addBulletList = () => {
                                     class="appearance-none h-[40px] pl-4 pr-10 min-w-[120px] rounded-lg border border-gray-200 text-sm dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 focus:border-blue-500 focus:ring-blue-500 bg-gray-50 dark:bg-neutral-700"
                                 >
                                     <option value="st">Team ST</option>
-                                    <option value="public">Public</option>
+                                    <option value="public" v-if="defaultType !== 'st'">Public</option>
                                 </select>
-                                <div
-                                    class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-500 dark:text-neutral-400">
-                                    <ChevronDown class="size-4"/>
+                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-500 dark:text-neutral-400">
+                                    <ChevronDown class="size-4" />
                                 </div>
                             </div>
 
@@ -415,7 +435,7 @@ const addBulletList = () => {
                                 <EmojiPicker
                                     v-if="showEmojiPicker"
                                     @select="onSelectEmoji"
-                                    class="absolute z-50"
+                                    class="absolute z-50 mt-2"
                                 />
                             </div>
 
@@ -442,7 +462,6 @@ const addBulletList = () => {
                                     </span>
                                 </button>
                             </div>
-
                             <div class="hs-tooltip [--placement:bottom] inline-block">
                                 <button @click="addNumberList" type="button"
                                         class="hs-tooltip-toggle size-10 inline-flex justify-center items-center gap-2 rounded-md bg-gray-50 border border-gray-200 text-gray-600 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 focus:outline-none focus:bg-blue-50 focus:border-blue-200 focus:text-blue-600 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-white/10 dark:hover:border-white/10 dark:hover:text-white dark:focus:bg-white/10 dark:focus:border-white/10 dark:focus:text-white">
@@ -481,8 +500,6 @@ const addBulletList = () => {
                             </button>
                         </div>
                     </div>
-
-
                 </form>
 
                 <!-- Error messages -->
@@ -496,12 +513,9 @@ const addBulletList = () => {
                     <p class="text-green-800 dark:text-green-200">{{ successMessage }}</p>
                 </div>
 
-                <div v-if="showErrorMessage"
-                     class="w-full mt-4 px-3 py-2 rounded-lg bg-red-50 dark:bg-red-900 text-sm inline-flex items-center gap-x-2 text-red-800 dark:text-red-200">
-                    <AlertCircle class="shrink-0 size-4"/>
-                    <span>{{ errorMessage }}</span>
+                <div v-if="showErrorMessage" class="w-full mt-4 px-3 py-2 rounded-lg bg-red-50 dark:bg-red-900 text-sm inline-flex items-center gap-x-2 text-red-800 dark:text-red-200">
+                    <AlertCircle class="shrink-0 size-4" /><span>{{ errorMessage }}</span>
                 </div>
-
             </div>
         </div>
 
@@ -579,6 +593,40 @@ const addBulletList = () => {
                 </div>
             </div>
         </Dialog>
+    </TransitionRoot>
+
+    <TransitionRoot
+        :show="showCropModalVisible"
+        as="template"
+        enter="duration-300 ease-out"
+        enter-from="opacity-0"
+        enter-to="opacity-100"
+        leave="duration-200 ease-in"
+        leave-from="opacity-100"
+        leave-to="opacity-0"
+        >
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+            <div class="bg-white rounded-lg shadow-lg p-4 w-1/2">
+                <Cropper
+                    :src="cropImageUrl"
+                    :type="cropImageType"
+                    :aspect-ratio="1"
+                    :rectangular="true"
+                    ref="cropper"
+                    @uploaded="handleCropImage"
+                />
+                <div class="flex justify-end gap-x-2 pt-4">
+                    <button @click="showCropModalVisible = false" type="button" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm 
+                        font-medium rounded-lg border border-gray-400 text-gray-700 hover:text-red-600 
+                        focus:outline-hidden focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
+                        Cancel
+                    </button>
+                    <button @click="handleCrop(cropImageDefault, cropImageIndex)" type="button" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-hidden focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
+                        Crop Image
+                    </button>
+                </div>
+            </div>
+        </div>
     </TransitionRoot>
 </template>
 

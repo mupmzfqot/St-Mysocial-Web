@@ -88,6 +88,30 @@ class HomeController extends Controller
         ]);
     }
 
+    public function editPost($id)
+    {
+        $stUsers = User::query()->select('id', 'name')->whereHas('roles', function ($query) {
+                $query->where('name', 'user');
+            })
+            ->where('is_active', true)
+            ->whereNotNull('email_verified_at')
+            ->get();
+
+        $post = Post::query()
+            ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media', 'repost.tags')
+            ->where('id', $id)
+            ->first();
+
+        $isPrivilegedUser = auth()->user()->hasAnyRole(['admin', 'user']);
+        $defaultType = $isPrivilegedUser ? 'st' : 'public';
+
+        return Inertia::render('Homepage/EditPost', [
+            'post' => $post,
+            'stUsers' => $stUsers,
+            'defaultType' => $defaultType,
+        ]);
+    }
+
     public function storePost(Request $request, CreatePost $createPost)
     {
         $request->validate([
