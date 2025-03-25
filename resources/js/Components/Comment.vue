@@ -379,6 +379,8 @@ onMounted(() => {
                     :type="cropImageType"
                     :aspect-ratio="1"
                     :rectangular="true"
+                    style="max-height: 80svh;"
+                    :size-restrictions-algorithm="pixelsRestriction"
                     ref="cropper"
                     @uploaded="handleCropImage"
                 />
