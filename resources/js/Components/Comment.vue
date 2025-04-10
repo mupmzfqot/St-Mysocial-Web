@@ -61,11 +61,19 @@ const triggerFileInput = () => {
     fileInput.value.click();
 };
 
+const validateFile = (file) => {
+    if (!ALLOWED_TYPES.includes(file.type)) {
+        alert('File type not supported');
+        return false;
+    }
+    return true;
+}
+
 const handleFiles = (event) => {
     const files = event.target?.files;
     if (files) {
         Array.from(files).forEach((file) => {
-            if (file.size <= 5 * 1024 * 1024) {
+            if (file.size <= 5 * 1024 * 1024 && validateFile(file)) {
                 const fileReader = new FileReader();
                 fileReader.onload = (e) => {
                     previews.value.push({
@@ -274,7 +282,7 @@ onMounted(() => {
                     <img
                         :src="currentUser.avatar"
                         :alt="`${currentUser.name}'s avatar`"
-                        class="w-10 h-10 rounded-full v-"
+                        class="w-10 h-10 rounded-full"
                     />
 
                     <!-- Chat Input -->
@@ -282,6 +290,7 @@ onMounted(() => {
                         id="chat-input"
                         v-model="form.message"
                         contenteditable="true"
+                        accept="image/png, image/gif, image/jpeg, image/jpg"
                         class="flex-1 py-2 px-3 text-sm border rounded-lg border-gray-300 bg-white focus:ring-1 focus:ring-blue-500 focus:outline-none break-words"
                         placeholder="Type a message..."
                     >
