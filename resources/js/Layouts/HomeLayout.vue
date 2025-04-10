@@ -1,7 +1,7 @@
 <script setup>
 import {onMounted, ref, watch} from 'vue';
 import {Link, router, usePage} from "@inertiajs/vue3";
-import {CircleCheckBig, Heart, Images, Video, LogOut, MessageSquareMore, Star, UserIcon, LayoutGrid} from "lucide-vue-next";
+import {CircleCheckBig, Heart, Images, Video, LogOut, MessageSquareMore, Star, UserIcon, House} from "lucide-vue-next";
 import {debounce} from "lodash";
 import {useUnreadMessages} from '@/Composables/useUnreadMessages';
 import {TeamStore} from '@/Composables/useTeamStore';
@@ -193,7 +193,7 @@ function isActiveNav(path) {
                             </div>
                         </Link>
                         <Link v-if="isST" :href="route('homepage')" type="button" :class="['inline-flex hover:bg-blue-100 items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/home') ? 'text-blue-600' : '']">
-                            <LayoutGrid class="shrink-0 size-5 text-blue-800 fill-blue-200" />
+                            <House class="shrink-0 size-5 text-blue-800" />
                             Home
                         </Link>
 <!--                        <Link :href="route('public')" type="button" :class="['inline-flex hover:bg-blue-100 items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/public') ? 'text-blue-600' : '']">-->
