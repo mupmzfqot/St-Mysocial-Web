@@ -89,7 +89,7 @@ const formattedUnlockTime = computed(() => {
             </p>
         </div>
 
-        <div class="flex flex-row bg-white border-gray-200 shadow-2xs rounded-xl lg:h-[24rem] lg:w-[38rem] sm:min-h-[23vh] sm:w-[550px] dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400">
+        <div class="flex flex-row bg-white border-gray-200 shadow-2xs rounded-xl lg:min-h-[24rem] lg:w-[38rem] sm:min-h-[23vh] sm:w-[550px] dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400">
             <div class="shrink-0 relative lg:w-[26rem] sm:w-[250px] rounded-t-xl overflow-hidden pt-[40%] sm:rounded-s-xl sm:max-w-[250px] md:rounded-se-none md:max-w-xs">
                 <img class="size-full absolute top-0 start-0 object-cover" src="../../../images/background.webp" alt="Card Image">
             </div>
