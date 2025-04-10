@@ -36,7 +36,7 @@ class NewComment extends Notification
         return [
             'id'        => $this->comment->id,
             'name'      => $this->comment->user?->name,
-            'message'   => "{$this->user->name} commented on your post.",
+            'message'   => "{$this->user->name} commented on your post",
             'url'       => route('user-post.show-post', $this->comment->post_id),
         ];
     }

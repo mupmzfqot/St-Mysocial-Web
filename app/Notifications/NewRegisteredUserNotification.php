@@ -37,7 +37,7 @@ class NewRegisteredUserNotification extends Notification
     {
         return (new MailMessage)
             ->subject('New User Registration')
-            ->line("New user {$this->user->name} has been registered.");
+            ->line("New user {$this->user->name} has been registered");
     }
 
     /**
@@ -57,7 +57,7 @@ class NewRegisteredUserNotification extends Notification
         return [
             'id'        => $this->user->id,
             'name'      => $this->user->name,
-            'message'   => "{$this->user->name} has registered.",
+            'message'   => "{$this->user->name} has registered",
             'url'       => route('user.profile', $this->user->id),
         ];
     }

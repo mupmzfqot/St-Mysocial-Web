@@ -41,7 +41,7 @@ class ChangeProfileImageStatus extends Notification
         return [
             'id'        => $this->user->id,
             'name'      => "Profile Image status {$this->status}",
-            'message'   => "Administrator {$this->status} your profile {$this->type}.",
+            'message'   => "Administrator {$this->status} your profile {$this->type}",
             'url'       => route('user.profile'),
         ];
     }

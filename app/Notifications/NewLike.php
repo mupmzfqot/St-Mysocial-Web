@@ -39,7 +39,7 @@ class NewLike extends Notification
         return [
             'id'        => $this->post->post_id,
             'name'      => 'Post Liked',
-            'message'   => "{$this->user->name} likes your post.",
+            'message'   => "{$this->user->name} likes your post",
             'url'       => route('user-post.show-post', $this->post->post_id),
         ];
     }
