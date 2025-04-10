@@ -84,7 +84,7 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
     public function getCoverImageAttribute(): ?string
     {
         return $this->getMedia('cover_image')
-            ->first()?->original_url ?? asset('background.png');
+            ->first()?->original_url ?? asset('background.webp');
     }
 
     public function conversations()
