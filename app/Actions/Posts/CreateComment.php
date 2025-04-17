@@ -18,7 +18,7 @@ class CreateComment
         try {
             $comment = Comment::query()->create([
                 'post_id' => $request->post_id,
-                'message' => $request->message,
+                'message' => strip_tags($request->message, '<p><b><i><a>'),
                 'user_id' => auth()->id()
             ]);
 

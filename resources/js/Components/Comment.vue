@@ -19,6 +19,7 @@ const croppedFile = ref(null);
 const cropImageType = ref('');
 const cropImageIndex = ref(null);
 const cropper = ref(null);
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg'];
 
 const props = defineProps({
     postId: {
@@ -313,7 +314,7 @@ onMounted(() => {
                             ref="fileInput"
                             @change="handleFiles"
                             multiple
-                            accept="image/*,video/*,application/pdf"
+                            accept="image/*"
                             class="hidden"
                         />
                         <button
