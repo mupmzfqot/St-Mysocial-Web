@@ -77,4 +77,18 @@ onMounted(() => {
     background: rgb(46,137,228);
     background: linear-gradient(90deg, rgba(46,137,228,1) 0%, rgba(89,27,75,1) 100%);
 }
+.bg-primary-gradient {
+    background: rgb(68,30,167);
+    background: -moz-linear-gradient(90deg, rgba(68,30,167,1) 0%, rgba(186,58,217,1) 100%);
+    background: -webkit-linear-gradient(90deg, rgba(68,30,167,1) 0%, rgba(186,58,217,1) 100%);
+    background: linear-gradient(90deg, rgba(68,30,167,1) 0%, rgba(186,58,217,1) 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#441ea7",endColorstr="#ba3ad9",GradientType=1);
+}
+.bg-primary-gradient-reverse {
+    background: rgb(186,58,217);
+    background: -moz-linear-gradient(90deg, rgba(186,58,217,1) 0%, rgba(68,30,167,1) 100%);
+    background: -webkit-linear-gradient(90deg, rgba(186,58,217,1) 0%, rgba(68,30,167,1) 100%);
+    background: linear-gradient(90deg, rgba(186,58,217,1) 0%, rgba(68,30,167,1) 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#ba3ad9",endColorstr="#441ea7",GradientType=1);
+}
 </style>
