@@ -32,12 +32,15 @@ class RegisteredUserController extends Controller
      */
     public function store(RegistrationRequest $request)
     {
+        $random_password = rand(); 
         $user = User::query()->create([
             'name' => $request->name,
             'username' => $request->username,
             'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'password' => Hash::make($random_password),
         ]);
+
+        session(['generated_random_password' => $random_password]);
 
         $domain = substr(strrchr($request->email, "@"), 1);
         if($domain === config('mail.st_user_email_domain')) {
@@ -59,5 +62,10 @@ class RegisteredUserController extends Controller
         Auth::login($user);
         return redirect()->route('registration-success');
 
+    }
+
+    public function payload($request, $random_password)
+    {
+        
     }
 }

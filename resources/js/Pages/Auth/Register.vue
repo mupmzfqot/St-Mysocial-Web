@@ -100,24 +100,21 @@ const submit = () => {
                             <!-- End Form Group -->
 
                             <!-- Form Group -->
-                            <div>
+                            <!-- <div>
                                 <label for="password" class="block text-sm mb-2 dark:text-white">Password</label>
                                 <div class="relative">
                                     <StrongPassword required v-model="form.password" />
                                 </div>
                                 <p class="text-sm text-red-600 mt-2" v-if="form.errors.password">{{ form.errors.password }}</p>
-                            </div>
+                            </div> -->
                             <!-- End Form Group -->
 
                             <!-- Form Group -->
-                            <div>
+                            <!-- <div>
                                 <label for="confirm-password" class="block text-sm mb-2 dark:text-white">Confirm Password</label>
                                 <TogglePassword v-model="form.password_confirmation" placeholder="Confirm Password" />
-                            </div>
+                            </div> -->
                             <!-- End Form Group -->
-                            <div v-if="form.errors.recaptcha">
-                                <p class="text-sm text-red-600 mt-2">{{ form.errors.recaptcha }}</p>
-                            </div>
 
                             <button type="submit" class="w-full py-3 mt-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent btn-primary text-white hover:bg-gray-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
                                 Register
