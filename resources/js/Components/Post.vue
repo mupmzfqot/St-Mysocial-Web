@@ -221,12 +221,39 @@ const handleLinkClick = (event) => {
                 </div>
                 <div class="text-xs text-gray-500 dark:text-neutral-500">{{ content.created_at }}</div>
             </div>
-            <span v-if="!content.published && status" class="py-1 px-3 inline-flex items-center gap-x-1 ms-auto text-xs font-medium bg-red-100 text-red-800 rounded-full dark:bg-red-500/10 dark:text-red-500">
+            <div class="ms-auto flex items-center" v-if="$page.props.auth.user.id === content.user_id" style="z-index: 100;">
+                <div class="me-1">
+                    <span v-if="!content.published && status" class="py-1 px-3 inline-flex items-center gap-x-1 ms-auto text-xs font-medium bg-red-100 text-red-800 rounded-full dark:bg-red-500/10 dark:text-red-500">
                       <MinusCircle class="size-3" />Not Published
                     </span>
-            <span v-if="content.published && status" class="py-1 px-3 inline-flex items-center gap-x-1 ms-auto text-xs font-medium bg-teal-100 text-teal-800 rounded-full dark:bg-teal-500/10 dark:text-teal-500">
+                    <span v-if="content.published && status" class="py-1 px-3 inline-flex items-center gap-x-1 ms-auto text-xs font-medium bg-teal-100 text-teal-800 rounded-full dark:bg-teal-500/10 dark:text-teal-500">
                       <CheckCircle class="size-3" />Published
                     </span>
+                </div>
+                <div class="hs-dropdown relative inline-flex">
+                    <button id="hs-dropdown-custom-icon-trigger" type="button" class="hs-dropdown-toggle flex justify-center 
+                        items-center size-9 text-sm font-semibold rounded-full bg-white text-gray-800 shadow-2xs 
+                        hover:bg-blue-100 focus:outline-hidden hover:text-blue-900 
+                        disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 
+                        dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 
+                        dark:focus:bg-neutral-800" aria-haspopup="menu" aria-expanded="false" aria-label="Dropdown">
+                        <EllipsisVertical class="size-4 font-bold shrink-0" />
+                    </button>
+
+                    <div class="hs-dropdown-menu transition-[opacity,margin] duration hidden min-w-[10rem] bg-white border border-gray-200 shadow-md rounded-lg mt-2 dark:bg-neutral-800 dark:border dark:border-neutral-700" role="menu" aria-orientation="vertical" aria-labelledby="hs-dropdown-custom-icon-trigger">
+                        <div class="p-1 space-y-0.5">
+                            <Link :href="route('edit-post', content.id)"
+                                class="flex items-center gap-x-2 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700">
+                                <PencilLine class="shrink-0 size-5 text-gray-800" />Edit post
+                            </Link>
+                            <a href="#" @click.prevent="openDeleteConfirm(content.id)"
+                                class="flex items-center gap-x-2 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700">
+                                <XCircle class="shrink-0 size-5 text-gray-800" />Delete post
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="mt-2 text-gray-800 text-wrap text-justify text-sm dark:text-neutral-400" v-html="styledTag(content.post)"></div>
@@ -276,7 +303,15 @@ const handleLinkClick = (event) => {
                 <div class="text-xs text-gray-500 dark:text-neutral-500">{{ content.created_at }}</div>
             </div>
             
-            <div class="ms-auto" v-if="$page.props.auth.user.id === content.user_id" style="z-index: 100;">
+            <div class="ms-auto flex items-center" v-if="$page.props.auth.user.id === content.user_id" style="z-index: 100;">
+                <div class="me-1">
+                    <span v-if="!content.published && status" class="py-1 px-3 inline-flex items-center gap-x-1 ms-auto text-xs font-medium bg-red-100 text-red-800 rounded-full dark:bg-red-500/10 dark:text-red-500">
+                      <MinusCircle class="size-3" />Not Published
+                    </span>
+                    <span v-if="content.published && status" class="py-1 px-3 inline-flex items-center gap-x-1 ms-auto text-xs font-medium bg-teal-100 text-teal-800 rounded-full dark:bg-teal-500/10 dark:text-teal-500">
+                      <CheckCircle class="size-3" />Published
+                    </span>
+                </div>
                 <div class="hs-dropdown relative inline-flex">
                     <button id="hs-dropdown-custom-icon-trigger" type="button" class="hs-dropdown-toggle flex justify-center 
                         items-center size-9 text-sm font-semibold rounded-full bg-white text-gray-800 shadow-2xs 
@@ -301,12 +336,6 @@ const handleLinkClick = (event) => {
                     </div>
                 </div>
             </div>
-            <span v-if="!content.published && status" class="py-1 px-3 inline-flex items-center gap-x-1 ms-auto text-xs font-medium bg-red-100 text-red-800 rounded-full dark:bg-red-500/10 dark:text-red-500">
-                      <MinusCircle class="size-3" />Not Published
-                    </span>
-            <span v-if="content.published && status" class="py-1 px-3 inline-flex items-center gap-x-1 ms-auto text-xs font-medium bg-teal-100 text-teal-800 rounded-full dark:bg-teal-500/10 dark:text-teal-500">
-                      <CheckCircle class="size-3" />Published
-                    </span>
         </div>
         <div @click="handleLinkClick" class="mt-2 text-gray-800 text-wrap text-justify text-sm dark:text-neutral-400" v-html="styledTag(content.post)"></div>
 
@@ -367,8 +396,6 @@ const handleLinkClick = (event) => {
         </div>
     </div>
     <!-- end of if repost empty -->
-
-
 
     <!-- Delete Confirmation Modal -->
     <TransitionRoot appear :show="showDeleteConfirmModal" as="template" style="position: absolute; z-index: 99999">

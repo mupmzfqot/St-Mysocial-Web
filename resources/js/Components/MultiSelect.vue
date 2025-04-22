@@ -15,8 +15,6 @@ const model = computed({
     get: () => props.modelValue || [],
     set: (value) => emit('update:modelValue', value)
 });
-
-console.log("model_value: "+props.modelValue)
 </script>
 
 <template>
