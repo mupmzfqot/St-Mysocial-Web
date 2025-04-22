@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\API;
 
 use App\Actions\Messages\OpenConversation;
-use App\Events\MessageSent;
+use App\Actions\Messages\SendMessage;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
 use App\Models\Conversation;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 
 class MessageController extends Controller
 {
@@ -84,33 +83,11 @@ class MessageController extends Controller
                 'message' => $e->getMessage()
             ]);
         }
-
     }
 
-    public function sendMessage(Request $request)
+    public function sendMessage(Request $request, SendMessage $sendMessage)
     {
-        try {
-            $conversation = Conversation::query()->find($request->conversation_id);
-            Gate::authorize('send', $conversation);
-
-            $message = $conversation->messages()->create([
-                'sender_id' => auth()->id(),
-                'content' => $request->message,
-            ]);
-
-//            broadcast(new MessageSent($message));
-
-            return response()->json([
-                'error' => 0,
-                'data' => $this->formatResult($message, $request->recipient_id),
-            ]);
-        } Catch (\Exception $exception) {
-            return response()->json([
-                'error' => 1,
-                'message' => $exception->getMessage(),
-            ]);
-        }
-
+        return $sendMessage->handle($request, $request->conversation_id);
     }
 
     private function formatResult($message, $recipient_id)
