@@ -20,10 +20,10 @@ class SendMessage
                     'mimetypes:image/jpeg,image/png,image/jpg',
                     'max:10240' // 10MB
                 ],
-                'content' => 'required_with:files'
+                'message' => 'required_without:files'
             ]);
 
-            if(!$request->content && !$request->hasFile('files')) {
+            if(!$request->message && !$request->hasFile('files')) {
                 return response()->json([
                     'message' => 'Please enter a message or attach a file.'
                 ]);

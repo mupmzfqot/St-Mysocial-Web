@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Mews\Purifier\Casts\CleanHtml;
+use Mews\Purifier\Casts\CleanHtmlInput;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\Image\Enums\Fit;
@@ -24,7 +25,7 @@ class Post extends Model implements HasMedia
     protected $appends = ['is_liked', 'commented'];
 
     protected $casts = [
-        'content' => CleanHtml::class
+        'content' => CleanHtmlInput::class
     ];
 
     public function registerMediaConversions(?Media $media = null): void

@@ -7,7 +7,7 @@ import {Paperclip, SmilePlus, X, LinkIcon} from "lucide-vue-next";
 import EmojiPicker from 'vue3-emoji-picker';
 import 'vue3-emoji-picker/css';
 import PostMedia from "@/Components/PostMedia.vue";
-import {QuillEditor} from "@vueup/vue-quill";
+import QuillEditor from '@/Components/QuillEditor.vue';
 import '@vueup/vue-quill/dist/vue-quill.snow.css';
 import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from "@headlessui/vue";
 
@@ -57,29 +57,33 @@ const handleNewMessage = (message) => {
 };
 
 const sendMessage = async (conversationId) => {
-    if (!content.value.trim()) return;
+    let content = quillEditor.value.getContent();
+    let contentValue = content.replace(/<\/?[^>]+(>|$)/g, "");
+    if (contentValue.trim() === '' && form.files.length === 0) return;
 
     try {
+        let message = contentValue.trim() === '' ? '' : content;
+        console.log(message)
         const formData = new FormData();
-        formData.append('message', content.value);
+        formData.append('message', message);
         form.files.forEach((file, index) => {
             formData.append(`files[${index}]`, file);
         });
+
         const response = await axios.post(route('message.send', conversationId), formData, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             }
         });
 
-        if (quillEditor.value) {
-            quillEditor.value.setHTML('');
+        if (quillEditor.value.getContent()) {
+            quillEditor.value.setContent('');
         }
 
         if(isWebSocketConnected.value === false) {
             handleNewMessage(response.data);
         }
 
-        content.value = "";
         form.reset();
         previews.value = [];
         form.files = [];
@@ -156,7 +160,6 @@ const setupInteractionListeners = () => {
     }
 };
 
-
 onMounted(() => {
     setupWebSocket();
     scrollToBottom();
@@ -168,15 +171,18 @@ onBeforeUnmount(() => {
     stopPolling();
 });
 
-const showEmojiPicker = ref(false);
 const { fetchUnreadMessageCount } = useUnreadMessages();
 const markAsRead = async() => {
     await axios.post(route('message.mark-as-read', props.conversation.id));
     fetchUnreadMessageCount();
 };
 
+const showEmojiPicker = ref(false);
 const onSelectEmoji = (emoji) => {
-    content.value += emoji.i;
+    if (quillEditor.value) {
+        const range = quillEditor.value.getSelection();
+        quillEditor.value.insertText(range ? range.index: 0, emoji.i);
+    }
     showEmojiPicker.value = false;
 };
 
@@ -216,9 +222,9 @@ const removeMedia = (index) => {
 };
 
 const openLinkDialog = () => {
-    selectedRange.value = quillEditor.value.getQuill().getSelection();
+    selectedRange.value = quillEditor.value.getSelection();
     if (selectedRange.value && selectedRange.value.length > 0) {
-        linkText.value = quillEditor.value.getQuill().getText(selectedRange.value.index, selectedRange.value.length);
+        linkText.value = quillEditor.value.getText(selectedRange.value.index, selectedRange.value.length);
     }
     showLinkModal.value = true;
 };
@@ -226,8 +232,6 @@ const openLinkDialog = () => {
 const insertLink = () => {
     if (linkUrl.value) {
         const displayText = linkUrl.value;
-        const quill = quillEditor.value.getQuill();
-
         let finalUrl = linkUrl.value;
         if(linkUrl.value.includes('.') && !linkUrl.value.startsWith('http://') && !linkUrl.value.startsWith('https://')) {
             finalUrl = `https://${linkUrl.value}`;
@@ -235,11 +239,14 @@ const insertLink = () => {
 
         if (selectedRange.value) {
             if (selectedRange.value.length > 0) {
-                quill.deleteText(selectedRange.value.index, selectedRange.value.length);
+                quillEditor.value.deleteText(selectedRange.value.index, selectedRange.value.length);
             }
-            quill.insertText(selectedRange.value.index, displayText, { 'link': finalUrl });
+            quillEditor.value.insertText(selectedRange.value.index, displayText);
+            quillEditor.value.formatText(selectedRange.value.index, displayText.length, 'link', finalUrl);
         } else {
-            quill.insertText(quill.getLength() - 1, displayText, { 'link': finalUrl });
+            const currentIndex = quillEditor.value.getLength() - 1;
+            quillEditor.value.insertText(currentIndex, displayText);
+            quillEditor.value.formatText(currentIndex, displayText.length, 'link', finalUrl);
         }
     }
 
@@ -250,7 +257,7 @@ const insertLink = () => {
 };
 
 const styledTag = (value) => {
-    return value.replace(/<a /g, '<a class="underline" ')
+    return value.replace(/<a /g, '<a class="text-blue-600 hover:text-blue-800 hover:no-underline" target="_blank"')
         .replace(/<ul>/g, '<ul class="list-disc list-inside pl-4">')
         .replace(/<ol>/g, '<ol class="list-decimal list-inside pl-3.5">');
 }
@@ -288,13 +295,13 @@ const styledTag = (value) => {
                 <ul class="space-y-2" v-if="activeMessages.length > 0" id="messagesContainer">
                     <li :class="['max-w-md flex gap-x-2 sm:gap-x-4', message.sender_id === $page.props.auth.user.id ? 'justify-end ms-auto' : '']"
                         v-for="message in activeMessages" :key="message.id">
-                        <div v-if="message.sender_id === $page.props.auth.user.id" class="bg-blue-600 px-2 pb-2 rounded-lg">
+                        <div v-if="message.sender_id === $page.props.auth.user.id" class="bg-blue-100 px-2 pb-2 rounded-lg">
                             <PostMedia
                                 v-if="message.media && message.media.length > 0"
                                 :medias="message.media"
                                 :small="true"
                             />
-                            <p class="text-sm text-white mt-1" v-html="styledTag(message.content)"></p>
+                            <p class="text-sm mt-1" v-html="styledTag(message.content)"></p>
                         </div>
 
                         <div class="bg-white border border-gray-200 rounded-xl px-2 py-2" v-else>
@@ -315,16 +322,7 @@ const styledTag = (value) => {
 
             <div class="flex items-center space-x-1 border-t rounded-xl border-gray-200 p-1 bg-gray-200">
                 <!-- Chat Input -->
-                    <QuillEditor
-                        ref="quillEditor"
-                        v-model:content="content"
-                        contentType="html"
-                        :options="{
-                                    placeholder: 'Type a message...',
-                                    modules: {
-                                        toolbar: false
-                                    }
-                                }"
+                    <QuillEditor ref="quillEditor" @update:value="form.content = $event"
                         class="flex-1 text-sm border rounded-lg border-gray-300 bg-white focus:ring-1 focus:ring-blue-500 focus:outline-none break-words resize-none overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full"
                     />
 

@@ -20,6 +20,9 @@ const updateUnreadCount = (userId) => {
 }
 
 const truncatedText = (originalText) => {
+    if(!originalText) {
+        return '<i>send you a file</i>';
+    }
     return originalText.length > 50
         ? originalText.slice(0, 50) + "..."
         : originalText;

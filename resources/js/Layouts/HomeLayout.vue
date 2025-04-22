@@ -37,7 +37,6 @@ onMounted(() => {
 
     Echo.private(`message.notification`)
         .listen('NewMessage', (event) => {
-            console.log(event)
             fetchUnreadMessageCount();
         })
         .error((error) => {
