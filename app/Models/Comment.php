@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Mews\Purifier\Casts\CleanHtml;
 use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -20,6 +21,10 @@ class Comment extends Model implements HasMedia
     protected $guarded = [];
 
     protected $appends = ['is_liked'];
+
+    protected $casts = [
+        'message' => CleanHtml::class
+    ];
 
     public function user(): BelongsTo
     {
