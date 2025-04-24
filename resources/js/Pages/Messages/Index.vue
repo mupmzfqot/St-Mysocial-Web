@@ -1,8 +1,9 @@
 <script setup>
-import {Head, Link} from "@inertiajs/vue3";
+import {Head, Link, usePage} from "@inertiajs/vue3";
 import HomeLayout from "@/Layouts/HomeLayout.vue";
 import { useUnreadMessages } from '@/Composables/useUnreadMessages';
 import { onMounted, ref } from "vue";
+import { FileImage } from "lucide-vue-next";
 
 const props = defineProps({
     conversations: Object
@@ -19,10 +20,9 @@ const updateUnreadCount = (userId) => {
     unreadCounts.value[userId] += 1;
 }
 
+const currentUser = usePage().props.auth.user.id;
+
 const truncatedText = (originalText) => {
-    if(!originalText) {
-        return '<i>send you a file</i>';
-    }
     return originalText.length > 50
         ? originalText.slice(0, 50) + "..."
         : originalText;
@@ -74,7 +74,12 @@ const countUnread = (userId) => {
                         </div>
                         <div v-if="user.latest_message.length > 0"
                            :class="['text-sm dark:text-neutral-500 font-medium text-gray-400', user.unread_messages_count > 0 ? 'flex justify-between' : '']">
-                            <p v-html="truncatedText(user.latest_message[0].content)"></p>
+                            <p v-if="user.latest_message[0].content" v-html="truncatedText(user.latest_message[0].content)"></p>
+                            <p v-else class="flex items-center">
+                                <FileImage class="shrink-0 size-4 mr-1" />
+                                <span v-if="user.id !== currentUser">You just sent a file</span>
+                                <span v-else>Send you a file </span>
+                            </p>
                             <span v-if="user.unread_messages_count > 0" class="inline-flex items-center py-0.5 px-1.5 rounded-full text-xs bg-red-500 text-white">
                                 {{ user.unread_messages_count }}
                             </span>
