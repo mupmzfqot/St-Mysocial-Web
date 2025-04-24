@@ -130,7 +130,10 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('profile-covers', [ProfileController::class, 'indexCovers'])->name('profile-covers');
 
 
-    Route::get('app-setting', [SettingController::class, 'index'])->name('app-setting');
+    Route::group(['prefix' => 'app-setting'], function () {
+        Route::get('/', [SettingController::class, 'index'])->name('app-setting');
+        Route::post('/smtp/{id?}', [SettingController::class, 'save_smtp'])->name('smtp');
+    });
 });
 
 
