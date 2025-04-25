@@ -77,8 +77,8 @@ const countUnread = (userId) => {
                             <p v-if="user.latest_message[0].content" v-html="truncatedText(user.latest_message[0].content)"></p>
                             <p v-else class="flex items-center">
                                 <FileImage class="shrink-0 size-4 mr-1" />
-                                <span v-if="user.id !== currentUser">You just sent a file</span>
-                                <span v-else>Send you a file </span>
+                                <span v-if="user.latest_message[0].sender_id === currentUser">You have sent a file</span>
+                                <span v-else>You have received a file </span>
                             </p>
                             <span v-if="user.unread_messages_count > 0" class="inline-flex items-center py-0.5 px-1.5 rounded-full text-xs bg-red-500 text-white">
                                 {{ user.unread_messages_count }}
