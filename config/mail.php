@@ -1,7 +1,5 @@
 <?php
 
-use App\Models\SmtpConfig;
-
 return [
 
     /*
@@ -54,15 +52,15 @@ return [
         'smtp_db' => [
             'transport' => 'smtp',
             'url' => env('MAIL_URL'),
-            'host' => 'smtp.mailers.smtp.host' ?? env('MAIL_HOST', '127.0.0.1'),
-            'port' => 'smtp.mailers.smtp.port' ?? env('MAIL_PORT', 2525),
-            'encryption' => 'smtp.mailers.smtp.encryption' ?? env('MAIL_ENCRYPTION', 'tls'),
-            'username' => 'smtp.mailers.smtp.username' ?? env('MAIL_USERNAME'),
-            'password' => 'smtp.mailers.smtp.password' ?? env('MAIL_PASSWORD'),
+            'host' => config('mail.mailers.smtp.host') ?? env('MAIL_HOST', '127.0.0.1'),
+            'port' => (int) config('mail.mailers.smtp.port') ?? env('MAIL_PORT', 2525),
+            'encryption' => config('mail.mailers.smtp.encryption') ?? env('MAIL_ENCRYPTION', 'tls'),
+            'username' => config('mail.mailers.smtp.username') ?? env('MAIL_USERNAME'),
+            'password' => config('mail.mailers.smtp.password') ?? env('MAIL_PASSWORD'),
             'timeout' => null,
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
-            'sender' => 'smtp.mailers.smtp.sender' ?? env('MAIL_FROM_NAME', 'TeamST'),
-            'from_adress' => 'smtp.mailers.smtp.email' ?? env('MAIL_FROM_ADDRESS', 'support@st.gov.my'),
+            'sender' => config('mail.from.name') ?? env('MAIL_FROM_NAME', 'TeamST'),
+            'from_adress' => config('mail.from.address') ?? env('MAIL_FROM_ADDRESS', 'support@st.gov.my'),
         ],
 
         'ses' => [
@@ -125,8 +123,8 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'smtp.mailers.smtp.email' ?? 'support@st.gov.my'),
-        'name' => env('MAIL_FROM_NAME', 'smtp.mailers.smtp.sender' ?? 'TeamST'),  
+        'address' => config('mail.from.address') ?? env('MAIL_FROM_ADDRESS',  'support@st.gov.my'),
+        'name' => config('mail.from.name') ??env('MAIL_FROM_NAME', 'TeamST'),  
     ],
 
     'st_user_email_domain' => env('ST_USER_EMAIL_DOMAIN'),

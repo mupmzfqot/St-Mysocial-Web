@@ -26,6 +26,20 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if(Schema::hasTable('smtp_configs')) {
+            $smtp = SmtpConfig::first();
+
+            if ($smtp) {
+                Config::set('mail.mailers.smtp.host', $smtp->host);
+                Config::set('mail.mailers.smtp.port', $smtp->port);
+                Config::set('mail.mailers.smtp.username', $smtp->username);
+                Config::set('mail.mailers.smtp.password', $smtp->password);
+                Config::set('mail.mailers.smtp.encryption', $smtp->encryption);
+                Config::set('mail.from.address', $smtp->email);
+                Config::set('mail.from.name', $smtp->sender);
+            }
+        }
+
         // Share data with all Inertia responses
         Inertia::share([
             // Always share the authenticated user
@@ -45,19 +59,6 @@ class AppServiceProvider extends ServiceProvider
                 ->line('Here is your password: **' . $password . '**')
                 ->line('Please keep it secure and change it after logging in.');
         });
-
-        if(Schema::hasTable('smtp_configs')) {
-            $smtp = SmtpConfig::first();
-
-            if ($smtp) {
-                Config::set('mail.mailers.smtp.host', $smtp->host);
-                Config::set('mail.mailers.smtp.port', $smtp->port);
-                Config::set('mail.mailers.smtp.username', $smtp->username);
-                Config::set('mail.mailers.smtp.password', $smtp->password);
-                Config::set('mail.mailers.smtp.encryption', $smtp->encryption);
-                Config::set('mail.from.address', $smtp->email);
-                Config::set('mail.from.name', $smtp->sender);
-            }
-        }
+        
     }
 }
