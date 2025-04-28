@@ -17,7 +17,7 @@ class SendMessage
                 'files' => 'nullable|array',
                 'files.*' => [
                     'file',
-                    'mimetypes:image/jpeg,image/png,image/jpg',
+                    'mimetypes:image/jpeg,image/png,image/jpg,application/pdf',
                     'max:10240' // 10MB
                 ],
                 'message' => 'required_without:files'
