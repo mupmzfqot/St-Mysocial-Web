@@ -170,6 +170,7 @@ const formatTags = (tags) => {
     return `${firstTwoTags.join(', ')}, and ${remainingCount} other${remainingCount > 1 ? 's' : ''}`;
 }
 const styledTag = (value) => {
+    if(!value) return;
     return value.replace(/<a /g, '<a class="text-blue-600 hover:text-blue-800 hover:no-underline"')
         .replace(/<ul>/g, '<ul class="list-disc list-inside pl-4">')
         .replace(/<ol>/g, '<ol class="list-decimal list-inside pl-3.5">');
@@ -256,7 +257,7 @@ const handleLinkClick = (event) => {
             </div>
         </div>
 
-        <div class="mt-2 text-gray-800 text-wrap text-justify text-sm dark:text-neutral-400" v-html="styledTag(content.post)"></div>
+        <div v-if="content.post" class="mt-2 text-gray-800 text-wrap text-justify text-sm dark:text-neutral-400" v-html="styledTag(content.post)"></div>
 
         <div class="my-3 border border-gray-200 px-3 pb-2 rounded-xl">
             <div class="flex items-center mt-2">
@@ -748,7 +749,7 @@ const handleLinkClick = (event) => {
 
 
                                         </div>
-                                        <div @click="handleLinkClick" class="text-gray-800 text-wrap text-justify text-sm dark:text-neutral-400 pt-1" v-html="styledTag(postDetails.post)"></div>
+                                        <div v-if="postDetails.post" @click="handleLinkClick" class="text-gray-800 text-wrap text-justify text-sm dark:text-neutral-400 pt-1" v-html="styledTag(postDetails.post)"></div>
 
 
                                     </div>

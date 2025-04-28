@@ -21,7 +21,7 @@ class CreatePost
         try {
 
             $validated = $request->validate([
-                'content' => 'required|string',
+                'content' => 'nullable|string',
                 'files' => 'nullable|array',
                 'files.*' => [
                     'file',
