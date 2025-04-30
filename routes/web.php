@@ -129,11 +129,15 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('profile-photos', [ProfileController::class, 'indexPhotos'])->name('profile-photos');
     Route::get('profile-covers', [ProfileController::class, 'indexCovers'])->name('profile-covers');
 
-
-    Route::group(['prefix' => 'app-setting'], function () {
-        Route::get('/', [SettingController::class, 'index'])->name('app-setting');
+    Route::name('app-setting.')->prefix('app-setting')->group(function () {
+        Route::get('/', [SettingController::class, 'index'])->name('index');
         Route::post('/smtp/{id?}', [SettingController::class, 'save_smtp'])->name('smtp');
     });
+
+    // Route::group(['prefix' => 'app-setting'], function () {
+    //     Route::get('/', [SettingController::class, 'index'])->name('app-setting');
+    //     Route::post('/smtp/{id?}', [SettingController::class, 'save_smtp'])->name('smtp');
+    // });
 });
 
 

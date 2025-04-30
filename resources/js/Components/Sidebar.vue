@@ -128,7 +128,7 @@ watch(() => page.props.pendingApprovals, (newApprovals) => {}, { immediate: true
                         </li>
 
                         <li>
-                            <Link :href="route('app-setting')" class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:bg-gray-100">
+                            <Link :href="route('app-setting.index')" class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:bg-gray-100">
                                 <SlidersHorizontal class="shrink-0 size-4" /> Settings
                             </Link>
                         </li>
