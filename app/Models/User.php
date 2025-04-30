@@ -33,7 +33,6 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
         return 'users.'.$this->id;
     }
 
-
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -58,6 +57,11 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
             'updated_at' => 'datetime:d F Y H:i A',
             'last_login' => 'datetime:d F Y H:i A'
         ];
+    }
+
+    protected function getNameAttribute($value): string
+    {
+        return ucwords(strtolower($value));
     }
 
     public function getCreatedDateAttribute()
