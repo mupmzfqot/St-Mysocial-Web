@@ -24,6 +24,7 @@ watch(
 );
 
 const styledTag = (value) => {
+    if(!value) return;
     return value.replace(
         /<a /g,
         '<a class="text-blue-500 underline hover:text-red-500 hover:no-underline" '
@@ -144,7 +145,7 @@ const styledTag = (value) => {
                                     </a>
                                 </td>
                                 <td class="size-px whitespace-nowrap py-2 w-96">
-                                    <span class="text-sm text-gray-600 dark:text-neutral-400 text-wrap" v-html="styledTag(post.post)"></span>
+                                    <span class="text-sm text-gray-600 dark:text-neutral-400 text-wrap" v-if="post.post" v-html="styledTag(post.post)"></span>
                                 </td>
                                 <td class="size-px whitespace-nowrap">
                                     <div v-if="post.media && post.media.length > 0" class="flex -space-x-2">
