@@ -12,7 +12,7 @@ const props = defineProps({
 const form = useForm({
     id: props.config?.id || null,
     host: props.config?.host || '',
-    port: props.config?.port || 567,
+    port: props.config?.port || 587,
     username: props.config?.username || '',
     password: props.config?.password || '',
     encryption: props.config?.encryption || '',
