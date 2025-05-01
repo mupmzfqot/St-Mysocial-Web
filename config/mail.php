@@ -49,20 +49,6 @@ return [
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
 
-        'smtp_db' => [
-            'transport' => 'smtp',
-            'url' => env('MAIL_URL'),
-            'host' => config('mail.mailers.smtp.host') ?? env('MAIL_HOST', '127.0.0.1'),
-            'port' => (int) config('mail.mailers.smtp.port') ?? env('MAIL_PORT', 2525),
-            'encryption' => config('mail.mailers.smtp.encryption') ?? env('MAIL_ENCRYPTION', 'tls'),
-            'username' => config('mail.mailers.smtp.username') ?? env('MAIL_USERNAME'),
-            'password' => config('mail.mailers.smtp.password') ?? env('MAIL_PASSWORD'),
-            'timeout' => null,
-            'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
-            'sender' => config('mail.from.name') ?? env('MAIL_FROM_NAME', 'TeamST'),
-            'from_adress' => config('mail.from.address') ?? env('MAIL_FROM_ADDRESS', 'support@st.gov.my'),
-        ],
-
         'ses' => [
             'transport' => 'ses',
         ],
