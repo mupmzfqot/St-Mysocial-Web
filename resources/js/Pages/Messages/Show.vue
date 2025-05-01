@@ -63,7 +63,6 @@ const sendMessage = async (conversationId) => {
 
     try {
         let message = contentValue.trim() === '' ? '' : content;
-        console.log(message)
         const formData = new FormData();
         formData.append('message', message);
         form.files.forEach((file, index) => {

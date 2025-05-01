@@ -6,7 +6,9 @@ use App\Events\MessageSent;
 use App\Events\NewMessage;
 use App\Models\Conversation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Log;
 
 class SendMessage
 {
@@ -47,8 +49,8 @@ class SendMessage
 
             $message->load('sender', 'media');
 
-            broadcast(new MessageSent($message));
-            broadcast(new NewMessage($conversation_id));
+            Event::dispatch(new MessageSent($message));
+            Event::dispatch(new NewMessage($conversation_id));
 
             return response()->json([
                 'id' => $message->id,

@@ -8,6 +8,7 @@ use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use Log;
 
 class NewMessage implements ShouldBroadcastNow
 {
@@ -32,20 +33,48 @@ class NewMessage implements ShouldBroadcastNow
     public function broadcastWith(): array
     {
        
-        return [
-            'users_id' => $this->getRecipients(),
-        ];
+        return $this->getRecipients();
     }
 
     private function getRecipients(): array
     {
         $conversation = Conversation::query()
                 ->where('id', $this->conversation_id)
-                ->with('users', function ($query) {
-                    $query->where('user_id', '!=', auth()->id());
-                })
+                ->with([
+                    'users' => function ($query) {
+                        $query->where('user_id', '!=', auth()->id())
+                            ->select('users.id', 'users.name');
+                    },
+                    'messages' => function ($query) {
+                        $query->latest()->take(1);
+                    }
+                ])
                 ->first();
-        return array_column($conversation->users->toArray(),'id');
+
+        if (!$conversation || $conversation->messages->isEmpty()) {
+            return [
+                'users_id' => $conversation->messages->pluck('sender_id')->toArray() ?? [],
+                'message' => [
+                    'content' => null,
+                    'sender_id' => null,
+                    'receiver_id' => null,
+                    'created_at' => null,
+                    'conversation_id' => $this->conversation_id
+                ]
+            ];
+        }
+    
+        $latestMessage = $conversation->messages->first();
+        return [
+            'user_ids' => $conversation->messages?->pluck('sender_id')->toArray(),
+            'message' => [
+                'content' => $latestMessage->content,
+                'sender_id' => $latestMessage->sender_id,
+                'receiver_id' => $latestMessage->receiver_id,
+                'created_at' => $latestMessage->created_at,
+                'conversation_id' => $this->conversation_id
+            ]
+        ];
     }
 
 }

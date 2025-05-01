@@ -11,5 +11,5 @@ Broadcast::channel('conversation.{conversationId}', function ($user, $conversati
 });
 
 Broadcast::channel('message.notification', function ($user) {
-    return $user;
+    return auth()->check();
 });

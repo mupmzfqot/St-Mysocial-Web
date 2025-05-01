@@ -2,7 +2,7 @@
 import {Head, Link, usePage} from "@inertiajs/vue3";
 import HomeLayout from "@/Layouts/HomeLayout.vue";
 import { useUnreadMessages } from '@/Composables/useUnreadMessages';
-import { onMounted, ref } from "vue";
+import { onMounted, ref, reactive } from "vue";
 import { FileImage } from "lucide-vue-next";
 
 const props = defineProps({
@@ -10,16 +10,8 @@ const props = defineProps({
 });
 
 const { getUnreadCountForConversation } = useUnreadMessages();
-const unreadCounts = ref({});
-
-const updateUnreadCount = (userId) => {
-    if(unreadCounts.value[userId] === undefined) {
-        unreadCounts.value[userId] = 0;
-    }
-
-    unreadCounts.value[userId] += 1;
-}
-
+const unreadCounts = reactive({});
+const conversations = reactive(props.conversations);
 const currentUser = usePage().props.auth.user.id;
 
 const truncatedText = (originalText) => {
@@ -30,18 +22,20 @@ const truncatedText = (originalText) => {
 onMounted(() => {
     Echo.private(`message.notification`)
         .listen('NewMessage', (event) => {
-            $.each(event.user_ids, (index, userId) => {
-                updateUnreadCount(userId);
-            })
+            if (event.user_ids && Array.isArray(event.user_ids)) {
+                event.user_ids.forEach((userId) => {
+                    const userConversation = conversations.find((c) => c.user_id === userId);
+                    if (userConversation && event.message) {
+                        userConversation.latest_message = [event.message];
+                        userConversation.unread_messages_count++;
+                    }
+                });
+            }
         })
         .error((error) => {
             console.log(error)
         })
-})
-
-const countUnread = (userId) => {
-    return unreadCounts.value[userId] || 0;
-}
+});
 
 </script>
 
@@ -67,10 +61,6 @@ const countUnread = (userId) => {
                     <div class="ms-3 flex-grow">
                         <div class="flex justify-between items-center">
                             <h3 class="font-semibold text-sm text-gray-800 dark:text-white">{{ user.name }}</h3>
-                            <span v-if="countUnread(user.user_id) > 0"
-                                  class="inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium bg-red-500 text-white">
-                                {{ countUnread(user.user_id) }}
-                            </span>
                         </div>
                         <div v-if="user.latest_message.length > 0"
                            :class="['text-sm dark:text-neutral-500 font-medium text-gray-400', user.unread_messages_count > 0 ? 'flex justify-between' : '']">
@@ -81,7 +71,7 @@ const countUnread = (userId) => {
                                 <span v-else>You have received a file </span>
                             </p>
                             <span v-if="user.unread_messages_count > 0" class="inline-flex items-center py-0.5 px-1.5 rounded-full text-xs bg-red-500 text-white">
-                                {{ user.unread_messages_count }}
+                                {{ user.unread_messages_count }} 
                             </span>
                         </div>
                         <p v-else class="text-sm font-medium text-gray-400 dark:text-neutral-500">No message</p>
