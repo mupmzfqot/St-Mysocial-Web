@@ -21,7 +21,7 @@ const form = useForm({
 });
 
 const submit = () => {
-    let url = props.config?.id ? route('app-setting.smtp', {id: form.id}) : route('app-setting.smtp');
+    let url = props.config?.id ? route('setting.smtp', {id: form.id}) : route('setting.smtp');
     form.post(url, {
         onSuccess: (page) => {
             const flash = page.props.flash;
