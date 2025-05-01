@@ -32,7 +32,6 @@ Route::middleware(['auth', 'verified', 'role:user|public_user'])->group(function
         Route::get('tag-post', [PostController::class, 'getTagPost'])->name('tag-post');
         Route::post('store', [PostController::class, 'store'])->name('store');
         Route::post('share', [PostController::class, 'share'])->name('share');
-        Route::post('store', [PostController::class, 'store'])->name('store');
         Route::post('update/{id}', [PostController::class, 'update'])->name('update');
         Route::get('liked-by/{id}', [HomeController::class, 'postLikedBy'])->name('liked-by');
         Route::post('delete', [HomeController::class, 'deletePost'])->name('delete');
@@ -59,8 +58,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/profile/update-status-image/{id}', [ProfileController::class, 'updateProfileImageStatus'])->name('profile.update-status-image');
 
-        Route::get('/photo-album', [PhotoAlbumController::class, 'index'])->name('photoAlbum.index');
-        Route::get('/videos', [PhotoAlbumController::class, 'videos'])->name('videos.index');
+    Route::get('/photo-album', [PhotoAlbumController::class, 'index'])->name('photoAlbum.index');
+    Route::get('/videos', [PhotoAlbumController::class, 'videos'])->name('videos.index');
 
     Route::get('user-post/show/{id}', [HomeController::class, 'showPost'])->name('user-post.show-post');
     Route::get('user-post/tagged-user/{id}', [PostController::class, 'getTaggedUser'])->name('user-post.tagged-user');
@@ -133,12 +132,6 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         Route::get('/', [SettingController::class, 'index'])->name('index');
         Route::post('/smtp/{id?}', [SettingController::class, 'save_smtp'])->name('smtp');
     });
-
-    // Route::group(['prefix' => 'app-setting'], function () {
-    //     Route::get('/', [SettingController::class, 'index'])->name('app-setting');
-    //     Route::post('/smtp/{id?}', [SettingController::class, 'save_smtp'])->name('smtp');
-    // });
 });
-
 
 require __DIR__.'/auth.php';
