@@ -11,13 +11,13 @@ const props = defineProps({
 
 const form = useForm({
     id: props.config?.id || null,
-    host: props.config?.host || '',
-    port: props.config?.port || 587,
-    username: props.config?.username || '',
-    password: props.config?.password || '',
-    encryption: props.config?.encryption || '',
-    sender: props.config?.sender || '',
-    email: props.config?.email || '',
+    host: props.config?.host || import.meta.env.VITE_SMTP_HOST || '',
+    port: props.config?.port || import.meta.env.VITE_SMTP_PORT || '',
+    username: props.config?.username || import.meta.env.VITE_SMTP_USERNAME || '',
+    password: props.config?.password || import.meta.env.VITE_SMTP_PASSWORD || '',
+    encryption: props.config?.encryption || import.meta.env.VITE_SMTP_ENCRYPTION || 'tls',
+    sender: props.config?.sender || import.meta.env.VITE_SMTP_SENDER || '',
+    email: props.config?.email || import.meta.env.VITE_SMTP_EMAIL || '',
 });
 
 const submit = () => {
