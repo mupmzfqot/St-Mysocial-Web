@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Notifications\NewRegisteredUserNotification;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
@@ -32,35 +33,44 @@ class RegisteredUserController extends Controller
      */
     public function store(RegistrationRequest $request)
     {
-        $random_password = $this->generateStrongPassword();
-        $user = User::query()->create([
-            'name' => $request->name,
-            'username' => $request->username,
-            'email' => $request->email,
-            'password' => Hash::make($random_password),
-        ]);
+        DB::beginTransaction();
+        try {
+            $random_password = $this->generateStrongPassword();
+            $user = User::query()->create([
+                'name' => $request->name,
+                'username' => $request->username,
+                'email' => $request->email,
+                'password' => Hash::make($random_password),
+            ]);
 
-        session(['generated_random_password' => $random_password]);
+            session(['generated_random_password' => $random_password]);
 
-        $domain = substr(strrchr($request->email, "@"), 1);
-        if($domain === config('mail.st_user_email_domain')) {
-            event(new Registered($user));
-            $user->update(['is_active' => true]);
-            $user->assignRole('user');
-        } else {
-            $user->assignRole('public_user');
+            $domain = substr(strrchr($request->email, "@"), 1);
+            if($domain === config('mail.st_user_email_domain')) {
+                event(new Registered($user));
+                $user->update(['is_active' => true]);
+                $user->assignRole('user');
+            } else {
+                $user->assignRole('public_user');
 
-            dispatch(function () use ($user) {
-                Mail::to($user->email)->send(new RegistrationSuccess($user));
-            });
+                dispatch(function () use ($user) {
+                    Mail::to($user->email)->send(new RegistrationSuccess($user));
+                });
+            }
+
+            $admins = getUserAdmin();
+
+            Notification::send($admins, new NewRegisteredUserNotification($user));
+
+            Auth::login($user);
+            DB::commit();
+            return redirect()->route('registration-success');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            logger()->error($e->getMessage());
+
+            return redirect()->back()->withErrors(['message' => 'Registration failed. Please contact support.']);
         }
-
-        $admins = getUserAdmin();
-
-        Notification::send($admins, new NewRegisteredUserNotification($user));
-
-        Auth::login($user);
-        return redirect()->route('registration-success');
 
     }
 
