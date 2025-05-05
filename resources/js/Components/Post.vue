@@ -208,7 +208,7 @@ const handleLinkClick = (event) => {
     <div v-if="content.repost">
         <div class="flex items-center">
             <Link :href="route('profile.show', content.author.id)" class="shrink-0">
-                <img class="size-10 rounded-full" :src="content.author.avatar" alt="Avatar">
+                <img class="size-10 rounded-full object-cover" :src="content.author.avatar" alt="Avatar">
             </Link>
             <div class="ms-4">
                 <div class="flex items-center">
@@ -262,7 +262,7 @@ const handleLinkClick = (event) => {
         <div class="my-3 border border-gray-200 px-3 pb-2 rounded-xl">
             <div class="flex items-center mt-2">
                 <Link :href="route('profile.show', content.repost.author.id)" class="shrink-0">
-                    <img class="size-10 rounded-full" :src="content.repost.author.avatar" alt="Avatar">
+                    <img class="size-10 rounded-full object-cover" :src="content.repost.author.avatar" alt="Avatar">
                 </Link>
                 <div class="ms-4">
                     <div class="flex items-center">
@@ -289,7 +289,7 @@ const handleLinkClick = (event) => {
     <div v-else>
         <div class="flex items-center">
             <Link :href="route('profile.show', content.author.id)" class="shrink-0">
-                <img class="size-10 rounded-full" :src="content.author.avatar" alt="Avatar">
+                <img class="size-10 rounded-full object-cover" :src="content.author.avatar" alt="Avatar">
             </Link>
             <div class="ms-4">
                 <div class="flex items-center">
@@ -732,7 +732,7 @@ const handleLinkClick = (event) => {
                                         <!-- Post Header -->
                                         <div class="flex items-center">
                                             <Link :href="route('profile.show', postDetails.author.id)" class="shrink-0">
-                                                <img class="size-10 rounded-full" :src="postDetails.author.avatar" alt="Avatar">
+                                                <img class="size-10 rounded-full object-cover" :src="postDetails.author.avatar" alt="Avatar">
                                             </Link>
                                             <div class="ms-4">
                                                 <div class="flex items-center">
@@ -763,7 +763,7 @@ const handleLinkClick = (event) => {
                                     <div class="my-3 border border-gray-200 px-3 pb-2 rounded-xl" v-if="postDetails.repost">
                                         <Link :href="route('profile.show', postDetails.repost.author.id)" class="flex items-center mt-2">
                                             <div class="shrink-0">
-                                                <img class="size-10 rounded-full" :src="postDetails.repost.author.avatar" alt="Avatar">
+                                                <img class="size-10 rounded-full object-cover" :src="postDetails.repost.author.avatar" alt="Avatar">
                                             </div>
                                             <div class="ms-4">
                                                 <div class="text-base font-semibold text-gray-800 dark:text-neutral-400 hover:text-blue-700">{{ postDetails.repost.author.name }}</div>

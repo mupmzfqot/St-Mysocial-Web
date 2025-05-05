@@ -90,7 +90,7 @@ const readNotification = (item) => {
                     <!-- Dropdown -->
                     <div class="hs-dropdown [--placement:bottom-right] relative inline-flex ms-2">
                         <button id="hs-dropdown-custom-trigger" type="button" class="hs-dropdown-toggle py-1 ps-1 pe-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-full border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800">
-                            <img class="w-8 h-auto rounded-full" :src="$page.props.auth.user.avatar" alt="Avatar">
+                            <img class="w-8 h-auto rounded-full object-cover" :src="$page.props.auth.user.avatar" alt="Avatar">
                             <svg class="hs-dropdown-open:rotate-180 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                         </button>
 

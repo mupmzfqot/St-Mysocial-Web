@@ -100,7 +100,7 @@ watch(
                                 <td class="size-px whitespace-nowrap align-top">
                                     <a class="block p-6" href="#">
                                         <div class="flex items-center gap-x-3">
-                                            <img :src="user.avatar" class="size-10 shrink-0 rounded-full" alt="avatar">
+                                            <img :src="user.avatar" class="size-10 shrink-0 rounded-full object-cover" alt="avatar">
                                             <div class="grow">
                                                 <span class="block text-sm font-semibold text-gray-800 dark:text-neutral-200">{{ user.name }}</span>
                                                 <span class="block text-sm text-gray-500 dark:text-neutral-500">{{ user.email }}</span>

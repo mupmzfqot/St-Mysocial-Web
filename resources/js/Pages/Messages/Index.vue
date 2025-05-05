@@ -55,7 +55,7 @@ onMounted(() => {
                 <div class="flex items-center">
                     <div class="hs-tooltip inline-block">
                         <a class="hs-tooltip-toggle relative inline-block" href="#">
-                            <img class="inline-block size-[40px] rounded-full" :src="user.avatar" alt="Avatar">
+                            <img class="inline-block size-[40px] rounded-full object-cover" :src="user.avatar" alt="Avatar">
                         </a>
                     </div>
                     <div class="ms-3 flex-grow">

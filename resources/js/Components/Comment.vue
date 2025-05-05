@@ -223,7 +223,7 @@ onMounted(() => {
                 <!-- Icon -->
                 <div class="relative last:after:hidden after:absolute after:top-10 after:bottom-0 after:start-5 after:w-px after:-translate-x-[0.5px] after:bg-gray-200 dark:after:bg-neutral-700">
                     <div class="relative z-10 size-10 flex justify-center items-center">
-                        <img class="shrink-0 size-10 rounded-full" :src="comment.user.avatar" alt="Avatar">
+                        <img class="shrink-0 size-10 rounded-full object-cover" :src="comment.user.avatar" alt="Avatar">
                     </div>
                 </div>
                 <!-- End Icon -->

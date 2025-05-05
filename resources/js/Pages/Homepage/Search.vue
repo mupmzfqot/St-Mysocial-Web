@@ -63,7 +63,7 @@ watch(
                                         <div class="flex items-center">
                                             <div class="hs-tooltip inline-block">
                                                 <a class="hs-tooltip-toggle relative inline-block" href="#">
-                                                    <img class="inline-block size-[40px] rounded-full" :src="user.avatar" alt="Avatar">
+                                                    <img class="inline-block size-[40px] rounded-full object-cover" :src="user.avatar" alt="Avatar">
                                                     <!--                                            <span class="absolute bottom-0 end-0 block size-3 rounded-full ring-2 ring-white bg-green-700"></span>-->
                                                 </a>
                                             </div>

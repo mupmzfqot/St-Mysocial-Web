@@ -502,7 +502,7 @@ onMounted(() => {
             <div class="">
                 <div class="min-h-60 flex flex-col bg-white border shadow-sm rounded-xl dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-700/70">
                     <div class="flex flex-auto flex-col justify-center items-center p-4 md:p-5">
-                        <img class="inline-block size-[120px] rounded-full"
+                        <img class="inline-block size-[120px] rounded-full object-cover"
                              :src="user.avatar"
                              alt="Avatar"
                         >
