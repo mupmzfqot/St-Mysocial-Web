@@ -6,8 +6,9 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import {Head, Link, useForm} from '@inertiajs/vue3';
 import TogglePassword from "@/Components/TogglePassword.vue";
-import {ref, computed} from 'vue';
-import { useReCaptcha } from 'vue-recaptcha-v3';
+import {ref, computed, onUnmounted} from 'vue';
+import { useReCaptcha, VueReCaptcha } from 'vue-recaptcha-v3';
+import { getCurrentInstance } from 'vue'
 
 const props = defineProps({
     canResetPassword: {
@@ -15,8 +16,7 @@ const props = defineProps({
     },
     status: {
         type: String,
-    },
-    captchaSrc: String
+    }
 });
 
 const form = useForm({
@@ -26,12 +26,17 @@ const form = useForm({
     captcha: '',
 });
 
-const { executeRecaptcha, recaptchaLoaded } = useReCaptcha()
-const recaptcha = async () => {
-    await recaptchaLoaded()
-    form.captcha_token = await executeRecaptcha('login')
-    submit();
+const instance = getCurrentInstance()
+const app = instance.appContext.app
+if (!app._installedRecaptcha) {
+    app.use(VueReCaptcha, { siteKey: import.meta.env.VITE_RECAPTCHA_SITE_KEY,  loaderOptions: {
+        autoHideBadge: false,
+        badge: 'bottomright', // 'bottomright', 'bottomleft', 'inline'
+    }});
+    app._recaptchaInitialized = true
 }
+
+const { executeRecaptcha } = useReCaptcha()
 
 const loginError = ref({
     message: '',
@@ -41,13 +46,15 @@ const loginError = ref({
     captcha: null,
 });
 
-const submit = () => {
+const submit = async() => {
     loginError.value = {
         message: '',
         remainAttempts: null,
         maxAttempts: null,
         unlockAt: null
     };
+
+    form.captcha = await executeRecaptcha('login')
 
     form.post(route('login'), {
         onFinish: () => form.reset('password'),
@@ -72,6 +79,13 @@ const formattedUnlockTime = computed(() => {
     }
     return null;
 });
+
+onUnmounted(() => {
+    const badge = document.querySelector('.grecaptcha-badge')
+    if (badge && badge.parentNode) {
+        badge.parentNode.removeChild(badge)
+    }
+})
 </script>
 
 <template>
@@ -125,7 +139,7 @@ const formattedUnlockTime = computed(() => {
                             </div>
                         </div>
                     </div>
-                    <form @submit.prevent="recaptcha">
+                    <form @submit.prevent="submit">
                         <div>
                             <InputLabel :class="'text-xs'" for="email" value="Email" />
                             <TextInput
