@@ -7,6 +7,7 @@ import TextInput from '@/Components/TextInput.vue';
 import {Head, Link, useForm} from '@inertiajs/vue3';
 import TogglePassword from "@/Components/TogglePassword.vue";
 import {ref, computed} from 'vue';
+import { useReCaptcha } from 'vue-recaptcha-v3';
 
 const props = defineProps({
     canResetPassword: {
@@ -24,6 +25,13 @@ const form = useForm({
     remember: false,
     captcha: '',
 });
+
+const { executeRecaptcha, recaptchaLoaded } = useReCaptcha()
+const recaptcha = async () => {
+    await recaptchaLoaded()
+    form.captcha_token = await executeRecaptcha('login')
+    submit();
+}
 
 const loginError = ref({
     message: '',
@@ -93,7 +101,7 @@ const formattedUnlockTime = computed(() => {
             <div class="shrink-0 relative lg:w-[26rem] sm:w-[250px] rounded-t-xl overflow-hidden pt-[40%] sm:rounded-s-xl sm:max-w-[250px] md:rounded-se-none md:max-w-xs">
                 <img class="size-full absolute top-0 start-0 object-cover" src="../../../images/background.webp" alt="Card Image">
             </div>
-            <div class="lg:px-6 lg:py-4 sm:p-3 flex flex-col w-full">
+            <div class="flex flex-1 justify-center lg:px-6 lg:py-4 sm:p-3 flex flex-col w-full">
                 <h3 class="lg:text-xl sm:text-lg text-center font-bold text-gray-800 dark:text-white">Login</h3>
                 <div :class="[form.errors.email ? 'mt-0': 'mt-3']">
                     <div class="py-2" v-if="form.errors.email">
@@ -117,7 +125,7 @@ const formattedUnlockTime = computed(() => {
                             </div>
                         </div>
                     </div>
-                    <form @submit.prevent="submit">
+                    <form @submit.prevent="recaptcha">
                         <div>
                             <InputLabel :class="'text-xs'" for="email" value="Email" />
                             <TextInput
@@ -135,7 +143,7 @@ const formattedUnlockTime = computed(() => {
                             <InputLabel :class="'text-xs'" for="password" value="Password" />
                             <TogglePassword :class="'mt-0.5 block w-full'" v-model="form.password" />
                         </div>
-
+<!-- 
                         <div class="block lg:mt-4 sm:mt-3">
                             <img :src="captchaSrc" alt="" class="lg:h-12 sm:h-10 rounded-md" />
                         </div>
@@ -153,7 +161,7 @@ const formattedUnlockTime = computed(() => {
                             <div class="text-red-600 text-xs mt-0.5" v-if="form.errors.captcha">
                                 {{ form.errors.captcha }}
                             </div>
-                        </div>
+                        </div> -->
 
                         <div class="block lg:mt-3 sm:mt-2">
                             <label class="flex items-center">
