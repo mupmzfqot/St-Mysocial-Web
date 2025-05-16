@@ -7,7 +7,6 @@ import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 import FlashMessage from "@/Components/FlashMessage.vue";
-// import { VueReCaptcha } from 'vue-recaptcha-v3';
 
 const appName = import.meta.env.VITE_APP_NAME || 'TeamST';
 
@@ -18,13 +17,6 @@ createInertiaApp({
         return createApp({ render: () => h(App, props) })
             .use(plugin)
             .use(ZiggyVue)
-            // .use(VueReCaptcha, {
-            //     siteKey: import.meta.env.VITE_RECAPTCHA_SITE_KEY,
-            //     loaderOptions: {
-            //         autoHideBadge: false,
-            //         badge: 'bottomright', // 'bottomright', 'bottomleft', 'inline'
-            //     },
-            // })
             .component('FlashMessage', FlashMessage)
             .mount(el);
     },
