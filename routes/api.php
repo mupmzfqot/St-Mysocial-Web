@@ -38,7 +38,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('posts/unlike', [PostController::class, 'unlikePost']);
     Route::post('posts/unlike-comment', [PostController::class, 'unlikeComment']);
     Route::post('posts/repost', [PostController::class, 'repost']);
-    Route::post('posts/repost', [PostController::class, 'repost']);
+    Route::post('posts/update/{post_id}', [PostController::class, 'update']);
 
 
     Route::group(['prefix' => 'message'], function () {

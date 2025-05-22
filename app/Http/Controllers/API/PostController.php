@@ -20,6 +20,7 @@ use Gate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use App\Actions\Posts\UpdatePost;
 
 class PostController extends Controller
 {
@@ -80,12 +81,12 @@ class PostController extends Controller
         ]);
     }
 
-    public function update(Request $request, $id, CreatePostAPI $createPost)
+    public function update(Request $request, $id, UpdatePost $updatePost)
     {
         try {
             $post = Post::find($id);
             Gate::authorize('modify', $post);
-            $updatedPost = $createPost->handle($request, $id);
+            $updatedPost = $updatePost->handle($request, $post);
             return response()->json([
                 'error' => 0,
                 'data' => new PostResource($updatedPost->load('repost'))
