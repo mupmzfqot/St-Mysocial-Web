@@ -275,7 +275,7 @@ onMounted(() => {
         <div class="z-[9999]" >
             <div
                 v-if="currentUser"
-                class="bg-gray-100 fixed bottom-0 left-0 right-0 dark:bg-neutral-900 shadow-lg p-4 border-t"
+                :class="['p-4 border-t', currentUser.roles.some(role => role.name === 'admin') ? '' : 'left-0 right-0 bg-gray-100 shadow-lg fixed bottom-0']"
             >
                 <!-- Chat Input Area -->
                 <div class="flex items-center space-x-2" >

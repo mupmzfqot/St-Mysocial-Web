@@ -35,7 +35,6 @@ Route::middleware(['auth', 'verified', 'role:user|public_user'])->group(function
         Route::post('update/{id}', [PostController::class, 'update'])->name('update');
         Route::get('liked-by/{id}', [HomeController::class, 'postLikedBy'])->name('liked-by');
         Route::post('delete', [HomeController::class, 'deletePost'])->name('delete');
-        Route::post('comment', [HomeController::class, 'storeComment'])->name('store-comment');
         Route::post('like', [HomeController::class, 'storeLike'])->name('send-like');
         Route::post('unlike', [HomeController::class, 'unlike'])->name('unlike');
         Route::post('like-comment', [HomeController::class, 'storeCommentLike'])->name('send-comment-like');
@@ -57,7 +56,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/profile/update-status-image/{id}', [ProfileController::class, 'updateProfileImageStatus'])->name('profile.update-status-image');
-
+    Route::post('user-post/comment', [HomeController::class, 'storeComment'])->name('user-post.store-comment');
     Route::get('/photo-album', [PhotoAlbumController::class, 'index'])->name('photoAlbum.index');
     Route::get('/videos', [PhotoAlbumController::class, 'videos'])->name('videos.index');
 
