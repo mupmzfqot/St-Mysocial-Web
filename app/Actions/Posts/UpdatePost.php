@@ -37,17 +37,17 @@ class UpdatePost
         ]);
 
         if ($request->hasFile('images')) {
-            $this->removeMedia($post, $request->file('images'));
+            // $this->removeMedia($post, $request->file('images'));
             $post->addMedias($request->file('images'), $post)->toMediaCollection('post_media');
         }
 
         if ($request->hasFile('videos')) {
-            $this->removeMedia($post, $request->file('videos'));
+            // $this->removeMedia($post, $request->file('videos'));
             $post->addMedias($request->file('videos'), $post)->toMediaCollection('post_media');
         }
 
         if ($request->hasFile('document')) {
-            $this->removeMedia($post, $request->file('document'));
+            // $this->removeMedia($post, $request->file('document'));
             $post->addMedias($request->file('document'), $post)->toMediaCollection('post_media');
         }
 

@@ -21,6 +21,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use App\Actions\Posts\UpdatePost;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class PostController extends Controller
 {
@@ -327,5 +328,53 @@ class PostController extends Controller
             ]);
         }
 
+    }
+
+    public function deleteMediaByUrl(Request $request)
+    {
+        try {
+            $request->validate([
+                'media_url' => 'required|string'
+            ]);
+
+            $parseUrl = parse_url($request->media_url);
+            $path = $parseUrl['path'];
+            $segments = explode('/', $path);
+            
+            if (count($segments) < 5) {
+                throw new \Exception('Invalid media URL format');
+            }
+
+            $media_id = $segments[3];
+            $filename = $segments[4];
+
+            $media = Media::query()
+                ->where('id', $media_id)
+                ->where('file_name', $filename)
+                ->where('model_type', Post::class)
+                ->first();
+
+            if (!$media) {
+                return response()->json([
+                    'error' => 1,
+                    'message' => 'Media not found',
+                ], 404);
+            }
+
+            $post = Post::find($media->model_id);
+            Gate::authorize('modify', $post);
+
+            $media->delete();
+
+            return response()->json([
+                'error' => 0,
+                'message' => 'Media has been deleted',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 1,
+                'message' => $e->getMessage(),
+            ]);
+        }
     }
 }
