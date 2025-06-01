@@ -25,21 +25,14 @@ Route::middleware(['auth', 'verified', 'role:user|public_user'])->group(function
     Route::get('/top-posts', [HomeController::class, 'showTopPosts'])->name('top-posts');
     Route::prefix('user-post')->name('user-post.')->group(function () {
         Route::get('get', [PostController::class, 'get'])->name('get');
-        Route::get('get-post/{id}', [PostController::class, 'postById'])->name('get-post');
         Route::get('top-post', [PostController::class, 'getTopPost'])->name('get-top-post');
         Route::get('liked-post', [PostController::class, 'getLikedPost'])->name('liked-post');
         Route::get('recent-post', [PostController::class, 'getRecentPost'])->name('recent-post');
         Route::get('tag-post', [PostController::class, 'getTagPost'])->name('tag-post');
         Route::post('store', [PostController::class, 'store'])->name('store');
-        Route::post('share', [PostController::class, 'share'])->name('share');
         Route::post('update/{id}', [PostController::class, 'update'])->name('update');
-        Route::get('liked-by/{id}', [HomeController::class, 'postLikedBy'])->name('liked-by');
         Route::post('delete', [HomeController::class, 'deletePost'])->name('delete');
-        Route::post('like', [HomeController::class, 'storeLike'])->name('send-like');
-        Route::post('unlike', [HomeController::class, 'unlike'])->name('unlike');
-        Route::post('like-comment', [HomeController::class, 'storeCommentLike'])->name('send-comment-like');
-        Route::post('unlike-comment', [HomeController::class, 'unlikeComment'])->name('unlike-comment');
-        Route::post('delete-comment', [HomeController::class, 'deleteComment'])->name('delete-comment');
+       
     });
 
     Route::get('st-user', [UserController::class, 'stIndex'])->name('st-user');
@@ -56,7 +49,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/profile/update-status-image/{id}', [ProfileController::class, 'updateProfileImageStatus'])->name('profile.update-status-image');
+    
     Route::post('user-post/comment', [HomeController::class, 'storeComment'])->name('user-post.store-comment');
+    Route::post('like', [HomeController::class, 'storeLike'])->name('user-post.send-like');
+    Route::post('unlike', [HomeController::class, 'unlike'])->name('user-post.unlike');
+    Route::post('like-comment', [HomeController::class, 'storeCommentLike'])->name('user-post.send-comment-like');
+    Route::post('unlike-comment', [HomeController::class, 'unlikeComment'])->name('user-post.unlike-comment');
+    Route::post('delete-comment', [HomeController::class, 'deleteComment'])->name('user-post.delete-comment');
+    Route::get('get-post/{id}', [PostController::class, 'postById'])->name('user-post.get-post');
+    Route::post('share', [PostController::class, 'share'])->name('user-post.share');
+        Route::get('liked-by/{id}', [HomeController::class, 'postLikedBy'])->name('user-post.liked-by');
+    
     Route::get('/photo-album', [PhotoAlbumController::class, 'index'])->name('photoAlbum.index');
     Route::get('/videos', [PhotoAlbumController::class, 'videos'])->name('videos.index');
 
