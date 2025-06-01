@@ -176,7 +176,7 @@ class PostController extends Controller
     public function show($id)
     {
         $post = Post::query()
-            ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media', 'repost.tags')
+            ->with('author', 'media', 'comments.user', 'comments.media', 'tags', 'repost.author', 'repost.media', 'repost.tags')
             ->where('id', $id)
             ->first();
 

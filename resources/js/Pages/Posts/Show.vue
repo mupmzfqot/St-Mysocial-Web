@@ -4,13 +4,41 @@ import {Head, Link} from "@inertiajs/vue3";
 import Breadcrumbs from "@/Components/Breadcrumbs.vue";
 import {ChevronRight} from "lucide-vue-next";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import Comment from "@/Components/Comment.vue";
+import {onMounted, ref} from 'vue';
+import axios from 'axios';
 
-defineProps({
+const props = defineProps({
     post: {
         type: Object,
     }
-})
+});
+
+const loading = ref(false);
+const error = ref(null);
+const postData = ref(props.post);
+const postId = props.post.id;
+
+const reloadPosts = async () => {
+    loading.value = true;
+    error.value = null;
+
+    try {
+        const response = await axios.get(route('user-post.get-post', postId));
+        postData.value = response.data;
+        console.log(response.data)
+    } catch (err) {
+        error.value = 'Failed to load post.';
+        console.error(err);
+    } finally {
+        loading.value = false;
+    }
+};
+
+// Initialize post data on mount
+onMounted(() => {
+    reloadPosts();
+    console.log(postData.value);
+});
 </script>
 
 <template>
@@ -34,23 +62,7 @@ defineProps({
             <div class="-m-1.5 overflow-x-auto">
                 <div class="p-1.5 w-2/3 inline-block align-middle">
                     <div  class="flex flex-col text-wrap bg-white border shadow-sm rounded-xl py-3 px-4 mb-2 dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-700/70">
-                        <Post :content="post" :status="false"/>
-
-                        <hr class="-mx-4 mt-2" />
-                        <div class="flex-grow overflow-y-auto custom-scrollbar py-2">
-                            <!-- Comments Section -->
-
-                            <div class="mt-1">
-                                <p class="text-md font-semibold mb-3 text-gray-800 dark:text-white">
-                                    Comments
-                                </p>
-                                <Comment
-                                    :post-id="post.id"
-                                    :comments="post?.comments || []"
-                                    :current-user="$page.props.auth.user"
-                                />
-                            </div>
-                        </div>
+                        <Post :content="postData" @reload-posts="reloadPosts" :status="false" />
                     </div>
                 </div>
             </div>
