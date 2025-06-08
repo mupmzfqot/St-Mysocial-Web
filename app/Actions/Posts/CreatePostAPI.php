@@ -6,6 +6,7 @@ use App\Models\Post;
 use App\Models\PostTag;
 use App\Models\User;
 use App\Notifications\TagUserPost;
+use App\Services\FirebaseService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -20,9 +21,10 @@ class CreatePostAPI
         try {
 
             $validated = $request->validate([
-                'content' => 'required|string',
+                'content' => 'nullable|string',
                 'images' => 'nullable|array',
                 'videos' => 'nullable|array',
+                'document' => 'nullable|array',
                 'images.*' => [
                     'file',
                     'mimetypes:image/jpeg,image/png,image/gif',
@@ -60,13 +62,28 @@ class CreatePostAPI
                 'link' => $request->post('link'),
             ];
 
-
-
             $post = Post::query()->create($data);
 
-            if(!empty($request->userTags) && !auth()->user()->hasRole('admin')) {
+            $userTagsInput = $request->input('user_tags');
+            $processedUserTags = [];
+
+            if (!empty($userTagsInput)) {
+                if (is_string($userTagsInput)) {
+                    $decodedTags = json_decode($userTagsInput, true);
+                    if (is_array($decodedTags)) {
+                        $processedUserTags = $decodedTags;
+                    }
+                } elseif (is_array($userTagsInput)) {
+                    $processedUserTags = $userTagsInput;
+                }
+            }
+
+            // Filter out any non-scalar values from tags, as user IDs should be scalar
+            $processedUserTags = array_filter($processedUserTags, 'is_scalar');
+
+            if (!empty($processedUserTags)) {
                 PostTag::query()->where('post_id', $post->id)->delete();
-                foreach ($request->userTags as $tag) {
+                foreach ($processedUserTags as $tag) {
                     PostTag::query()->create([
                         'post_id' => $post->id,
                         'user_id'  => $tag,
@@ -74,14 +91,15 @@ class CreatePostAPI
                     ]);
                 }
 
-                $taggedUser = User::query()->whereIn('id', $request->userTags)->get();
-                Notification::send($taggedUser, new TagUserPost($post, auth()->user(), false));
-
+                $taggedUser = User::query()->whereIn('id', $processedUserTags)->get();
+                if ($taggedUser->isNotEmpty()) {
+                    Notification::send($taggedUser, new TagUserPost($post, $request->user(), false));
+                }
             }
 
-            if (auth()->user()->hasRole('admin')) {
+            if ($request->user()->hasRole('admin')) {
                 $taggedUser = User::query()->whereHas('roles', function ($query) { $query->where('name', 'user'); })->get();
-                Notification::send($taggedUser, new TagUserPost($post, auth()->user(), true));
+                Notification::send($taggedUser, new TagUserPost($post, $request->user(), true));
             }
 
             if ($request->hasFile('images')) {

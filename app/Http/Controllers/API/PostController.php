@@ -76,10 +76,18 @@ class PostController extends Controller
     public function store(Request $request, CreatePostAPI $createPost)
     {
         $created = $createPost->handle($request);
+
+        if ($created instanceof Post) {
+            return response()->json([
+                'error' => 0,
+                'data' => new PostResource($created)
+            ]);
+        }
+
         return response()->json([
-            'error' => 0,
-            'data' => new PostResource($created)
-        ]);
+            'error' => 1,
+            'message' => $created
+        ], 400);
     }
 
     public function update(Request $request, $id, UpdatePost $updatePost)
@@ -340,7 +348,7 @@ class PostController extends Controller
             $parseUrl = parse_url($request->media_url);
             $path = $parseUrl['path'];
             $segments = explode('/', $path);
-            
+
             if (count($segments) < 5) {
                 throw new \Exception('Invalid media URL format');
             }
