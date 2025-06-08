@@ -32,6 +32,7 @@ class PostResource extends JsonResource
                 'email'         => $this->author->email,
                 'profile_img'   => $this->author->avatar,
             ],
+            'user_tags'     => $this->tags->select('user_id', 'name') ?? [],
             'media'         => $this->getMedia('*')->map(fn ($item) => [
                     'id'            => $item->id,
                     'filename'      => $item->file_name,

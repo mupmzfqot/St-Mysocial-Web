@@ -10,18 +10,19 @@ class NotificationController extends Controller
 {
     public function index(Request $request)
     {
+        $unread_count = $request->user()->unreadNotifications->count();
 
         if(isset($request->is_read)) {
             if($request->query('is_read') == 0) {
-                return $this->formatResult($request->user()->unreadNotifications);
+                return $this->formatResult($request->user()->unreadNotifications, $unread_count);
             }
 
             if($request->query('is_read') == 1) {
-                return $this->formatResult($request->user()->readNotifications);
+                return $this->formatResult($request->user()->readNotifications, $unread_count);
             }
         }
 
-        return $this->formatResult($request->user()->notifications);
+        return $this->formatResult($request->user()->notifications, $unread_count);
 
     }
 
@@ -43,7 +44,7 @@ class NotificationController extends Controller
 
     }
 
-    private function formatResult($results)
+    private function formatResult($results, $unread_count)
     {
         $formattedResuls = $results->map(function ($result) {
             return [
@@ -59,6 +60,7 @@ class NotificationController extends Controller
 
         return response()->json([
             'error' => 0,
+            'unread_count' => $unread_count,
             'data' => $formattedResuls
         ]);
     }
