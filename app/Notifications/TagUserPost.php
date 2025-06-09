@@ -66,6 +66,7 @@ class TagUserPost extends Notification
             'data' => [
                 'post_id' => $this->post->id,
                 'user_id' => $this->user->id,
+                'unread_count' => $notifiable->unreadNotifications()->count(),
             ]
         ];
     }

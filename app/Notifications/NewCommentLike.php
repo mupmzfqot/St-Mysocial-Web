@@ -62,6 +62,7 @@ class NewCommentLike extends Notification
                 'post_id' => $this->comment->post_id,
                 'comment_id' => $this->comment->id,
                 'user_id' => $this->user->id,
+                'unread_count' => $notifiable->unreadNotifications()->count(),
             ]
         ];
     }

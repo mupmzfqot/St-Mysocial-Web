@@ -59,6 +59,7 @@ class NewLike extends Notification
             'data' => [
                 'post_id' => $this->post->post_id,
                 'user_id' => $this->user->id,
+                'unread_count' => $notifiable->unreadNotifications()->count(),
             ]
         ];
     }
