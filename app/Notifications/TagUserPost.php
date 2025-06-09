@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Channels\FCMChannel;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
@@ -27,7 +28,13 @@ class TagUserPost extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        $channels = ['database'];
+
+        if (!empty($notifiable->fcm_token)) {
+            $channels[] = FCMChannel::class;
+        }
+
+        return $channels;
     }
 
     /**
@@ -45,6 +52,21 @@ class TagUserPost extends Notification
             'name'      => 'Post Tag',
             'message'   => $message,
             'url'       => route('user-post.show-post', $this->post->id),
+        ];
+    }
+
+    public function toFcm(object $notifiable): array
+    {
+        $message = $this->isAdmin ? "Administrator created new post"
+            : "{$this->user->name} mentioned you in a post";
+
+        return [
+            'title' => 'Post Tag',
+            'body' => $message,
+            'data' => [
+                'post_id' => $this->post->id,
+                'user_id' => $this->user->id,
+            ]
         ];
     }
 }

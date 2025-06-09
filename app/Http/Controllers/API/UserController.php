@@ -147,4 +147,21 @@ class UserController extends Controller
             ];
         })->values();
     }
+
+    public function updateFcmToken(Request $request)
+    {
+        $request->validate([
+            'fcm_token' => 'required|string',
+        ]);
+
+        $user = $request->user();
+        $user->fcm_token = $request->fcm_token;
+        $user->save();
+
+        return response()->json([
+            'error' => 0,
+            'message' => 'FCM token updated successfully',
+            'fcm_token' => $user->fcm_token
+        ]);
+    }
 }

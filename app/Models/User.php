@@ -128,4 +128,9 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
         return $date->timezone(config('app.timezone'));
     }
 
+    public function devices(): HasMany
+    {
+        return $this->hasMany(UserDevice::class);
+    }
+
 }

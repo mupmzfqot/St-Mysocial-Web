@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Channels\FCMChannel;
 use App\Models\Comment;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
@@ -27,7 +28,13 @@ class NewComment extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        $channels = ['database'];
+
+        if (!empty($notifiable->fcm_token)) {
+            $channels[] = FCMChannel::class;
+        }
+
+        return $channels;
     }
 
 
@@ -38,6 +45,19 @@ class NewComment extends Notification
             'name'      => $this->comment->user?->name,
             'message'   => "{$this->user->name} commented on your post",
             'url'       => route('user-post.show-post', $this->comment->post_id),
+        ];
+    }
+
+    public function toFcm(object $notifiable): array
+    {
+        return [
+            'title' => 'New Comment',
+            'body' => "{$this->user->name} commented on your post",
+            'data' => [
+                'post_id' => $this->comment->post_id,
+                'comment_id' => $this->comment->id,
+                'user_id' => $this->user->id,
+            ]
         ];
     }
 }
