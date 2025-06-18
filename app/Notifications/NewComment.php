@@ -51,13 +51,13 @@ class NewComment extends Notification
     public function toFcm(object $notifiable): array
     {
         return [
-            'title' => 'New Comment',
+            'title' => 'Yuou just got new comment',
             'body' => "{$this->user->name} commented on your post",
             'data' => [
                 'post_id' => $this->comment->post_id,
-                'comment_id' => $this->comment->id,
-                'user_id' => $this->user->id,
-                'unread_count' => $notifiable->unreadNotifications()->count(),
+                'badge' => $notifiable->unreadNotifications()->count(),
+                'route' => 'post_details',
+                'title' => 'You just got new comment',
             ]
         ];
     }

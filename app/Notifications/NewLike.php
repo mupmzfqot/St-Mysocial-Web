@@ -54,12 +54,13 @@ class NewLike extends Notification
     public function toFcm(object $notifiable): array
     {
         return [
-            'title' => 'Post Liked',
+            'title' => 'You just got new likes on your post',
             'body' => "{$this->user->name} likes your post",
             'data' => [
                 'post_id' => $this->post->post_id,
-                'user_id' => $this->user->id,
-                'unread_count' => $notifiable->unreadNotifications()->count(),
+                'badge' => $notifiable->unreadNotifications()->count(),
+                'route' => 'post_details',
+                'title' => 'You just got new likes',
             ]
         ];
     }

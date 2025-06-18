@@ -61,12 +61,13 @@ class TagUserPost extends Notification
             : "{$this->user->name} mentioned you in a post";
 
         return [
-            'title' => 'Post Tag',
+            'title' => 'You just got new post tag',
             'body' => $message,
             'data' => [
                 'post_id' => $this->post->id,
-                'user_id' => $this->user->id,
-                'unread_count' => $notifiable->unreadNotifications()->count(),
+                'badge' => $notifiable->unreadNotifications()->count(),
+                'route' => 'post_details',
+                'title' => 'You just got new post tag',
             ]
         ];
     }
