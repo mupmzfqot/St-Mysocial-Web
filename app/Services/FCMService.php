@@ -6,7 +6,7 @@ use Kreait\Firebase\Contract\Messaging;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification;
 use Kreait\Firebase\Messaging\MulticastSendReport;
-use App\Models\FCMLog;
+use App\Models\FcmLog;
 
 class FCMService
 {
@@ -60,7 +60,7 @@ class FCMService
 
     protected function logSuccess($userId, $token)
     {
-        FCMLog::create([
+        FcmLog::create([
             'user_id' => $userId,
             'token' => $token,
             'status' => 'success',
