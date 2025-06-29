@@ -20,14 +20,21 @@ class PostController extends Controller
         try {
 
             $query = Post::query()
-                ->with('author', 'media', 'comments.user', 'comments.media', 'tags', 'repost.author', 
-                    'repost.media', 'repost.tags'
+                ->with(
+                    'author',
+                    'media',
+                    'comments.user',
+                    'comments.media',
+                    'tags',
+                    'repost.author',
+                    'repost.media',
+                    'repost.tags'
                 )
                 ->orderBy('created_at', 'desc')
                 ->published();
 
 
-            if($request->has('type')) {
+            if ($request->has('type')) {
                 $request->validate(['type' => 'required|in:st,public']);
                 $type = auth()->user()->hasRole('public_user') ? 'public' : $request->input('type');
                 $query->where('type', $type);
@@ -71,7 +78,7 @@ class PostController extends Controller
             })
             ->published()
             ->with(['author', 'media'])
-            ->orderBy('created_at','desc')
+            ->orderBy('created_at', 'desc')
             ->paginate(10)
             ->withQueryString();
 
@@ -83,11 +90,11 @@ class PostController extends Controller
         $defaultType = 'st';
         $title = 'Create New Post';
         $stUsers = User::query()->whereHas('roles', function ($query) {
-                    $query->where('name', 'user');
-                })
-                ->where('is_active', true)
-                ->whereNotNull('email_verified_at')
-                ->get();
+            $query->where('name', 'user');
+        })
+            ->where('is_active', true)
+            ->whereNotNull('email_verified_at')
+            ->get();
         return Inertia::render('Posts/Form', compact('defaultType', 'stUsers', 'title'));
     }
 
@@ -95,20 +102,19 @@ class PostController extends Controller
     {
         try {
             $post = $createPost->handle($request);
-            if(is_string($post)) {
+            if (is_string($post)) {
                 return redirect()->back()->withErrors(['error' => $post]);
             }
 
             $message = 'Post successfully created!';
-            if($request->type === 'public' && !auth()->user()->hasRole('admin')) {
+            if ($request->type === 'public' && !auth()->user()->hasRole('admin')) {
                 $message = 'Your post will be available after admin approval.';
                 return redirect()->back()->with('success', $message);
             }
 
-            if(auth()->user()->hasRole('admin')) {
+            if (auth()->user()->hasRole('admin')) {
                 return redirect()->route('post.index')->with('success', $message);
             }
-
         } catch (\Exception $e) {
             return back()->withErrors(['error' => $e->getMessage()]);
         }
@@ -118,8 +124,10 @@ class PostController extends Controller
     {
         try {
             $post = Post::query()->find($id);
-            if($request->post('files')) {
-                $requestMediaId = collect($request->post('files'))->map(function ($file) { return $file['id']; })->toArray();
+            if ($request->post('files')) {
+                $requestMediaId = collect($request->post('files'))->map(function ($file) {
+                    return $file['id'];
+                })->toArray();
                 $existingMediaId = $post->getMedia('post_media')->pluck('id')->toArray();
                 if (count($existingMediaId) > count($requestMediaId)) {
                     Media::whereIn('id', array_diff($existingMediaId, $requestMediaId))->delete();
@@ -130,7 +138,7 @@ class PostController extends Controller
             $post->type = $request->type;
             $post->update();
 
-            if(!empty($request->userTags)) {
+            if (!empty($request->userTags)) {
                 PostTag::query()->where('post_id', $post->id)->delete();
                 foreach ($request->userTags as $tag) {
                     PostTag::query()->create([
@@ -141,19 +149,19 @@ class PostController extends Controller
                 }
             }
 
-            if($request->hasFile('files')) {
+            if ($request->hasFile('files')) {
                 foreach ($request->file('files') as $file) {
                     $post->addMedia($file)->toMediaCollection('post_media');
                 }
             }
 
             $message = 'Post successfully updated!';
-            if($request->type === 'public' && !auth()->user()->hasRole('admin')) {
+            if ($request->type === 'public' && !auth()->user()->hasRole('admin')) {
                 $message = 'Your post will be available after admin approval.';
                 return redirect()->route('home')->with('success', $message);
             }
 
-            if(auth()->user()->hasRole('admin')) {
+            if (auth()->user()->hasRole('admin')) {
                 return redirect()->route('post-moderation.index-st')->with('success', $message);
             }
         } catch (\Exception $e) {
@@ -188,8 +196,8 @@ class PostController extends Controller
         $defaultType = 'st';
         $title = 'Edit Post';
         $stUsers = User::query()->select('id', 'name')->whereHas('roles', function ($query) {
-                $query->where('name', 'user');
-            })
+            $query->where('name', 'user');
+        })
             ->where('is_active', true)
             ->whereNotNull('email_verified_at')
             ->get();
@@ -203,19 +211,19 @@ class PostController extends Controller
 
     public function getTopPost(Request $request)
     {
-            $cacheKey = 'top_posts_' . md5(json_encode($request->all()));
-            $posts = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($request) {
-                $query = Post::query()
-                    ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media', 'repost.tags')
-                    ->where('comment_count', '>', 0)
-                    ->where('like_count', '>', 0)
-                    ->orderBy(DB::raw('comment_count + like_count'), 'desc')
-                    ->published();
+        $cacheKey = 'top_posts_' . md5(json_encode($request->all()));
+        $posts = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($request) {
+            $query = Post::query()
+                ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media', 'repost.tags')
+                ->where('comment_count', '>', 0)
+                ->where('like_count', '>', 0)
+                ->orderBy(DB::raw('comment_count + like_count'), 'desc')
+                ->published();
 
-                return $query->simplePaginate(30)->withQueryString();
-            });
+            return $query->simplePaginate(30)->withQueryString();
+        });
 
-            return response()->json($posts);
+        return response()->json($posts);
     }
 
 
@@ -231,7 +239,6 @@ class PostController extends Controller
             ->simplePaginate(30);
 
         return response()->json($posts);
-
     }
 
     public function getRecentPost(Request $request)
@@ -244,7 +251,6 @@ class PostController extends Controller
             ->simplePaginate(30);
 
         return response()->json($posts);
-
     }
 
     public function getTagPost(Request $request)
@@ -254,7 +260,7 @@ class PostController extends Controller
             ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media', 'repost.tags')
             ->orderBy('created_at', 'desc')
             ->where('user_id', $user_id)
-            ->orWhereHas('tags', function ($query) use($user_id) {
+            ->orWhereHas('tags', function ($query) use ($user_id) {
                 $query->where('user_id', $user_id);
             })
             ->simplePaginate(30);
@@ -265,7 +271,7 @@ class PostController extends Controller
     public function getTaggedUser($postId)
     {
         $user = User::query()
-            ->whereHas('tags', function ($query) use($postId) {
+            ->whereHas('tags', function ($query) use ($postId) {
                 $query->where('post_id', $postId);
             })
             ->get()
@@ -279,5 +285,17 @@ class PostController extends Controller
             });;
 
         return response()->json($user);
+    }
+
+    public function destroy($id)
+    {
+        $post = Post::query()->find($id);
+        if ($post) {
+            $post->comments()?->delete();
+            $post->likes()?->delete();
+            $post->delete();
+        }
+
+        redirect()->back();
     }
 }
