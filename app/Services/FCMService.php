@@ -78,7 +78,7 @@ class FCMService
             'user_id' => $userId,
             'token' => $token,
             'status' => 'failed',
-            'message' => $exception->getMessage()
+            'message' => $exception
         ]);
     }
 
