@@ -57,7 +57,7 @@ class TagUserPost extends Notification
 
     public function toFcm(object $notifiable): array
     {
-        $title = $this->isAdmin ? 'Admin created new post' : 'You just got new post tag';
+        $title = $this->isAdmin ? 'Administrator created new post' : 'You just got new post tag';
         $message = $this->isAdmin ? null : "{$this->user->name} mentioned you in a post";
 
         return [
