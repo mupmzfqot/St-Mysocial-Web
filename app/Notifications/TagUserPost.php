@@ -19,7 +19,7 @@ class TagUserPost extends Notification
         protected Post $post,
         protected User $user,
         protected bool $isAdmin,
-    ){}
+    ) {}
 
     /**
      * Get the notification's delivery channels.
@@ -57,17 +57,17 @@ class TagUserPost extends Notification
 
     public function toFcm(object $notifiable): array
     {
-        $message = $this->isAdmin ? "Administrator created new post"
-            : "{$this->user->name} mentioned you in a post";
+        $title = $this->isAdmin ? 'Admin created new post' : 'You just got new post tag';
+        $message = $this->isAdmin ? null : "{$this->user->name} mentioned you in a post";
 
         return [
-            'title' => 'You just got new post tag',
+            'title' => $title,
             'body' => $message,
             'data' => [
                 'post_id' => $this->post->id,
                 'badge' => $notifiable->unreadNotifications()->count(),
                 'route' => 'post_details',
-                'title' => 'You just got new post tag',
+                'title' => $title,
             ]
         ];
     }
