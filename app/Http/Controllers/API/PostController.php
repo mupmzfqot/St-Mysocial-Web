@@ -22,9 +22,17 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use App\Actions\Posts\UpdatePost;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use App\Services\PostCacheService;
 
 class PostController extends Controller
 {
+    protected $postCacheService;
+    
+    public function __construct(PostCacheService $postCacheService)
+    {
+        $this->postCacheService = $postCacheService;
+    }
+
     public function index(Request $request)
     {
         try {
@@ -34,20 +42,38 @@ class PostController extends Controller
             }
             $searchTerm = $request->query('search');
             $perPage = $request->query('per_page', 20);
-            $posts = Post::query()
-                ->when($searchTerm, function ($query, $search) {
-                    $query->where('post', 'like', '%' . $search . '%');
-                })
-                ->where('type', $type)
-                ->published()
-                ->orderBy('created_at', 'desc')
-                ->with(['author', 'media'])
-                ->paginate($perPage)
-                ->withQueryString();
+            
+            $posts = $this->postCacheService->getCachedPosts(
+                $type, 
+                $searchTerm, 
+                $perPage, 
+                $request->getQueryString()
+            );
 
             return response()->json([
                 'error' => 0,
-                'data' => PostResource::collection($posts->load('repost'))
+                'data' => PostResource::collection($posts->load('repost')),
+                'pagination' => [
+                    'current_page' => $posts->currentPage(),
+                    'last_page' => $posts->lastPage(),
+                    'per_page' => $posts->perPage(),
+                    'total' => $posts->total(),
+                    'from' => $posts->firstItem(),
+                    'to' => $posts->lastItem(),
+                    'has_more_pages' => $posts->hasMorePages(),
+                    'next_page_url' => $posts->nextPageUrl(),
+                    'prev_page_url' => $posts->previousPageUrl(),
+                    'first_page_url' => $posts->url(1),
+                    'last_page_url' => $posts->url($posts->lastPage()),
+                    'path' => $posts->path(),
+                    'links' => $posts->linkCollection()->toArray(),
+                ],
+                'meta' => [
+                    'type' => $type,
+                    'search_term' => $searchTerm,
+                    'per_page' => $perPage,
+                    'query_string' => $request->getQueryString(),
+                ]
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -137,7 +163,26 @@ class PostController extends Controller
 
         return response()->json([
             'error' => 0,
-            'data' => PostResource::collection($posts->load('repost'))
+            'data' => PostResource::collection($posts->load('repost')),
+            'pagination' => [
+                'current_page' => $posts->currentPage(),
+                'last_page' => $posts->lastPage(),
+                'per_page' => $posts->perPage(),
+                'total' => $posts->total(),
+                'from' => $posts->firstItem(),
+                'to' => $posts->lastItem(),
+                'has_more_pages' => $posts->hasMorePages(),
+                'next_page_url' => $posts->nextPageUrl(),
+                'prev_page_url' => $posts->previousPageUrl(),
+                'first_page_url' => $posts->url(1),
+                'last_page_url' => $posts->url($posts->lastPage()),
+                'path' => $posts->path(),
+                'links' => $posts->linkCollection()->toArray(),
+            ],
+            'meta' => [
+                'type' => 'top_posts',
+                'per_page' => 10,
+            ]
         ]);
     }
 
@@ -289,7 +334,27 @@ class PostController extends Controller
 
             return response()->json([
                 'error' => 0,
-                'data'  => PostResource::collection($posts->load('repost'))
+                'data'  => PostResource::collection($posts->load('repost')),
+                'pagination' => [
+                    'current_page' => $posts->currentPage(),
+                    'last_page' => $posts->lastPage(),
+                    'per_page' => $posts->perPage(),
+                    'total' => $posts->total(),
+                    'from' => $posts->firstItem(),
+                    'to' => $posts->lastItem(),
+                    'has_more_pages' => $posts->hasMorePages(),
+                    'next_page_url' => $posts->nextPageUrl(),
+                    'prev_page_url' => $posts->previousPageUrl(),
+                    'first_page_url' => $posts->url(1),
+                    'last_page_url' => $posts->url($posts->lastPage()),
+                    'path' => $posts->path(),
+                    'links' => $posts->linkCollection()->toArray(),
+                ],
+                'meta' => [
+                    'user_id' => $request->user_id,
+                    'per_page' => $perPage,
+                    'query_string' => $request->getQueryString(),
+                ]
             ]);
         } catch (\Exception $e) {
             return response()->json([
