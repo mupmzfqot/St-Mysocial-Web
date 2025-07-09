@@ -71,7 +71,7 @@ class PostController extends Controller
                 'meta' => [
                     'type' => $type,
                     'search_term' => $searchTerm,
-                    'per_page' => $perPage,
+                    'per_page' => (int) $perPage,
                     'query_string' => $request->getQueryString(),
                 ]
             ]);
@@ -182,6 +182,7 @@ class PostController extends Controller
             'meta' => [
                 'type' => 'top_posts',
                 'per_page' => 10,
+                'query_string' => $request->getQueryString(),
             ]
         ]);
     }
@@ -352,7 +353,7 @@ class PostController extends Controller
                 ],
                 'meta' => [
                     'user_id' => $request->user_id,
-                    'per_page' => $perPage,
+                    'per_page' => int ($perPage),
                     'query_string' => $request->getQueryString(),
                 ]
             ]);
