@@ -353,7 +353,7 @@ class PostController extends Controller
                 ],
                 'meta' => [
                     'user_id' => $request->user_id,
-                    'per_page' => int ($perPage),
+                    'per_page' => (int) $perPage,
                     'query_string' => $request->getQueryString(),
                 ]
             ]);
