@@ -95,7 +95,7 @@ class PostController extends Controller
 
         return response()->json([
             'error' => 0,
-            'data' => new PostResource($post->load('comments'))
+            'data' => new PostResource($post->load('comments', 'repost'))
         ]);
     }
 
