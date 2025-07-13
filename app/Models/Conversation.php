@@ -29,6 +29,6 @@ class Conversation extends Model
 
     public function otherUser($currentUserId)
     {
-        return $this->users()->where('user_id', '!=', $currentUserId);
+        return $this->users()->where('users.id', '!=', $currentUserId);
     }
 }

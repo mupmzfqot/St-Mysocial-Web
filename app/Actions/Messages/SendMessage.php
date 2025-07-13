@@ -5,9 +5,12 @@ namespace App\Actions\Messages;
 use App\Events\MessageSent;
 use App\Events\NewMessage;
 use App\Models\Conversation;
+use App\Models\User;
+use App\Notifications\NewMessageNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Notification;
 use Log;
 
 class SendMessage
@@ -36,7 +39,7 @@ class SendMessage
             Gate::authorize('send', $conversation);
 
             $message = $conversation->messages()->create([
-                'sender_id' => auth()->id(),
+                'sender_id' => $request->user()->id,
                 'content' => $request->message,
             ]);
 
@@ -51,6 +54,12 @@ class SendMessage
 
             Event::dispatch(new MessageSent($message));
             Event::dispatch(new NewMessage($conversation_id));
+
+            $recipient = $conversation->otherUser($request->user()->id)->first();
+
+            if($recipient) {
+                $recipient->notify(new NewMessageNotification($message, $request->user()));
+            }
 
             return response()->json([
                 'id' => $message->id,
