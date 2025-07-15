@@ -7,6 +7,7 @@ use App\Actions\Posts\Repost;
 use App\Models\Post;
 use App\Models\PostTag;
 use App\Models\User;
+use App\Services\PostCacheService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +16,13 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class PostController extends Controller
 {
+    protected $postCacheService;
+    
+    public function __construct(PostCacheService $postCacheService)
+    {
+        $this->postCacheService = $postCacheService;
+    }
+
     public function get(Request $request)
     {
         try {
@@ -106,6 +114,9 @@ class PostController extends Controller
                 return redirect()->back()->withErrors(['error' => $post]);
             }
 
+            // Invalidate cache for the post type
+            $this->postCacheService->clearCache($post->type);
+
             $message = 'Post successfully created!';
             if ($request->type === 'public' && !auth()->user()->hasRole('admin')) {
                 $message = 'Your post will be available after admin approval.';
@@ -155,6 +166,9 @@ class PostController extends Controller
                 }
             }
 
+            // Invalidate cache for the post type
+            $this->postCacheService->clearCache($post->type);
+
             $message = 'Post successfully updated!';
             if ($request->type === 'public' && !auth()->user()->hasRole('admin')) {
                 $message = 'Your post will be available after admin approval.';
@@ -173,6 +187,12 @@ class PostController extends Controller
     {
         try {
             $repostResult = $repost->handle(auth()->id(), $request);
+            
+            // Invalidate cache for the post type if repost is successful
+            if (isset($repostResult['post'])) {
+                $this->postCacheService->clearCache($repostResult['post']->type);
+            }
+            
             return response()->json($repostResult);
         } catch (\Exception $e) {
             return response()->json([
@@ -291,9 +311,14 @@ class PostController extends Controller
     {
         $post = Post::query()->find($id);
         if ($post) {
+            $postType = $post->type; // Store type before deletion
+            
             $post->comments()?->delete();
             $post->likes()?->delete();
             $post->delete();
+            
+            // Invalidate cache for the post type
+            $this->postCacheService->clearCache($postType);
         }
 
         redirect()->back();

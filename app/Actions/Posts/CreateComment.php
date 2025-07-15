@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Notification;
 
 class CreateComment
 {
-    public function handle(Request $request): bool
+    public function handle(Request $request): Comment
     {
         DB::beginTransaction();
         try {
@@ -35,10 +35,11 @@ class CreateComment
             }
 
             DB::commit();
-            return true;
-        } Catch (\Exception $e) {
+            return $comment;
+        } catch (\Exception $e) {
+            DB::rollBack();
             logger($e->getMessage());
-            return false;
+            throw $e;
         }
     }
 }

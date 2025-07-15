@@ -18,6 +18,10 @@ class PostObserver
     public function created(Post $post): void
     {
         try {
+            Log::info("PostObserver: Post created", [
+                'post_id' => $post->id,
+                'type' => $post->type
+            ]);
             $this->clearCacheByType($post->type);
         } catch (\Exception $e) {
             Log::error("Failed to clear cache after post created", ['error' => $e->getMessage()]);
@@ -27,6 +31,10 @@ class PostObserver
     public function updated(Post $post): void
     {
         try {
+            Log::info("PostObserver: Post updated", [
+                'post_id' => $post->id,
+                'type' => $post->type
+            ]);
             $this->clearCacheByType($post->type);
         } catch (\Exception $e) {
             Log::error("Failed to clear cache after post updated", ['error' => $e->getMessage()]);
@@ -36,6 +44,10 @@ class PostObserver
     public function deleted(Post $post): void
     {
         try {
+            Log::info("PostObserver: Post deleted", [
+                'post_id' => $post->id,
+                'type' => $post->type
+            ]);
             $this->clearCacheByType($post->type);
         } catch (\Exception $e) {
             Log::error("Failed to clear cache after post deleted", ['error' => $e->getMessage()]);

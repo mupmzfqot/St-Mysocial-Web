@@ -104,6 +104,9 @@ class PostController extends Controller
         $created = $createPost->handle($request);
 
         if ($created instanceof Post) {
+            // Invalidate cache for the post type (double safety with observer)
+            $this->postCacheService->clearCache($created->type);
+            
             return response()->json([
                 'error' => 0,
                 'data' => new PostResource($created)
@@ -122,6 +125,10 @@ class PostController extends Controller
             $post = Post::find($id);
             Gate::authorize('modify', $post);
             $updatedPost = $updatePost->handle($request, $post);
+            
+            // Invalidate cache for the post type (double safety with observer)
+            $this->postCacheService->clearCache($updatedPost->type);
+            
             return response()->json([
                 'error' => 0,
                 'data' => new PostResource($updatedPost->load('repost'))
@@ -139,7 +146,11 @@ class PostController extends Controller
     {
         try {
             Gate::authorize('modify', $post);
+            $postType = $post->type; // Store type before deletion
             $post->delete();
+
+            // Invalidate cache for the post type (double safety with observer)
+            $this->postCacheService->clearCache($postType);
 
             return response()->json([
                 'message' => 'Post has been deleted',
@@ -190,19 +201,22 @@ class PostController extends Controller
     public function storeComments(Request $request, CreateComment $createComment)
     {
         try {
-            $createComment->handle($request);
+            $comment = $createComment->handle($request);
+            
+            // Invalidate cache for specific post (double safety with observer)
+            $this->postCacheService->invalidatePostCache($comment->post_id);
+            
             return response()->json([
                 'error'     => 0,
                 'message'   => 'Comment has been sent.',
             ], 201);
-        } Catch (\Exception $e) {
+        } catch (\Exception $e) {
             return response()->json([
-                'error'     => 0,
+                'error'     => 1,
                 'message'   => 'Failed to send comment.',
                 'response' => $e->getMessage(),
             ]);
         }
-
     }
 
     public function getComments(Request $request, $postId)
@@ -234,7 +248,10 @@ class PostController extends Controller
 
     public function storeLike(Request $request)
     {
-        $liked = PostLiked::query()->where('post_id', $request->post_id)->where('user_id', $request->user()->id)->first();
+        $liked = PostLiked::query()
+            ->where('post_id', $request->post_id)
+            ->where('user_id', $request->user()->id)
+            ->first();
 
         if(!$liked) {
             $postLiked = PostLiked::query()->create([
@@ -246,6 +263,9 @@ class PostController extends Controller
             if($post->user_id != auth()->id()) {
                 Notification::send($post?->author, new NewLike($postLiked, User::find(auth()->id())));
             }
+
+            // Invalidate cache for specific post (double safety with observer)
+            $this->postCacheService->invalidatePostCache($request->post_id);
         }
 
         return response()->json([
@@ -256,7 +276,13 @@ class PostController extends Controller
 
     public function unlikePost(Request $request)
     {
-        PostLiked::query()->where('post_id', $request->post_id)->where('user_id', auth()->id())->delete();
+        PostLiked::query()
+            ->where('post_id', $request->post_id)
+            ->where('user_id', auth()->id())
+            ->delete();
+
+        // Invalidate cache for specific post (double safety with observer)
+        $this->postCacheService->invalidatePostCache($request->post_id);
 
         return response()->json([
             'error'     => 0,
@@ -279,6 +305,9 @@ class PostController extends Controller
                 Notification::send($comment?->user, new NewCommentLike($comment, User::find(auth()->id())));
             }
 
+            // Invalidate cache for the post (double safety with observer)
+            $this->postCacheService->invalidatePostCache($comment->post_id);
+
             return response()->json([
                 'error'     => 0,
                 'message'   => 'Comment has been liked',
@@ -288,7 +317,15 @@ class PostController extends Controller
 
     public function unlikeComment(Request $request)
     {
-        CommentLiked::query()->where('comment_id', $request->comment_id)->where('user_id', auth()->id())->delete();
+        $comment = CommentLiked::query()->where('comment_id', $request->comment_id)->where('user_id', auth()->id())->first();
+        
+        if ($comment) {
+            $commentModel = Comment::query()->find($request->comment_id);
+            CommentLiked::query()->where('comment_id', $request->comment_id)->where('user_id', auth()->id())->delete();
+
+            // Invalidate cache for the post (double safety with observer)
+            $this->postCacheService->invalidatePostCache($commentModel->post_id);
+        }
 
         return response()->json([
             'error'     => 0,
@@ -384,6 +421,10 @@ class PostController extends Controller
                 });
                 $comment->delete();
                 DB::commit();
+                
+                // Invalidate cache for specific post (double safety with observer)
+                $this->postCacheService->invalidatePostCache($comment->post_id);
+                
                 return response()->json([
                     'error' => 0,
                     'message' => 'Comment has been deleted'
