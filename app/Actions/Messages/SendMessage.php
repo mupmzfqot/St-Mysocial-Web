@@ -73,15 +73,20 @@ class SendMessage
             }
 
             return response()->json([
-                'id' => $message->id,
-                'conversation_id' => $message->conversation_id,
-                'content' => $message->content,
-                'sender_id' => $message->sender_id,
-                'sender_name' => $message->sender->name,
-                'media' => array_values($message->getMedia('message_media')->toArray())
+                'error' => 0,
+                'message' => 'Message sent successfully',
+                'data' => [
+                    'id' => $message->id,
+                    'conversation_id' => $message->conversation_id,
+                    'content' => $message->content,
+                    'sender_id' => $message->sender_id,
+                    'sender_name' => $message->sender->name,
+                    'media' => array_values($message->getMedia('message_media')->toArray())
+                ]
             ]);
         } catch (\Exception $exception) {
             return response()->json([
+                'error' => 1,
                 'message' => $exception->getMessage(),
             ]);
         }

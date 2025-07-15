@@ -40,17 +40,6 @@ class MessageController extends Controller
 
         $conversation = $results->map(function ($conversation) {
             return [
-                'id' => $conversation->messages[0]?->id,
-                'conversation_id' => $conversation->id,
-                'content' => $conversation->messages[0]?->content,
-                'sender_id' => $conversation->messages[0]?->sender_id,
-                'sender_name' => $conversation->messages[0]?->sender?->name,
-                'media' => array_values($conversation->messages[0]?->getMedia('message_media')->toArray()),
-                'unread_message_count' => $conversation->messages_count,
-
-            ];
-
-            return [
                 'id' => $conversation->id,
                 'user_id' => $conversation->users->first()->id,
                 'name' => $conversation->users->first()->name,
