@@ -40,11 +40,22 @@ class MessageController extends Controller
 
         $conversation = $results->map(function ($conversation) {
             return [
+                'id' => $conversation->messages[0]?->id,
+                'conversation_id' => $conversation->id,
+                'content' => $conversation->messages[0]?->content,
+                'sender_id' => $conversation->messages[0]?->sender_id,
+                'sender_name' => $conversation->messages[0]?->sender?->name,
+                'media' => array_values($conversation->messages[0]?->getMedia('message_media')->toArray()),
+                'unread_message_count' => $conversation->messages_count,
+
+            ];
+
+            return [
                 'id' => $conversation->id,
                 'user_id' => $conversation->users->first()->id,
                 'name' => $conversation->users->first()->name,
                 'avatar' => $conversation->users->first()->avatar,
-                'latest_message' => $conversation->messages,
+                'content' => $conversation->messages,
                 'unread_message_count' => $conversation->messages_count,
             ];
         });
@@ -97,7 +108,10 @@ class MessageController extends Controller
             'conversation_id' => $message->conversation_id,
             'content' => $message->content,
             'sender_id' => $message->sender_id,
-            'recipient' => new UserResource(User::find($recipient_id))
+            'recipient' => new UserResource(User::find($recipient_id)),
+            'sender_id' => $message->sender_id,
+            'sender_name' => $message->sender?->name,
+            'media' => array_values($message->getMedia('message_media')->toArray())
         ];
     }
 }
