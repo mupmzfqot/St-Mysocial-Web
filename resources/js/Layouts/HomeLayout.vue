@@ -8,7 +8,7 @@ import {useWebSocket} from '@/Composables/useWebSocket';
 import {TeamStore} from '@/Composables/useTeamStore';
 import {ToastifyContainer} from "vue3-toastify";
 import 'vue3-toastify/dist/index.css';
-import WebSocketAlert from '@/Components/WebSocketAlert.vue';
+// import WebSocketAlert from '@/Components/WebSocketAlert.vue';
 
 const { auth: { roles: userRoles } } = usePage().props;
 const { unreadNotifications: notifications } = usePage().props;
@@ -77,10 +77,10 @@ function isActiveNav(path) {
 
 <template>
     <!-- WebSocket Alert -->
-    <WebSocketAlert 
+    <!-- <WebSocketAlert 
         :show-alert="['connecting', 'reconnecting', 'failed'].includes(connectionStatus)" 
         :connection-status="connectionStatus" 
-    />
+    /> -->
     
     <!-- ========== HEADER ========== -->
     <header class="sticky bg-primary-gradient-reverse top-0 inset-x-0 flex flex-wrap md:justify-start md:flex-nowrap z-[48] w-full bg-white border-b text-sm py-2.5  dark:bg-neutral-800 dark:border-neutral-700">
