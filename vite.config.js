@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
-// import vueDevTools from 'vite-plugin-vue-devtools'
 
 export default defineConfig({
     plugins: [
@@ -18,6 +17,23 @@ export default defineConfig({
                 },
             },
         }),
-        // ...(mode === 'development' ? [vueDevTools()] : []),
     ],
+    build: {
+        outDir: 'public/build',
+        assetsDir: 'assets',
+        manifest: true,
+        rollupOptions: {
+            output: {
+                manualChunks: undefined,
+            },
+            treeshake: {
+                moduleSideEffects: false,
+            },
+        },
+        target: 'es2018',
+    },
+    optimizeDeps: {
+        include: ['vue', '@inertiajs/vue3'],
+        exclude: ['laravel-echo', 'pusher-js'],
+    },
 });
