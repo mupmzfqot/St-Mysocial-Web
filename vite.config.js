@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
-import vueDevTools from 'vite-plugin-vue-devtools'
+// import vueDevTools from 'vite-plugin-vue-devtools'
 
 export default defineConfig({
     plugins: [
@@ -18,6 +18,6 @@ export default defineConfig({
                 },
             },
         }),
-        vueDevTools()
+        // ...(mode === 'development' ? [vueDevTools()] : []),
     ],
 });
