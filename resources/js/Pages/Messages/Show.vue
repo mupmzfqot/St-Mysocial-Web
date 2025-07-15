@@ -3,6 +3,7 @@ import {Head, Link, useForm} from "@inertiajs/vue3";
 import HomeLayout from "@/Layouts/HomeLayout.vue";
 import {ref, onMounted, onBeforeUnmount, watch, nextTick} from 'vue';
 import {useUnreadMessages} from "@/Composables/useUnreadMessages.js";
+import {useWebSocket} from "@/Composables/useWebSocket.js";
 import {Paperclip, SmilePlus, X, LinkIcon} from "lucide-vue-next";
 import EmojiPicker from 'vue3-emoji-picker';
 import 'vue3-emoji-picker/css';
@@ -79,8 +80,25 @@ const sendMessage = async (conversationId) => {
             quillEditor.value.setContent('');
         }
 
-        if(isWebSocketConnected.value === false) {
+        // Always add the message to the list, regardless of WebSocket status
+        if (response.data && response.data.message) {
+            // If response contains message data, use it
+            handleNewMessage(response.data.message);
+        } else if (response.data) {
+            // If response is the message data directly
             handleNewMessage(response.data);
+        } else {
+            // If no response data, create a temporary message
+            const tempMessage = {
+                id: Date.now(), // Temporary ID
+                content: message,
+                sender_id: props.user.id,
+                sender_name: props.user.name,
+                conversation_id: conversationId,
+                created_at: new Date().toISOString(),
+                media: []
+            };
+            handleNewMessage(tempMessage);
         }
 
         form.reset();
@@ -88,28 +106,43 @@ const sendMessage = async (conversationId) => {
         form.files = [];
     } catch (error) {
         console.error('Error sending message:', error);
+        // Show error to user
+        alert('Failed to send message. Please try again.');
     }
 };
 
-const setupWebSocket = () => {
+const { isConnected, subscribeToChannel, unsubscribeFromChannel } = useWebSocket();
+
+const setupWebSocket = async () => {
+    const channelName = `conversation.${props.conversation.id}`;
+    
+    const messageCallback = (event) => {
+        if (!activeMessages.value.some(msg => msg.id === event.id)) {
+            handleNewMessage(event);
+        }
+    };
+
+    const errorCallback = (error) => {
+        console.error('Message channel error:', error);
+        isWebSocketConnected.value = false;
+        // Fallback to polling if WebSocket fails
+        startPolling();
+    };
+
     try {
-        const channel = Echo.private(`conversation.${props.conversation.id}`);
-
-        channel
-            .listen('MessageSent', (event) => {
-                if (!activeMessages.value.some(msg => msg.id === event.id)) {
-                    handleNewMessage(event);
-                }
-            })
-            .error((error) => {
-                console.error('WebSocket connection error:', error);
-                isWebSocketConnected.value = false;
-                startPolling();
-            });
-
-        isWebSocketConnected.value = true;
+        // Subscribe to the conversation channel
+        const channel = await subscribeToChannel(channelName, 'MessageSent', messageCallback, errorCallback);
+        
+        if (channel) {
+            isWebSocketConnected.value = true;
+            console.log('✅ WebSocket connected for messages');
+        } else {
+            isWebSocketConnected.value = false;
+            console.log('❌ WebSocket failed, using polling');
+            startPolling();
+        }
     } catch (error) {
-        console.error('WebSocket setup failed:', error);
+        console.error('❌ Failed to setup WebSocket:', error);
         isWebSocketConnected.value = false;
         startPolling();
     }
@@ -122,9 +155,20 @@ const startPolling = () => {
                 const response = await axios.get(route('message.show', props.conversation.id));
                 const newMessages = response.data;
 
-                if (newMessages.length > activeMessages.value.length) {
-                    activeMessages.value = newMessages;
-                    scrollToBottom();
+                // Check if there are new messages
+                if (newMessages && newMessages.length > 0) {
+                    // Find the latest message ID we have
+                    const currentLatestId = activeMessages.value.length > 0 
+                        ? Math.max(...activeMessages.value.map(msg => msg.id))
+                        : 0;
+                    
+                    // Add only new messages
+                    const newMessagesToAdd = newMessages.filter(msg => msg.id > currentLatestId);
+                    
+                    if (newMessagesToAdd.length > 0) {
+                        activeMessages.value.push(...newMessagesToAdd);
+                        scrollToBottom();
+                    }
                 }
             } catch (error) {
                 console.error('Polling error:', error);
@@ -159,8 +203,8 @@ const setupInteractionListeners = () => {
     }
 };
 
-onMounted(() => {
-    setupWebSocket();
+onMounted(async () => {
+    await setupWebSocket();
     scrollToBottom();
     markAsRead();
     setupInteractionListeners();
@@ -168,6 +212,8 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
     stopPolling();
+    // Unsubscribe from the conversation channel
+    unsubscribeFromChannel(`conversation.${props.conversation.id}`);
 });
 
 const { fetchUnreadMessageCount } = useUnreadMessages();
@@ -268,9 +314,12 @@ const styledTag = (value) => {
     <HomeLayout>
         <div class="pb-3 flex justify-between items-center">
             <h1 class="font-semibold text-xl dark:text-white">Messages</h1>
-            <Link :href="route('message.index')" type="button" class="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-gray-200 text-gray-800 hover:bg-gray-400-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
-                Back
-            </Link>
+            <div class="flex items-center gap-3">
+                <!-- Connection Status Indicator -->
+                <Link :href="route('message.index')" type="button" class="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-gray-200 text-gray-800 hover:bg-gray-400-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
+                    Back
+                </Link>
+            </div>
         </div>
 
         <div class="flex flex-col bg-white border shadow-sm rounded-xl p-1 h-[calc(100vh-180px)] message-container">

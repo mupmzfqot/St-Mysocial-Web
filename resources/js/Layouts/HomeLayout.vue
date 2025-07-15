@@ -4,9 +4,12 @@ import {Link, router, usePage} from "@inertiajs/vue3";
 import {CircleCheckBig, Heart, Images, Video, LogOut, MessageSquareMore, Star, UserIcon, House} from "lucide-vue-next";
 import {debounce} from "lodash";
 import {useUnreadMessages} from '@/Composables/useUnreadMessages';
+import {useWebSocket} from '@/Composables/useWebSocket';
 import {TeamStore} from '@/Composables/useTeamStore';
 import {ToastifyContainer} from "vue3-toastify";
 import 'vue3-toastify/dist/index.css';
+import WebSocketAlert from '@/Components/WebSocketAlert.vue';
+import WebSocketDebug from '@/Components/WebSocketDebug.vue';
 
 const { auth: { roles: userRoles } } = usePage().props;
 const { unreadNotifications: notifications } = usePage().props;
@@ -15,6 +18,7 @@ const teams = ref([]);
 const isPublic = userRoles.includes("public_user");
 const isST = userRoles.includes("user");
 const { unreadMessageCount, fetchUnreadMessageCount } = useUnreadMessages();
+const { isConnected, subscribeToChannel, connectionStatus } = useWebSocket();
 
 const readNotification = (item) => {
     router.visit(route('read-notification', item.id), {
@@ -30,19 +34,26 @@ const fetchTeams = async () => {
     teams.value = await TeamStore.fetchTeams();
 }
 
-onMounted(() => {
+onMounted(async () => {
     window.HSStaticMethods.autoInit();
     fetchTeams();
     fetchUnreadMessageCount();
 
-    Echo.private(`message.notification`)
-        .listen('NewMessage', (event) => {
-            fetchUnreadMessageCount();
-        })
-        .error((error) => {
-            console.log(error)
-        })
-})
+    // Subscribe to message notifications
+    const messageCallback = (event) => {
+        fetchUnreadMessageCount();
+    };
+
+    const errorCallback = (error) => {
+        console.error('Message notification channel error:', error);
+    };
+
+    try {
+        await subscribeToChannel('message.notification', 'NewMessage', messageCallback, errorCallback);
+    } catch (error) {
+        console.error('❌ Failed to subscribe to message notifications:', error);
+    }
+});
 
 const props = defineProps({
     searchTerm: String
@@ -66,6 +77,15 @@ function isActiveNav(path) {
 </script>
 
 <template>
+    <!-- WebSocket Alert -->
+    <WebSocketAlert 
+        :show-alert="['connecting', 'reconnecting', 'failed'].includes(connectionStatus)" 
+        :connection-status="connectionStatus" 
+    />
+    
+    <!-- WebSocket Debug Panel -->
+    <WebSocketDebug />
+    
     <!-- ========== HEADER ========== -->
     <header class="sticky bg-primary-gradient-reverse top-0 inset-x-0 flex flex-wrap md:justify-start md:flex-nowrap z-[48] w-full bg-white border-b text-sm py-2.5  dark:bg-neutral-800 dark:border-neutral-700">
         <nav class="max-w-[85rem] mx-auto w-full px-4 sm:px-6 lg:px-8 flex basis-full items-center">
