@@ -1,4 +1,4 @@
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 
 export function useWebSocket() {
     const isConnected = ref(false);
@@ -17,8 +17,27 @@ export function useWebSocket() {
     const lastError = ref(null);
     const errorCount = ref(0);
 
+    // Check current connection status from Echo
+    const checkCurrentConnectionStatus = () => {
+        if (typeof window !== 'undefined' && window.Echo && window.Echo.connector) {
+            const socket = window.Echo.connector.socket;
+            if (socket) {
+                // Check if socket is already connected
+                if (socket.connected) {
+                    isConnected.value = true;
+                    connectionStatus.value = 'connected';
+                    connectionAttempts.value = 0;
+                    errorCount.value = 0;
+                    lastError.value = null;
+                    return true;
+                }
+            }
+        }
+        return false;
+    };
+
     // Wait for Echo to be properly initialized
-    const waitForEcho = (maxAttempts = 20, interval = 100) => {
+    const waitForEcho = (maxAttempts = 50, interval = 100) => {
         return new Promise((resolve, reject) => {
             let attempts = 0;
             
@@ -28,12 +47,9 @@ export function useWebSocket() {
                 // Check if Echo exists and has proper structure
                 if (typeof window !== 'undefined' && 
                     window.Echo && 
-                    window.Echo.connector && 
-                    window.Echo.connector.socket &&
-                    window.Echo.connector.socket.connected !== undefined) {
+                    window.Echo.connector) {
                     
                     echoReady.value = true;
-                    console.log('✅ Echo is ready');
                     resolve();
                 } else if (attempts >= maxAttempts) {
                     const error = new Error('Echo initialization timeout after ' + maxAttempts + ' attempts');
@@ -62,35 +78,51 @@ export function useWebSocket() {
             // Wait for Echo to be properly initialized
             await waitForEcho();
             
-            // Set up connection event listeners
-            window.Echo.connector.socket.on('connect', () => {
-                console.log('✅ WebSocket connected');
-                isConnected.value = true;
-                connectionStatus.value = 'connected';
-                connectionAttempts.value = 0;
-                errorCount.value = 0;
-                lastError.value = null;
-            });
+            // Check if already connected
+            if (checkCurrentConnectionStatus()) {
+                return; // Already connected, no need to set up listeners
+            }
+            
+            // Only set up event listeners if Echo is ready
+            if (window.Echo && window.Echo.connector) {
+                // For Reverb, we need to check if the socket exists
+                const socket = window.Echo.connector.socket;
+                
+                if (socket) {
+                    socket.on('connect', () => {
+                        isConnected.value = true;
+                        connectionStatus.value = 'connected';
+                        connectionAttempts.value = 0;
+                        errorCount.value = 0;
+                        lastError.value = null;
+                    });
 
-            window.Echo.connector.socket.on('disconnect', (reason) => {
-                console.log('❌ WebSocket disconnected:', reason);
-                isConnected.value = false;
-                connectionStatus.value = 'disconnected';
+                    socket.on('disconnect', (reason) => {
+                        console.log('❌ WebSocket disconnected:', reason);
+                        isConnected.value = false;
+                        connectionStatus.value = 'disconnected';
 
-                // Attempt reconnection
-                if (connectionAttempts.value < maxReconnectAttempts) {
-                    scheduleReconnect();
+                        // Attempt reconnection
+                        if (connectionAttempts.value < maxReconnectAttempts) {
+                            scheduleReconnect();
+                        } else {
+                            connectionStatus.value = 'failed';
+                        }
+                    });
+
+                    socket.on('connect_error', (error) => {
+                        console.error('🔌 WebSocket connection error:', error);
+                        lastError.value = error;
+                        errorCount.value++;
+                        connectionStatus.value = 'failed';
+                    });
                 } else {
-                    connectionStatus.value = 'failed';
+                    // Retry connection after a short delay
+                    setTimeout(() => connect(), 1000);
                 }
-            });
-
-            window.Echo.connector.socket.on('connect_error', (error) => {
-                console.error('🔌 WebSocket connection error:', error);
-                lastError.value = error;
-                errorCount.value++;
-                connectionStatus.value = 'failed';
-            });
+            } else {
+                throw new Error('Echo not properly initialized');
+            }
 
         } catch (error) {
             console.error('❌ WebSocket setup failed:', error);
@@ -107,8 +139,6 @@ export function useWebSocket() {
 
         connectionAttempts.value++;
         connectionStatus.value = 'reconnecting';
-        
-        console.log(`🔄 Attempting to reconnect (${connectionAttempts.value}/${maxReconnectAttempts})...`);
         
         reconnectTimer.value = setTimeout(() => {
             connect();
@@ -148,7 +178,6 @@ export function useWebSocket() {
             // Store channel reference
             channels.value.set(channelName, channel);
             
-            console.log(`✅ Subscribed to channel: ${channelName}`);
             return channel;
             
         } catch (error) {
@@ -170,7 +199,6 @@ export function useWebSocket() {
             try {
                 channel.unsubscribe();
                 channels.value.delete(channelName);
-                console.log(`✅ Unsubscribed from channel: ${channelName}`);
             } catch (error) {
                 console.error(`❌ Error unsubscribing from channel ${channelName}:`, error);
             }
@@ -182,7 +210,6 @@ export function useWebSocket() {
         channels.value.forEach((channel, channelName) => {
             try {
                 channel.unsubscribe();
-                console.log(`✅ Cleaned up channel: ${channelName}`);
             } catch (error) {
                 console.error(`❌ Error cleaning up channel ${channelName}:`, error);
             }
@@ -206,7 +233,6 @@ export function useWebSocket() {
 
     // Manual reconnection
     const forceReconnect = () => {
-        console.log('🔄 Force reconnecting...');
         connectionAttempts.value = 0;
         echoReady.value = false;
         hasAttemptedConnection.value = false;
@@ -214,12 +240,47 @@ export function useWebSocket() {
         connect();
     };
 
-    // Lifecycle hooks
+    // Periodic connection check
+    let connectionCheckInterval = null;
+
+    const startConnectionCheck = () => {
+        if (connectionCheckInterval) {
+            clearInterval(connectionCheckInterval);
+        }
+        
+        connectionCheckInterval = setInterval(() => {
+            if (typeof window !== 'undefined' && window.Echo && window.Echo.connector) {
+                const socket = window.Echo.connector.socket;
+                if (socket && socket.connected && !isConnected.value) {
+                    isConnected.value = true;
+                    connectionStatus.value = 'connected';
+                    connectionAttempts.value = 0;
+                    errorCount.value = 0;
+                    lastError.value = null;
+                } else if (socket && !socket.connected && isConnected.value) {
+                    console.log('❌ WebSocket disconnection detected during periodic check');
+                    isConnected.value = false;
+                    connectionStatus.value = 'disconnected';
+                }
+            }
+        }, 2000); // Check every 2 seconds
+    };
+
+    // Lifecycle hooks - DELAYED to ensure echo.js is loaded first
     onMounted(() => {
-        // Wait for DOM to be ready, then try to connect
+        // Check immediately if Echo is already available and connected
+        if (typeof window !== 'undefined' && window.Echo) {
+            if (checkCurrentConnectionStatus()) {
+                startConnectionCheck();
+                return;
+            }
+        }
+        
+        // Wait much longer to ensure echo.js is fully loaded
         setTimeout(() => {
             connect();
-        }, 1000); // Increased delay to ensure Echo is loaded
+            startConnectionCheck();
+        }, 5000); // Increased delay to ensure echo.js is loaded
     });
 
     onBeforeUnmount(() => {
@@ -227,8 +288,15 @@ export function useWebSocket() {
             clearTimeout(reconnectTimer.value);
             reconnectTimer.value = null;
         }
+        if (connectionCheckInterval) {
+            clearInterval(connectionCheckInterval);
+            connectionCheckInterval = null;
+        }
         cleanupChannels();
     });
+
+    // Computed properties
+    const activeChannels = computed(() => channels.value.size);
 
     return {
         // State
@@ -238,6 +306,8 @@ export function useWebSocket() {
         errorCount,
         echoReady,
         hasAttemptedConnection,
+        activeChannels,
+        connectionAttempts,
         
         // Methods
         connect,
@@ -247,5 +317,6 @@ export function useWebSocket() {
         checkConnection,
         forceReconnect,
         waitForEcho,
+        startConnectionCheck,
     };
 } 

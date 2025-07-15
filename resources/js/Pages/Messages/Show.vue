@@ -1,5 +1,5 @@
 <script setup>
-import {Head, Link, useForm} from "@inertiajs/vue3";
+import {Head, Link, useForm, usePage} from "@inertiajs/vue3";
 import HomeLayout from "@/Layouts/HomeLayout.vue";
 import {ref, onMounted, onBeforeUnmount, watch, nextTick} from 'vue';
 import {useUnreadMessages} from "@/Composables/useUnreadMessages.js";
@@ -26,6 +26,8 @@ const props = defineProps({
     },
 });
 
+const $page = usePage();
+
 const form = useForm({
     message: '',
     post_id: props.postId,
@@ -38,6 +40,7 @@ const content = ref('');
 const activeMessages = ref([...props.messages]);
 const messagesContainer = ref(null);
 const isWebSocketConnected = ref(false);
+const isPolling = ref(false);
 const pollingInterval = ref(null);
 const quillEditor = ref(null);
 const showLinkModal = ref(false);
@@ -53,7 +56,18 @@ const scrollToBottom = () => {
 };
 
 const handleNewMessage = (message) => {
-    activeMessages.value.push(message);
+    // Ensure message has required properties
+    const safeMessage = {
+        id: message.id || Date.now(),
+        content: message.content || '',
+        sender_id: message.sender_id || $page.props.auth.user.id,
+        sender_name: message.sender_name || $page.props.auth.user.name,
+        conversation_id: message.conversation_id || props.conversation.id,
+        created_at: message.created_at || new Date().toISOString(),
+        media: message.media || []
+    };
+    
+    activeMessages.value.push(safeMessage);
     scrollToBottom();
 };
 
@@ -76,36 +90,57 @@ const sendMessage = async (conversationId) => {
             }
         });
 
+        // Check if there's an error in the response
+        if (response.data && response.data.message && response.data.message.includes('error')) {
+            alert('Failed to send message: ' + response.data.message);
+            return;
+        }
+
         if (quillEditor.value.getContent()) {
             quillEditor.value.setContent('');
         }
 
         // Always add the message to the list, regardless of WebSocket status
-        if (response.data && response.data.message) {
-            // If response contains message data, use it
-            handleNewMessage(response.data.message);
+        let messageToAdd = null;
+        
+        if (response.data && response.data.content) {
+            // If response has content directly (this is the correct format from SendMessage action)
+            messageToAdd = response.data;
+        } else if (response.data && response.data.message) {
+            // If response contains message data, use it (fallback)
+            messageToAdd = response.data.message;
         } else if (response.data) {
-            // If response is the message data directly
-            handleNewMessage(response.data);
+            // If response is the message data directly (fallback)
+            messageToAdd = response.data;
         } else {
             // If no response data, create a temporary message
-            const tempMessage = {
+            messageToAdd = {
                 id: Date.now(), // Temporary ID
                 content: message,
-                sender_id: props.user.id,
-                sender_name: props.user.name,
+                sender_id: $page.props.auth.user.id, // Use authenticated user ID
+                sender_name: $page.props.auth.user.name,
                 conversation_id: conversationId,
                 created_at: new Date().toISOString(),
                 media: []
             };
-            handleNewMessage(tempMessage);
+        }
+
+        if (messageToAdd) {
+            // Ensure the message has content
+            if (!messageToAdd.content && messageToAdd.content !== '') {
+                messageToAdd.content = message;
+            }
+            
+            handleNewMessage(messageToAdd);
+        } else {
+            console.error('❌ No message data to add');
         }
 
         form.reset();
         previews.value = [];
         form.files = [];
     } catch (error) {
-        console.error('Error sending message:', error);
+        console.error('❌ Error sending message:', error);
         // Show error to user
         alert('Failed to send message. Please try again.');
     }
@@ -115,7 +150,7 @@ const { isConnected, subscribeToChannel, unsubscribeFromChannel } = useWebSocket
 
 const setupWebSocket = async () => {
     const channelName = `conversation.${props.conversation.id}`;
-    
+
     const messageCallback = (event) => {
         if (!activeMessages.value.some(msg => msg.id === event.id)) {
             handleNewMessage(event);
@@ -123,7 +158,6 @@ const setupWebSocket = async () => {
     };
 
     const errorCallback = (error) => {
-        console.error('Message channel error:', error);
         isWebSocketConnected.value = false;
         // Fallback to polling if WebSocket fails
         startPolling();
@@ -132,13 +166,13 @@ const setupWebSocket = async () => {
     try {
         // Subscribe to the conversation channel
         const channel = await subscribeToChannel(channelName, 'MessageSent', messageCallback, errorCallback);
-        
+
         if (channel) {
             isWebSocketConnected.value = true;
-            console.log('✅ WebSocket connected for messages');
+            // Stop polling if WebSocket is working
+            stopPolling();
         } else {
             isWebSocketConnected.value = false;
-            console.log('❌ WebSocket failed, using polling');
             startPolling();
         }
     } catch (error) {
@@ -150,6 +184,7 @@ const setupWebSocket = async () => {
 
 const startPolling = () => {
     if (!pollingInterval.value) {
+        isPolling.value = true;
         pollingInterval.value = setInterval(async () => {
             try {
                 const response = await axios.get(route('message.show', props.conversation.id));
@@ -171,9 +206,9 @@ const startPolling = () => {
                     }
                 }
             } catch (error) {
-                console.error('Polling error:', error);
+                console.error('❌ Polling error:', error);
             }
-        }, 3000);
+        }, 2000); // Reduced to 2 seconds for faster updates
     }
 };
 
@@ -181,6 +216,31 @@ const stopPolling = () => {
     if (pollingInterval.value) {
         clearInterval(pollingInterval.value);
         pollingInterval.value = null;
+        isPolling.value = false;
+    }
+};
+
+const manualRefresh = async () => {
+    try {
+        const response = await axios.get(route('message.show', props.conversation.id));
+        const newMessages = response.data;
+
+        if (newMessages && newMessages.length > 0) {
+            // Find the latest message ID we have
+            const currentLatestId = activeMessages.value.length > 0 
+                ? Math.max(...activeMessages.value.map(msg => msg.id))
+                : 0;
+            
+            // Add only new messages
+            const newMessagesToAdd = newMessages.filter(msg => msg.id > currentLatestId);
+            
+            if (newMessagesToAdd.length > 0) {
+                activeMessages.value.push(...newMessagesToAdd);
+                scrollToBottom();
+            } 
+        }
+    } catch (error) {
+        // console.error('❌ Manual refresh error:', error);
     }
 };
 
@@ -302,6 +362,11 @@ const insertLink = () => {
 };
 
 const styledTag = (value) => {
+    // Handle null, undefined, or empty values
+    if (!value || typeof value !== 'string') {
+        return '';
+    }
+    
     return value.replace(/<a /g, '<a class="text-blue-600 hover:text-blue-800 hover:no-underline" target="_blank"')
         .replace(/<ul>/g, '<ul class="list-disc list-inside pl-4">')
         .replace(/<ol>/g, '<ol class="list-decimal list-inside pl-3.5">');
@@ -316,6 +381,13 @@ const styledTag = (value) => {
             <h1 class="font-semibold text-xl dark:text-white">Messages</h1>
             <div class="flex items-center gap-3">
                 <!-- Connection Status Indicator -->
+                <div v-if="!isWebSocketConnected && isPolling" class="flex items-center gap-2 text-sm text-yellow-600">
+                    <div class="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
+                    <span>Polling for messages...</span>
+                    <button @click="manualRefresh" class="text-xs bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600">
+                        Refresh
+                    </button>
+                </div>
                 <Link :href="route('message.index')" type="button" class="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-gray-200 text-gray-800 hover:bg-gray-400-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
                     Back
                 </Link>

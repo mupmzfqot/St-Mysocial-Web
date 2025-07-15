@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
+import vueDevTools from 'vite-plugin-vue-devtools';
 
 export default defineConfig({
     plugins: [
@@ -17,6 +18,7 @@ export default defineConfig({
                 },
             },
         }),
+        vueDevTools()
     ],
     build: {
         outDir: 'public/build',
@@ -32,8 +34,5 @@ export default defineConfig({
         },
         target: 'es2018',
     },
-    optimizeDeps: {
-        include: ['vue', '@inertiajs/vue3'],
-        exclude: ['laravel-echo', 'pusher-js'],
-    },
+    
 });

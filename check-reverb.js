@@ -40,24 +40,29 @@ const main = async () => {
         console.log('   php artisan reverb:status');
         console.log('');
         console.log('4. Make sure your .env file has the correct Reverb settings:');
-        console.log('   REVERB_APP_KEY=your_app_key');
-        console.log('   REVERB_APP_SECRET=your_app_secret');
-        console.log('   REVERB_APP_ID=your_app_id');
-        console.log('   REVERB_HOST=localhost');
+        console.log('   REVERB_APP_KEY=ioipjibtntmk8ogipqtg');
+        console.log('   REVERB_APP_SECRET=smhumec4rlnliqydifhs');
+        console.log('   REVERB_APP_ID=837724');
+        console.log('   REVERB_HOST=social_web.test');
         console.log('   REVERB_PORT=8080');
-        console.log('   REVERB_SCHEME=http');
+        console.log('   REVERB_SCHEME=https');
         console.log('');
         console.log('5. For frontend, make sure these VITE variables are set:');
-        console.log('   VITE_REVERB_APP_KEY=your_app_key');
-        console.log('   VITE_REVERB_HOST=localhost');
+        console.log('   VITE_REVERB_APP_KEY=ioipjibtntmk8ogipqtg');
+        console.log('   VITE_REVERB_HOST=social_web.test');
         console.log('   VITE_REVERB_PORT=8080');
-        console.log('   VITE_REVERB_SCHEME=http');
+        console.log('   VITE_REVERB_SCHEME=https');
+        console.log('');
+        console.log('6. Check if your domain is accessible:');
+        console.log('   curl -I https://social_web.test:8080');
     } else {
         console.log('\n✅ Reverb server is running!');
         console.log('If you\'re still having WebSocket issues, check:');
         console.log('1. Browser console for connection errors');
         console.log('2. Network tab for failed WebSocket requests');
         console.log('3. Laravel logs for any server-side errors');
+        console.log('4. Make sure your domain (social_web.test) is accessible');
+        console.log('5. Check if HTTPS is properly configured for local development');
     }
 };
 

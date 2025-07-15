@@ -43,4 +43,6 @@ class MessageSent implements ShouldBroadcastNow
             'media'             => array_values($this->message->getMedia('message_media')->toArray())
         ];
     }
+
+
 }

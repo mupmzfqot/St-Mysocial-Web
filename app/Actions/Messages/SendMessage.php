@@ -52,13 +52,24 @@ class SendMessage
 
             $message->load('sender', 'media');
 
-            Event::dispatch(new MessageSent($message));
-            Event::dispatch(new NewMessage($conversation_id));
+            // Try to broadcast events, but don't fail if WebSocket is not available
+            try {
+                Event::dispatch(new MessageSent($message));
+                Event::dispatch(new NewMessage($conversation_id));
+            } catch (\Exception $e) {
+                // Log the WebSocket error but don't fail the request
+                Log::warning('WebSocket broadcast failed for message ' . $message->id . ': ' . $e->getMessage());
+            }
 
             $recipient = $conversation->otherUser($request->user()->id)->first();
 
             if($recipient) {
-                $recipient->notify(new NewMessageNotification($message, $request->user()));
+                try {
+                    $recipient->notify(new NewMessageNotification($message, $request->user()));
+                } catch (\Exception $e) {
+                    // Log notification error but don't fail the request
+                    Log::warning('Notification failed for message ' . $message->id . ': ' . $e->getMessage());
+                }
             }
 
             return response()->json([
