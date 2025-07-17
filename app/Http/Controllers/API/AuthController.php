@@ -116,7 +116,7 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $request->user()->update(['is_login' => 0, 'last_login' => now()]);
+        $request->user()->update(['is_login' => 0, 'last_login' => now(), 'fcm_token' => null]);
         $request->user()->tokens()->delete();
 
         return response()->json([
