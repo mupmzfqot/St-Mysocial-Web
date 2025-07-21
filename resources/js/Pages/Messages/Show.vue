@@ -122,8 +122,6 @@ const sendMessage = async (conversationId) => {
         // Check if response indicates success with data
         if (response.data && response.data.message === 'Message sent successfully' && response.data.data) {
             console.log('✅ Message sent successfully with data:', response.data.data);
-            // Use the actual message data from the response
-            handleNewMessage(response.data.data);
             
             // Clear form and return early
             if (quillEditor.value.getContent()) {
