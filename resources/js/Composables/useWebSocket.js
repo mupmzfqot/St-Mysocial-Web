@@ -162,7 +162,7 @@ export function useWebSocket() {
         }, reconnectDelay * connectionAttempts.value);
     };
 
-    // Subscribe to a channel - FIXED IMPLEMENTATION
+    // Subscribe to a channel - OPTIMIZED IMPLEMENTATION
     const subscribeToChannel = async (channelName, eventName, callback, errorCallback = null) => {
         try {
             // Wait for Echo to be ready
@@ -184,19 +184,38 @@ export function useWebSocket() {
                 throw new Error(`Failed to create channel: ${channelName}`);
             }
             
-            // PROPER LARAVEL ECHO EVENT LISTENING
-            // Use the correct method for listening to events
-            channel.listen(eventName, (data) => {
-                console.log(`📨 Received event ${eventName} on channel ${channelName}:`, data);
-                console.log(`📨 Data type:`, typeof data);
-                console.log(`📨 Data keys:`, data ? Object.keys(data) : 'null');
-                
-                // Ensure data is properly structured
+            // OPTIMIZED EVENT LISTENING - Try multiple event name formats
+            const eventNames = [
+                eventName, // Original event name (e.g., 'MessageSent')
+                `App\\Events\\${eventName}`, // Full namespace
+                eventName.toLowerCase().replace(/([a-z])([A-Z])/g, '$1-$2'), // kebab-case (e.g., 'message-sent')
+                eventName.replace(/([A-Z])/g, '_$1').toLowerCase(), // snake_case (e.g., 'message_sent')
+            ];
+
+            console.log(`🎯 Trying event names:`, eventNames);
+
+            // Listen for all possible event name formats
+            eventNames.forEach(name => {
+                channel.listen(name, (data) => {
+                    console.log(`📨 Received event ${name} on channel ${channelName}:`, data);
+                    console.log(`📨 Data type:`, typeof data);
+                    console.log(`📨 Data keys:`, data ? Object.keys(data) : 'null');
+                    
+                    // Ensure data is properly structured
+                    if (data && typeof data === 'object') {
+                        callback(data);
+                    } else {
+                        console.warn(`⚠️ Received invalid data for event ${name}:`, data);
+                        console.warn(`⚠️ Data type:`, typeof data);
+                    }
+                });
+            });
+
+            // Also listen for any event on the channel (fallback)
+            channel.listen('.', (data) => {
+                console.log(`📨 Received any event on channel ${channelName}:`, data);
                 if (data && typeof data === 'object') {
                     callback(data);
-                } else {
-                    console.warn(`⚠️ Received invalid data for event ${eventName}:`, data);
-                    console.warn(`⚠️ Data type:`, typeof data);
                 }
             });
 
