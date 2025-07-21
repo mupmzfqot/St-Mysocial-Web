@@ -158,7 +158,7 @@ const sendMessage = async (conversationId) => {
     }
 };
 
-const { isConnected, subscribeToChannel, unsubscribeFromChannel } = useWebSocket();
+const { isConnected, subscribeToChannel, unsubscribeFromChannel, activeChannels } = useWebSocket();
 
 const setupWebSocket = async () => {
     const channelName = `conversation.${props.conversation.id}`;
