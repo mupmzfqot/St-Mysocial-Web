@@ -56,19 +56,36 @@ const scrollToBottom = () => {
 };
 
 const handleNewMessage = (message) => {
-    // Ensure message has required properties
-    const safeMessage = {
-        id: message.id || Date.now(),
-        content: message.content || '',
-        sender_id: message.sender_id || $page.props.auth.user.id,
-        sender_name: message.sender_name || $page.props.auth.user.name,
-        conversation_id: message.conversation_id || props.conversation.id,
-        created_at: message.created_at || new Date().toISOString(),
-        media: message.media || []
-    };
+    console.log('📨 Handling new message:', message);
+    console.log('📨 Message type:', typeof message);
+    console.log('📨 Message keys:', message ? Object.keys(message) : 'null');
     
-    activeMessages.value.push(safeMessage);
-    scrollToBottom();
+    // Ensure message is an object and has required properties
+    if (typeof message !== 'object' || message === null) {
+        console.error('❌ Invalid message object:', message);
+        return;
+    }
+    
+    try {
+        // Create a completely new object to avoid reference issues
+        const safeMessage = {
+            id: parseInt(message.id) || Date.now(),
+            content: String(message.content || ''),
+            sender_id: parseInt(message.sender_id) || $page.props.auth.user.id,
+            sender_name: String(message.sender_name || $page.props.auth.user.name),
+            conversation_id: parseInt(message.conversation_id) || props.conversation.id,
+            created_at: message.created_at || new Date().toISOString(),
+            media: Array.isArray(message.media) ? message.media : []
+        };
+        
+        console.log('✅ Adding safe message to active messages:', safeMessage);
+        activeMessages.value.push(safeMessage);
+        scrollToBottom();
+    } catch (error) {
+        console.error('❌ Error in handleNewMessage:', error);
+        console.error('❌ Message that caused error:', message);
+        console.error('❌ Error stack:', error.stack);
+    }
 };
 
 const sendMessage = async (conversationId) => {
@@ -84,65 +101,60 @@ const sendMessage = async (conversationId) => {
             formData.append(`files[${index}]`, file);
         });
 
+        console.log('🚀 Sending message to:', route('message.send', conversationId));
+        console.log('📝 Message content:', message);
+        
         const response = await axios.post(route('message.send', conversationId), formData, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             }
         });
 
+        console.log('📨 Raw response:', response);
+        console.log('📨 Response data:', response.data);
+        console.log('📨 Response status:', response.status);
+
         // Check if there's an error in the response
-        if (response.data && response.data.message && response.data.message.includes('error')) {
-            alert('Failed to send message: ' + response.data.message);
+        if (response.data && response.data.error === 1) {
+            return;
+        }
+        
+        // Check if response indicates success with data
+        if (response.data && response.data.message === 'Message sent successfully' && response.data.data) {
+            console.log('✅ Message sent successfully with data:', response.data.data);
+            // Use the actual message data from the response
+            handleNewMessage(response.data.data);
+            
+            // Clear form and return early
+            if (quillEditor.value.getContent()) {
+                quillEditor.value.setContent('');
+            }
+            form.reset();
+            previews.value = [];
+            form.files = [];
             return;
         }
 
+        // If we reach here, it means we don't have proper data
+        console.log('⚠️ No proper data in response, clearing form only');
+        
         if (quillEditor.value.getContent()) {
             quillEditor.value.setContent('');
         }
-
-        // Always add the message to the list, regardless of WebSocket status
-        let messageToAdd = null;
         
-        if (response.data && response.data.content) {
-            // If response has content directly (this is the correct format from SendMessage action)
-            messageToAdd = response.data;
-        } else if (response.data && response.data.message) {
-            // If response contains message data, use it (fallback)
-            messageToAdd = response.data.message;
-        } else if (response.data) {
-            // If response is the message data directly (fallback)
-            messageToAdd = response.data;
-        } else {
-            // If no response data, create a temporary message
-            messageToAdd = {
-                id: Date.now(), // Temporary ID
-                content: message,
-                sender_id: $page.props.auth.user.id, // Use authenticated user ID
-                sender_name: $page.props.auth.user.name,
-                conversation_id: conversationId,
-                created_at: new Date().toISOString(),
-                media: []
-            };
-        }
 
-        if (messageToAdd) {
-            // Ensure the message has content
-            if (!messageToAdd.content && messageToAdd.content !== '') {
-                messageToAdd.content = message;
-            }
-            
-            handleNewMessage(messageToAdd);
-        } else {
-            console.error('❌ No message data to add');
-        }
-
-        form.reset();
-        previews.value = [];
-        form.files = [];
     } catch (error) {
         console.error('❌ Error sending message:', error);
-        // Show error to user
-        alert('Failed to send message. Please try again.');
+        console.error('❌ Error details:', {
+            message: error.message,
+            stack: error.stack,
+            response: error.response?.data
+        });
+        
+        // Only show alert if it's a network or server error
+        if (error.response?.status >= 400) {
+            alert('Failed to send message. Please try again.');
+        }
     }
 };
 
@@ -152,26 +164,69 @@ const setupWebSocket = async () => {
     const channelName = `conversation.${props.conversation.id}`;
 
     const messageCallback = (event) => {
-        if (!activeMessages.value.some(msg => msg.id === event.id)) {
-            handleNewMessage(event);
+        console.log('📨 Received WebSocket message:', event);
+        console.log('📨 Event type:', typeof event);
+        console.log('📨 Event keys:', event ? Object.keys(event) : 'null');
+        
+        // Ensure event is a valid message object
+        if (typeof event !== 'object' || event === null) {
+            console.error('❌ Invalid WebSocket event:', event);
+            return;
+        }
+        
+        // Handle different possible event structures
+        let messageData = event;
+        
+        // If event has a 'data' property, use that
+        if (event.data && typeof event.data === 'object') {
+            messageData = event.data;
+        }
+        
+        // Additional validation for required fields
+        if (!messageData.id || !messageData.content) {
+            console.error('❌ WebSocket event missing required fields:', messageData);
+            return;
+        }
+        
+        // Check if this message is already in the list
+        const existingMessage = activeMessages.value.find(msg => msg.id === messageData.id);
+        if (!existingMessage) {
+            console.log('✅ Adding new message from WebSocket:', messageData);
+            handleNewMessage(messageData);
+        } else {
+            console.log('⚠️ Message already exists, skipping:', messageData.id);
         }
     };
+    
+
 
     const errorCallback = (error) => {
+        console.error('❌ WebSocket channel error:', error);
         isWebSocketConnected.value = false;
         // Fallback to polling if WebSocket fails
         startPolling();
     };
 
     try {
-        // Subscribe to the conversation channel
+        console.log('🔌 Setting up WebSocket for channel:', channelName);
+        
+        // Subscribe to the conversation channel for real-time updates
         const channel = await subscribeToChannel(channelName, 'MessageSent', messageCallback, errorCallback);
 
         if (channel) {
+            console.log('✅ WebSocket setup successful');
             isWebSocketConnected.value = true;
             // Stop polling if WebSocket is working
             stopPolling();
+            
+            // Test the WebSocket connection
+            console.log('🔍 Testing WebSocket connection...');
+            setTimeout(() => {
+                console.log('🔍 WebSocket connection status:', isConnected.value);
+                console.log('🔍 Active channels:', activeChannels.value);
+            }, 2000);
         } else {
+            console.log('❌ WebSocket setup failed, falling back to polling');
             isWebSocketConnected.value = false;
             startPolling();
         }
@@ -264,7 +319,11 @@ const setupInteractionListeners = () => {
 };
 
 onMounted(async () => {
-    await setupWebSocket();
+    // Initialize WebSocket with delay to ensure Echo is ready
+    setTimeout(async () => {
+        await setupWebSocket();
+    }, 1000);
+    
     scrollToBottom();
     markAsRead();
     setupInteractionListeners();
@@ -442,7 +501,7 @@ const styledTag = (value) => {
 
             <div class="flex items-center space-x-1 border-t rounded-xl border-gray-200 p-1 bg-gray-200">
                 <!-- Chat Input -->
-                    <QuillEditor ref="quillEditor" @update:value="form.content = $event"
+                    <QuillEditor ref="quillEditor" @update:value="content = $event"
                         class="flex-1 text-sm border rounded-lg border-gray-300 bg-white focus:ring-1 focus:ring-blue-500 focus:outline-none break-words resize-none overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full"
                     />
 
