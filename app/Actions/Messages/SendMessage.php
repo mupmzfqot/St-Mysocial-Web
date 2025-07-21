@@ -38,8 +38,20 @@ class SendMessage
                 
             Gate::authorize('send', $conversation);
 
+            $currentUser = $request->user();
+            if (!$currentUser) {
+                Log::error('No authenticated user found', [
+                    'conversation_id' => $conversation_id,
+                    'request_data' => $request->all()
+                ]);
+                return response()->json([
+                    'error' => 1,
+                    'message' => 'User not authenticated'
+                ]);
+            }
+
             $message = $conversation->messages()->create([
-                'sender_id' => $request->user()->id,
+                'sender_id' => $currentUser->id,
                 'content' => $request->message,
             ]);
 
@@ -54,22 +66,42 @@ class SendMessage
 
             // Try to broadcast events, but don't fail if WebSocket is not available
             try {
+                Log::info('Broadcasting events for message', [
+                    'message_id' => $message->id,
+                    'conversation_id' => $conversation_id,
+                    'sender_id' => $request->user()->id
+                ]);
+                
                 Event::dispatch(new MessageSent($message));
+                Log::info('MessageSent event dispatched successfully');
+                
                 Event::dispatch(new NewMessage($conversation_id));
+                Log::info('NewMessage event dispatched successfully');
+                
             } catch (\Exception $e) {
                 // Log the WebSocket error but don't fail the request
-                Log::warning('WebSocket broadcast failed for message ' . $message->id . ': ' . $e->getMessage());
+                Log::warning('WebSocket broadcast failed for message ' . $message->id . ': ' . $e->getMessage(), [
+                    'exception' => $e->getTraceAsString()
+                ]);
             }
 
-            $recipient = $conversation->otherUser($request->user()->id)->first();
+            $currentUser = $request->user();
+            if ($currentUser) {
+                $recipient = $conversation->otherUser($currentUser->id)->first();
 
-            if($recipient) {
-                try {
-                    $recipient->notify(new NewMessageNotification($message, $request->user()));
-                } catch (\Exception $e) {
-                    // Log notification error but don't fail the request
-                    Log::warning('Notification failed for message ' . $message->id . ': ' . $e->getMessage());
+                if($recipient) {
+                    try {
+                        $recipient->notify(new NewMessageNotification($message, $currentUser));
+                    } catch (\Exception $e) {
+                        // Log notification error but don't fail the request
+                        Log::warning('Notification failed for message ' . $message->id . ': ' . $e->getMessage());
+                    }
                 }
+            } else {
+                Log::warning('No authenticated user found for message notification', [
+                    'message_id' => $message->id,
+                    'conversation_id' => $conversation_id
+                ]);
             }
 
             return response()->json([

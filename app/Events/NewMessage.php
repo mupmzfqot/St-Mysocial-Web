@@ -51,9 +51,24 @@ class NewMessage implements ShouldBroadcastNow
                 ])
                 ->first();
 
-        if (!$conversation || $conversation->messages->isEmpty()) {
+        if (!$conversation) {
+            Log::warning('Conversation not found', ['conversation_id' => $this->conversation_id]);
             return [
-                'users_id' => $conversation->messages->pluck('sender_id')->toArray() ?? [],
+                'user_ids' => [],
+                'message' => [
+                    'content' => null,
+                    'sender_id' => null,
+                    'receiver_id' => null,
+                    'created_at' => null,
+                    'conversation_id' => $this->conversation_id
+                ]
+            ];
+        }
+
+        if ($conversation->messages->isEmpty()) {
+            Log::warning('No messages found in conversation', ['conversation_id' => $this->conversation_id]);
+            return [
+                'user_ids' => [],
                 'message' => [
                     'content' => null,
                     'sender_id' => null,
@@ -65,8 +80,16 @@ class NewMessage implements ShouldBroadcastNow
         }
     
         $latestMessage = $conversation->messages->first();
+        
+        Log::info('Broadcasting NewMessage event', [
+            'conversation_id' => $this->conversation_id,
+            'message_id' => $latestMessage->id,
+            'sender_id' => $latestMessage->sender_id,
+            'content' => $latestMessage->content
+        ]);
+        
         return [
-            'user_ids' => $conversation->messages?->pluck('sender_id')->toArray(),
+            'user_ids' => $conversation->users->pluck('id')->toArray(),
             'message' => [
                 'content' => $latestMessage->content,
                 'sender_id' => $latestMessage->sender_id,

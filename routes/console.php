@@ -164,3 +164,148 @@ Artisan::command('debug:broadcast', function () {
     
     $this->info('=== End Debug ===');
 })->purpose('Debug event broadcasting issues');
+
+Artisan::command('monitor:reverb', function () {
+    $this->info('=== Monitor Reverb Service ===');
+    
+    // Check if Reverb is running
+    $this->info('1. Checking Reverb service status...');
+    
+    $host = env('REVERB_HOST', 'localhost');
+    $port = env('REVERB_PORT', 443);
+    
+    $this->info("   Host: $host");
+    $this->info("   Port: $port");
+    
+    $connection = @fsockopen($host, $port, $errno, $errstr, 5);
+    if ($connection) {
+        $this->info('   ✅ Reverb service is running');
+        fclose($connection);
+    } else {
+        $this->error("   ❌ Reverb service is not running: $errstr ($errno)");
+        $this->info('   💡 Try running: php artisan reverb:start');
+        return;
+    }
+    
+    // Test broadcasting with detailed output
+    $this->info('2. Testing event broadcasting...');
+    try {
+        $conversation = Conversation::first();
+        if (!$conversation) {
+            $this->error('   No conversation found');
+            return;
+        }
+        
+        $this->info("   Testing with conversation ID: {$conversation->id}");
+        
+        // Create a test event with detailed logging
+        $event = new NewMessage($conversation->id);
+        
+        $this->info('   Event details:');
+        $this->info('   - Channel: ' . $event->broadcastOn()[0]->name);
+        $this->info('   - Event class: ' . get_class($event));
+        $this->info('   - Should broadcast now: ' . (method_exists($event, 'shouldBroadcastNow') ? 'Yes' : 'No'));
+        
+        // Dispatch event
+        event($event);
+        
+        $this->info('   ✅ Event dispatched to Reverb');
+        $this->info('   💡 Check Reverb logs for confirmation');
+        
+    } catch (\Exception $e) {
+        $this->error('   ❌ Event broadcasting failed: ' . $e->getMessage());
+    }
+    
+    // Check Laravel logs for broadcasting
+    $this->info('3. Checking recent Laravel logs...');
+    $logFile = storage_path('logs/laravel-' . date('Y-m-d') . '.log');
+    
+    if (file_exists($logFile)) {
+        $logs = file_get_contents($logFile);
+        $lines = explode("\n", $logs);
+        $recentLogs = array_slice($lines, -10);
+        
+        $this->info('   Recent log entries:');
+        foreach ($recentLogs as $log) {
+            if (strpos($log, 'broadcast') !== false || strpos($log, 'NewMessage') !== false) {
+                $this->line('   ' . $log);
+            }
+        }
+    } else {
+        $this->info('   No log file found for today');
+    }
+    
+    $this->info('=== End Monitor ===');
+})->purpose('Monitor Reverb service and event broadcasting');
+
+Artisan::command('test:sendmessage', function () {
+    $this->info('=== Test SendMessage Action ===');
+    
+    try {
+        $conversation = Conversation::first();
+        if (!$conversation) {
+            $this->error('No conversation found');
+            return;
+        }
+        
+        // Get a user that is part of this conversation
+        $user = $conversation->users->first();
+        if (!$user) {
+            $this->error('No user found in conversation');
+            return;
+        }
+        
+        $this->info("Testing with conversation ID: {$conversation->id}");
+        $this->info("Testing with user ID: {$user->id}");
+        $this->info("User name: {$user->name}");
+        
+        // Check conversation users
+        $this->info("Conversation users:");
+        foreach ($conversation->users as $convUser) {
+            $this->info("  - User ID: {$convUser->id}, Name: {$convUser->name}");
+        }
+        
+        // Check if user is in conversation
+        $isInConversation = $conversation->users->contains($user->id);
+        $this->info("User in conversation: " . ($isInConversation ? 'Yes' : 'No'));
+        
+        // Create a mock request
+        $request = new \Illuminate\Http\Request();
+        $request->merge([
+            'message' => 'Test message from command line',
+            'files' => []
+        ]);
+        
+        // Mock authentication properly
+        auth()->login($user);
+        
+        // Verify authentication
+        $this->info("Authenticated user: " . (auth()->check() ? auth()->user()->name : 'Not authenticated'));
+        
+        // Test policy directly
+        $policy = new \App\Policies\ConversationPolicy();
+        $canSend = $policy->send($user, $conversation);
+        $this->info("Policy check - can send: " . ($canSend ? 'Yes' : 'No'));
+        
+        // Create SendMessage action instance
+        $sendMessage = new \App\Actions\Messages\SendMessage();
+        
+        // Execute the action
+        $response = $sendMessage->handle($request, $conversation->id);
+        
+        $this->info('Response:');
+        $this->info(json_encode($response->getData(), JSON_PRETTY_PRINT));
+        
+        if ($response->getData()->error === 0) {
+            $this->info('✅ SendMessage action executed successfully');
+        } else {
+            $this->error('❌ SendMessage action failed');
+        }
+        
+    } catch (\Exception $e) {
+        $this->error('❌ Test failed: ' . $e->getMessage());
+        $this->error('Stack trace: ' . $e->getTraceAsString());
+    }
+    
+    $this->info('=== End Test ===');
+})->purpose('Test SendMessage action directly');
