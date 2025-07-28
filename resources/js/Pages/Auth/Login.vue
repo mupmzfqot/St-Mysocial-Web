@@ -186,5 +186,23 @@ onUnmounted(() => {
                 </div>
             </div>
         </div>
+
+        <!-- System Upgrade Alert -->
+        <div class="my-4 p-4 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg lg:w-[40rem] dark:bg-yellow-900/10 dark:border-yellow-900 dark:text-yellow-500" role="alert">
+            <div class="flex">
+                <div class="shrink-0">
+                    <svg class="shrink-0 size-5 mt-0.5 text-yellow-600" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                        <path d="M12 9v4"></path>
+                        <path d="M12 17h.01"></path>
+                    </svg>
+                </div>
+                <div class="ms-3">
+                    <p class="text-sm">
+                        The ST Social Media System (#TeamST) has been upgraded. Therefore, for security purposes, please click "Forgot Password" to receive a new password.
+                    </p>
+                </div>
+            </div>
+        </div>
     </GuestLayout>
 </template>
