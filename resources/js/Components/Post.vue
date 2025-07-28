@@ -367,7 +367,7 @@ const handleLinkClick = (event) => {
             {{ content.comment_count }} Comments
         </a>
 
-        <a @click.prevent="openShareModal(content.id)" class="inline-flex items-center gap-x-2 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600" href="#">
+        <a @click.prevent="openShareModal(content.repost ? content.repost.id : content.id)" class="inline-flex items-center gap-x-2 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600" href="#">
             <Repeat2 class="shrink-0 size-5 text-gray-800" />
             Share
         </a>

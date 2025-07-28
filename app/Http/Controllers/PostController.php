@@ -189,8 +189,8 @@ class PostController extends Controller
             $repostResult = $repost->handle(auth()->id(), $request);
             
             // Invalidate cache for the post type if repost is successful
-            if (isset($repostResult['post'])) {
-                $this->postCacheService->clearCache($repostResult['post']->type);
+            if ($repostResult && $repostResult->resource) {
+                $this->postCacheService->clearCache($repostResult->resource->type);
             }
             
             return response()->json($repostResult);

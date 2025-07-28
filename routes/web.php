@@ -58,7 +58,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('delete-comment', [HomeController::class, 'deleteComment'])->name('user-post.delete-comment');
     Route::get('get-post/{id}', [PostController::class, 'postById'])->name('user-post.get-post');
     Route::post('share', [PostController::class, 'share'])->name('user-post.share');
-        Route::get('liked-by/{id}', [HomeController::class, 'postLikedBy'])->name('user-post.liked-by');
+    Route::get('liked-by/{id}', [HomeController::class, 'postLikedBy'])->name('user-post.liked-by');
     
     Route::get('/photo-album', [PhotoAlbumController::class, 'index'])->name('photoAlbum.index');
     Route::get('/videos', [PhotoAlbumController::class, 'videos'])->name('videos.index');
