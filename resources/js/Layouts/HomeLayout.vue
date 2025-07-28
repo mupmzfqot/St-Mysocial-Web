@@ -67,6 +67,7 @@ watch(
 );
 
 const currentPath = ref(usePage().url)
+
 function isActiveNav(path) {
     return currentPath.value === path
 }
@@ -184,14 +185,59 @@ function isActiveNav(path) {
                 </div>
             </div>
         </nav>
+        
+        <!-- Mobile Navigation Menu -->
+        <div id="hs-secondaru-navbar" class="hs-collapse hidden overflow-hidden transition-all duration-300 basis-full grow md:hidden bg-white border-b border-gray-200" aria-labelledby="hs-secondaru-navbar-collapse">
+            <div class="overflow-hidden overflow-y-auto max-h-[75vh]">
+                <div class="py-2 md:py-0 flex flex-col md:flex-row md:items-center md:justify-end gap-0.5 md:gap-1">
+                    <!-- User Info -->
+                    <div class="px-4 py-3 border-b border-gray-200">
+                        <div class="flex items-center">
+                            <img class="w-10 h-10 rounded-full object-cover" :src="$page.props.auth.user.avatar" alt="Avatar">
+                            <div class="ml-3">
+                                <h3 class="font-semibold text-gray-800">{{ $page.props.auth.user.name }}</h3>
+                                <p class="text-sm text-gray-500">{{ $page.props.auth.user.email }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Navigation Links -->
+                    <Link v-if="isST" :href="route('homepage')" class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100">
+                        <House class="w-4 h-4 mr-3 text-blue-600" />
+                        Home
+                    </Link>
+                    <Link v-if="isST" :href="route('message.index')" class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100">
+                        <MessageSquareMore class="w-4 h-4 mr-3 text-green-600" />
+                        Messages
+                        <span v-if="unreadMessageCount > 0" class="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">{{ unreadMessageCount }}</span>
+                    </Link>
+                    <Link :href="route('liked-posts')" class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100">
+                        <Heart class="w-4 h-4 mr-3 text-red-600" />
+                        My Likes
+                    </Link>
+                    <Link :href="route('top-posts')" class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100">
+                        <Star class="w-4 h-4 mr-3 text-yellow-600" />
+                        Top Posts
+                    </Link>
+                    <Link :href="route('photoAlbum.index')" class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100">
+                        <Images class="w-4 h-4 mr-3 text-amber-600" />
+                        My Photos
+                    </Link>
+                    <Link :href="route('videos.index')" class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100">
+                        <Video class="w-4 h-4 mr-3 text-pink-600" />
+                        My Videos
+                    </Link>
+                </div>
+            </div>
+        </div>
     </header>
     <!-- ========== END HEADER ========== -->
 
     <!-- ========== MAIN CONTENT ========== -->
     <main id="content">
-        <div class="max-w-[85rem] max-h-screen mx-auto py-6 px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-12 gap-4">
-                <div class="col-span-3">
+        <div class="w-full lg:max-w-[85rem] max-h-screen mx-auto py-6 px-4 sm:px-6 lg:px-0">
+            <div class="flex flex-wrap gap-4">
+                <div class="hidden lg:block w-[20%]">
                     <div class="max-w-xs flex flex-col bg-white shadow-sm rounded-lg">
                         <Link :href="route('profile.edit')" class="shrink-0 group block px-4 py-3">
                             <div class="flex items-center">
@@ -238,18 +284,19 @@ function isActiveNav(path) {
                         </Link>
                     </div>
                 </div>
-                <div class="px-1
-                col-span-6 h-[90vh] overflow-y-auto
-                      [&::-webkit-scrollbar]:w-1
-                      [&::-webkit-scrollbar-track]:rounded-full
-                      [&::-webkit-scrollbar-track]:bg-gray-100
-                      [&::-webkit-scrollbar-thumb]:rounded-full
-                      [&::-webkit-scrollbar-thumb]:bg-gray-300
-                      dark:[&::-webkit-scrollbar-track]:bg-neutral-700
-                      dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500">
+                <div class="w-full lg:w-[55%]
+                    h-[90vh] overflow-y-auto
+                    [&::-webkit-scrollbar]:w-1
+                    [&::-webkit-scrollbar-track]:rounded-full
+                    [&::-webkit-scrollbar-track]:bg-gray-100
+                    [&::-webkit-scrollbar-thumb]:rounded-full
+                    [&::-webkit-scrollbar-thumb]:bg-gray-300
+                    dark:[&::-webkit-scrollbar-track]:bg-neutral-700
+                    dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500"
+                >
                     <slot />
                 </div>
-                <div class="col-span-3">
+                <div class="hidden lg:block w-[20%]">
                     <div class="max-w-xs flex flex-col bg-white shadow-sm rounded-lg hs-accordion active" v-if="isST">
                         <div type="button" id="hs-basic" class="hs-accordion-toggle bg-gray-100 border-b hover:cursor-pointer rounded-t-xl py-3 px-3 dark:bg-neutral-900 dark:border-neutral-700"
                             aria-expanded="true" aria-controls="hs-basic">
@@ -296,7 +343,6 @@ function isActiveNav(path) {
 
                 </div>
             </div>
-
         </div>
     </main>
     <!-- ========== END MAIN CONTENT ========== -->

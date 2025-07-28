@@ -116,11 +116,11 @@ onUnmounted(() => {
             </p>
         </div>
 
-        <div class="flex flex-row bg-white border-gray-200 shadow-2xs rounded-xl lg:min-h-[24rem] lg:w-[38rem] sm:min-h-[23vh] sm:w-[550px] dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400">
-            <div class="shrink-0 relative lg:w-[26rem] sm:w-[250px] rounded-t-xl overflow-hidden pt-[40%] sm:rounded-s-xl sm:max-w-[250px] md:rounded-se-none md:max-w-xs">
+        <div class="flex flex-row bg-white border-gray-200 shadow-2xs rounded-xl lg:min-h-[24rem] lg:min-w-[35rem] lg:max-w-[35rem] xl:min-w-[40rem] xl:max-w-[40rem] sm:min-h-[23vh] w-full max-w-sm sm:max-w-[550px] dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400">
+            <div class="hidden sm:block shrink-0 relative lg:w-[32rem] xl:w-[30rem] sm:w-[250px] rounded-t-xl overflow-hidden pt-[40%] sm:rounded-s-xl sm:max-w-[250px] md:rounded-se-none md:max-w-xs">
                 <img class="size-full absolute top-0 start-0 object-cover" src="../../../images/background.webp" alt="Card Image">
             </div>
-            <div class="flex flex-1 justify-center lg:px-6 lg:py-4 sm:p-3 flex flex-col w-full">
+            <div class="flex flex-1 justify-center lg:px-4 lg:py-6 px-4 py-6 sm:p-3 flex flex-col w-full">
                 <h3 class="lg:text-xl sm:text-lg text-center font-bold text-gray-800 dark:text-white">Login</h3>
                 <div :class="[form.errors.email ? 'mt-0': 'mt-3']">
                     <div class="py-2" v-if="form.errors.email">
@@ -144,8 +144,8 @@ onUnmounted(() => {
                             </div>
                         </div>
                     </div>
-                    <form @submit.prevent="submit">
-                        <div>
+                    <form @submit.prevent="submit" class="space-y-2 lg:space-y-3">
+                        <div >
                             <InputLabel :class="'text-xs'" for="email" value="Email" />
                             <TextInput
                                 id="email"
@@ -158,38 +158,19 @@ onUnmounted(() => {
                             />
                         </div>
 
-                        <div class="lg:mt-3 sm:mt-2">
+                        <div class="lg:mt-4 sm:mt-2">
                             <InputLabel :class="'text-xs'" for="password" value="Password" />
                             <TogglePassword :class="'mt-0.5 block w-full'" v-model="form.password" />
                         </div>
-<!-- 
-                        <div class="block lg:mt-4 sm:mt-3">
-                            <img :src="captchaSrc" alt="" class="lg:h-12 sm:h-10 rounded-md" />
-                        </div>
 
-                        <div class="block lg:mt-3 sm:mt-2 lg:w-[10rem] sm:w-[160px]">
-                            <TextInput
-                                id="captcha"
-                                type="text"
-                                class="mt-1 block text-xs"
-                                v-model="form.captcha"
-                                placeholder="Enter Captcha"
-                                required
-                                autofocus
-                            />
-                            <div class="text-red-600 text-xs mt-0.5" v-if="form.errors.captcha">
-                                {{ form.errors.captcha }}
-                            </div>
-                        </div> -->
-
-                        <div class="block lg:mt-3 sm:mt-2">
+                        <div class="block lg:mt-5 sm:mt-2">
                             <label class="flex items-center">
                                 <Checkbox name="remember" v-model:checked="form.remember" />
                                 <span class="ms-2 text-xs text-gray-600 dark:text-gray-400">Remember me</span>
                             </label>
                         </div>
 
-                        <div class="flex items-center justify-between lg:mt-4 sm:mt-3 pb-2">
+                        <div class="flex items-center justify-between lg:mt-6 sm:mt-3 pb-2">
                             <PrimaryButton :class="{ 'opacity-25': form.processing }, 'text-xs'" :disabled="form.processing">
                                 Log in
                             </PrimaryButton>

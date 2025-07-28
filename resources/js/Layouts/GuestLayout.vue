@@ -59,7 +59,7 @@ onMounted(() => {
             </nav>
         </header>
         <!-- ========== END HEADER ========== -->
-        <div class="flex flex-col sm:justify-center items-center min-h-[90vh]">
+        <div class="flex flex-col sm:justify-center items-center min-h-[90vh] px-4 py-6 sm:px-6 lg:px-8">
             <slot />
         </div>
 
