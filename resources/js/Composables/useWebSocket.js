@@ -175,8 +175,6 @@ export function useWebSocket() {
                 throw new Error('Echo not available for channel subscription');
             }
 
-            console.log(`🔌 Subscribing to channel: ${channelName} for event: ${eventName}`);
-
             // Create private channel
             const channel = window.Echo.private(channelName);
             
@@ -192,15 +190,10 @@ export function useWebSocket() {
                 eventName.replace(/([A-Z])/g, '_$1').toLowerCase(), // snake_case (e.g., 'message_sent')
             ];
 
-            console.log(`🎯 Trying event names:`, eventNames);
-
             // Listen for all possible event name formats
             eventNames.forEach(name => {
                 channel.listen(name, (data) => {
-                    console.log(`📨 Received event ${name} on channel ${channelName}:`, data);
-                    console.log(`📨 Data type:`, typeof data);
-                    console.log(`📨 Data keys:`, data ? Object.keys(data) : 'null');
-                    
+                
                     // Ensure data is properly structured
                     if (data && typeof data === 'object') {
                         callback(data);
@@ -213,7 +206,6 @@ export function useWebSocket() {
 
             // Also listen for any event on the channel (fallback)
             channel.listen('.', (data) => {
-                console.log(`📨 Received any event on channel ${channelName}:`, data);
                 if (data && typeof data === 'object') {
                     callback(data);
                 }
@@ -231,8 +223,6 @@ export function useWebSocket() {
 
             // Store channel reference
             channels.value.set(channelName, channel);
-            
-            console.log(`✅ Successfully subscribed to channel: ${channelName}`);
             return channel;
             
         } catch (error) {
@@ -255,7 +245,6 @@ export function useWebSocket() {
                 // Properly unsubscribe from the channel
                 window.Echo.leave(channelName);
                 channels.value.delete(channelName);
-                console.log(`✅ Successfully unsubscribed from channel: ${channelName}`);
             } catch (error) {
                 console.error(`❌ Error unsubscribing from channel ${channelName}:`, error);
             }
@@ -264,7 +253,6 @@ export function useWebSocket() {
 
     // Cleanup all channels
     const cleanupChannels = () => {
-        console.log('🧹 Cleaning up all channels...');
         channels.value.forEach((channel, channelName) => {
             try {
                 window.Echo.leave(channelName);
@@ -310,7 +298,6 @@ export function useWebSocket() {
                 const currentState = getConnectionState();
                 
                 if (currentState === 'connected' && !isConnected.value) {
-                    console.log('✅ WebSocket connection detected during monitoring');
                     isConnected.value = true;
                     connectionStatus.value = 'connected';
                     connectionAttempts.value = 0;
@@ -327,8 +314,6 @@ export function useWebSocket() {
 
     // Lifecycle hooks
     onMounted(async () => {
-        console.log('🚀 useWebSocket mounted, initializing...');
-        
         // Check if Echo is already available and connected
         if (isEchoAvailable()) {
             const state = getConnectionState();
@@ -349,8 +334,6 @@ export function useWebSocket() {
     });
 
     onBeforeUnmount(() => {
-        console.log('🧹 useWebSocket unmounting, cleaning up...');
-        
         // Clear timers
         if (reconnectTimer.value) {
             clearTimeout(reconnectTimer.value);

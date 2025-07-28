@@ -91,7 +91,7 @@ class SendMessage
 
                 if($recipient) {
                     try {
-                        $recipient->notify(new NewMessageNotification($message, $currentUser));
+                            $recipient->notify(new NewMessageNotification($message, $currentUser));
                     } catch (\Exception $e) {
                         // Log notification error but don't fail the request
                         Log::warning('Notification failed for message ' . $message->id . ': ' . $e->getMessage());
