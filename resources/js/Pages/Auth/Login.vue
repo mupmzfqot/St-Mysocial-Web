@@ -7,8 +7,8 @@ import TextInput from '@/Components/TextInput.vue';
 import {Head, Link, useForm} from '@inertiajs/vue3';
 import TogglePassword from "@/Components/TogglePassword.vue";
 import {ref, computed, onUnmounted} from 'vue';
-import { useReCaptcha, VueReCaptcha } from 'vue-recaptcha-v3';
-import { getCurrentInstance } from 'vue'
+import { useReCaptcha } from 'vue-recaptcha-v3';
+import { useRecaptchaPlugin } from '@/Composables/useRecaptchaPlugin.js';
 
 const props = defineProps({
     canResetPassword: {
@@ -26,15 +26,8 @@ const form = useForm({
     captcha: '',
 });
 
-const instance = getCurrentInstance()
-const app = instance.appContext.app
-if (!app._installedRecaptcha) {
-    app.use(VueReCaptcha, { siteKey: import.meta.env.VITE_RECAPTCHA_SITE_KEY,  loaderOptions: {
-        autoHideBadge: false,
-        badge: 'bottomright', // 'bottomright', 'bottomleft', 'inline'
-    }});
-    app._recaptchaInitialized = true
-}
+// Install reCAPTCHA plugin safely
+const { isInstalled } = useRecaptchaPlugin();
 
 const { executeRecaptcha } = useReCaptcha()
 
@@ -44,6 +37,18 @@ const loginError = ref({
     maxAttempts: null,
     unlockAt: null,
     captcha: null,
+});
+
+// Cleanup function to prevent memory leaks
+onUnmounted(() => {
+    // Clear any reCAPTCHA related cleanup if needed
+    if (window.grecaptcha) {
+        try {
+            window.grecaptcha.reset();
+        } catch (e) {
+            // Ignore errors during cleanup
+        }
+    }
 });
 
 const submit = async() => {
