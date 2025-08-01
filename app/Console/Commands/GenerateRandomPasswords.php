@@ -69,7 +69,6 @@ class GenerateRandomPasswords extends Command
                 // Update user password
                 $user->update([
                     'password' => $hashedPassword,
-                    'password_changed_at' => now(), // Optional: track when password was changed
                 ]);
             }
 
