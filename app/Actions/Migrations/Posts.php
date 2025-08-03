@@ -65,7 +65,9 @@ class Posts
             }
 
             try {
-                $newPost->addMedia($filepath)->toMediaCollection('post_media');
+                $newPost->addMedia($filepath)
+                    ->preservingOriginal()
+                    ->toMediaCollection('post_media');
             } catch (\Exception $e) {
                 \Log::error("Failed to upload media for post {$newPost->id}: " . $e->getMessage());
             }
