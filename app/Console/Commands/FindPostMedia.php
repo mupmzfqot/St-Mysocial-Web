@@ -23,7 +23,16 @@ class FindPostMedia extends Command
      *
      * @var string
      */
-    protected $description = 'Find posts with no media and attach media from the old database, optimized for performance.';
+    protected $description = 'Find posts with no media and attach media from the old database, with fallback for different extensions.';
+
+    private array $summary = [
+        'processed' => 0,
+        'attached' => 0,
+        'alt_ext_found' => 0,
+        'skipped' => 0,
+        'not_found' => 0,
+        'errors' => 0,
+    ];
 
     /**
      * Execute the console command.
@@ -45,13 +54,7 @@ class FindPostMedia extends Command
         $this->info("Found {$postIdsWithNoMedia->count()} posts without media.");
 
         $this->line('Step 2: Fetching image URLs from the secondary database...');
-        $postImagesData = DB::connection('mysql_2')
-            ->table('posts')
-            ->whereIn('posts.id', $postIdsWithNoMedia)
-            ->leftJoin('post_images', 'post_images.toItemId', '=', 'posts.id')
-            ->select('posts.id as post_id', 'posts.imgUrl', 'post_images.originImgUrl')
-            ->get()
-            ->keyBy('post_id');
+        $postImagesData = $this->fetchImageData($postIdsWithNoMedia);
         $this->info("Fetched image data for {$postImagesData->count()} posts.");
 
         $this->line('Step 3: Processing and attaching media...');
@@ -60,83 +63,118 @@ class FindPostMedia extends Command
         $progressBar = $this->output->createProgressBar($postIdsWithNoMedia->count());
         $progressBar->start();
 
-        $summary = [
-            'processed' => 0,
-            'attached' => 0,
-            'skipped' => 0,
-            'not_found' => 0,
-            'errors' => 0,
-        ];
-
         foreach ($postIdsWithNoMedia as $postId) {
-            $summary['processed']++;
-            $post = $postsToUpdate->get($postId);
-
-            if (!$post) {
-                $summary['errors']++;
-                $progressBar->advance();
-                continue;
-            }
-            
-            $image = $postImagesData->get($postId);
-            if (!$image) {
-                $summary['not_found']++;
-                $progressBar->advance();
-                continue;
-            }
-
-            $imageUrl = $image->originImgUrl ?: $image->imgUrl;
-            if (!$imageUrl) {
-                $summary['skipped']++;
-                $progressBar->advance();
-                continue;
-            }
-
-            $path = parse_url($imageUrl, PHP_URL_PATH);
-            $filePath = public_path($path);
-
-            if (File::exists($filePath) && !File::isDirectory($filePath)) {
-                $fileName = basename($filePath);
-                if ($post->getMedia('post_media')->where('file_name', $fileName)->isEmpty()) {
-                    if (!$isDryRun) {
-                        try {
-                            $post->addMedia($filePath)
-                                ->preservingOriginal()
-                                ->toMediaCollection('post_media');
-                        } catch (FileDoesNotExist | FileIsTooBig | \Exception $e) {
-                            $this->error("\nError for Post ID {$postId}: " . $e->getMessage());
-                            $summary['errors']++;
-                            continue;
-                        }
-                    }
-                    $summary['attached']++;
-                } else {
-                    $summary['skipped']++; // Already has this specific media
-                }
-            } else {
-                $summary['not_found']++;
-            }
+            $this->processPost($postId, $postsToUpdate, $postImagesData, $isDryRun);
             $progressBar->advance();
         }
 
         $progressBar->finish();
         $this->line("\n\n<info>Media attachment process completed.</info>");
+        $this->displaySummary($isDryRun);
+        
+        return 0;
+    }
 
+    private function fetchImageData($postIds)
+    {
+        return DB::connection('mysql_2')
+            ->table('posts')
+            ->whereIn('posts.id', $postIds)
+            ->leftJoin('post_images', 'post_images.toItemId', '=', 'posts.id')
+            ->select('posts.id as post_id', 'posts.imgUrl', 'post_images.originImgUrl')
+            ->get()
+            ->keyBy('post_id');
+    }
+
+    private function processPost($postId, $postsToUpdate, $postImagesData, $isDryRun)
+    {
+        $this->summary['processed']++;
+        $post = $postsToUpdate->get($postId);
+
+        if (!$post) {
+            $this->summary['errors']++;
+            return;
+        }
+        
+        $image = $postImagesData->get($postId);
+        if (!$image || !($image->originImgUrl || $image->imgUrl)) {
+            $this->summary['not_found']++;
+            return;
+        }
+
+        $imageUrl = $image->originImgUrl ?: $image->imgUrl;
+        $filePath = $this->findFileWithFallback($imageUrl, $this->summary['alt_ext_found']);
+
+        if ($filePath) {
+            $fileName = basename($filePath);
+            if ($post->getMedia('post_media')->where('file_name', $fileName)->isEmpty()) {
+                if (!$isDryRun) {
+                    $this->attachMedia($post, $filePath);
+                }
+                $this->summary['attached']++;
+            } else {
+                $this->summary['skipped']++;
+            }
+        } else {
+            $this->summary['not_found']++;
+        }
+    }
+
+    private function findFileWithFallback($url, &$altExtFoundCounter): ?string
+    {
+        $path = parse_url($url, PHP_URL_PATH);
+        if (!$path) return null;
+
+        $fullPath = public_path($path);
+        
+        if (File::exists($fullPath) && !File::isDirectory($fullPath)) {
+            return $fullPath;
+        }
+        
+        $pathInfo = pathinfo($fullPath);
+        $dirname = $pathInfo['dirname'];
+        $filename = $pathInfo['filename'];
+        $extensions = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
+        
+        foreach ($extensions as $ext) {
+            $fallbackPath = "{$dirname}/{$filename}.{$ext}";
+            if (File::exists($fallbackPath) && !File::isDirectory($fallbackPath)) {
+                $altExtFoundCounter++;
+                return $fallbackPath;
+            }
+        }
+
+        return null;
+    }
+
+    private function attachMedia(Post $post, string $filePath): void
+    {
+        try {
+            $post->addMedia($filePath)
+                ->preservingOriginal()
+                ->toMediaCollection('post_media');
+        } catch (FileDoesNotExist | FileIsTooBig | \Exception $e) {
+            $this->error("\nError for Post ID {$post->id}: " . $e->getMessage());
+            $this->summary['errors']++;
+        }
+    }
+    
+    private function displaySummary(bool $isDryRun): void
+    {
         $this->table(
             ['Metric', 'Count'],
             [
-                ['Total Posts Processed', $summary['processed']],
-                ['Media Attached', $summary['attached']],
-                ['Media Skipped (duplicate or no URL)', $summary['skipped']],
-                ['Image Files Not Found', $summary['not_found']],
-                ['Errors', $summary['errors']],
+                ['Total Posts Processed', $this->summary['processed']],
+                ['Media Attached', $this->summary['attached']],
+                ['Found with Alt. Extension', $this->summary['alt_ext_found']],
+                ['Media Skipped (duplicate or no URL)', $this->summary['skipped']],
+                ['Image Files Not Found', $this->summary['not_found']],
+                ['Errors', $this->summary['errors']],
             ]
         );
         
         if ($isDryRun) {
             $this->warn('--- This was a DRY RUN. No actual changes were made. ---');
         }
-        
-        return 0;
     }
 }
