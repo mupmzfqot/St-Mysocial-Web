@@ -103,7 +103,7 @@ class Users
                 return;
             }
 
-            $user->addMedia($filepath)->toMediaCollection($type);
+            $user->addMedia($filepath)->preservingOriginal()->toMediaCollection($type);
         } catch (\Exception $e) {
             \Log::error("Failed to upload {$type} for user {$newUser->id}: " . $e->getMessage());
         }
