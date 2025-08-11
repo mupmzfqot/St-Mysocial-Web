@@ -519,9 +519,39 @@ const styledTag = (value) => {
         return '';
     }
     
-    return value.replace(/<a /g, '<a class="text-blue-600 hover:text-blue-800 hover:no-underline" target="_blank"')
+    // First, autodetect and make links clickable
+    let processedValue = autodetectLinks(value);
+    
+    // Then apply existing styling
+    return processedValue
+        .replace(/<a /g, '<a class="text-blue-600 hover:text-blue-800 hover:no-underline" target="_blank" rel="noopener noreferrer"')
         .replace(/<ul>/g, '<ul class="list-disc list-inside pl-4">')
         .replace(/<ol>/g, '<ol class="list-decimal list-inside pl-3.5">');
+}
+
+const autodetectLinks = (text) => {
+    if (!text) return text;
+    
+    // Regex untuk mendeteksi berbagai format URL
+    const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9.-]+\.[a-zA-Z]{2,}[^\s]*)/g;
+    
+    return text.replace(urlRegex, (match, httpUrl, wwwUrl, domainUrl) => {
+        let url = match;
+        
+        // Jika tidak ada protocol, tambahkan https://
+        if (!httpUrl && (wwwUrl || domainUrl)) {
+            url = `https://${match}`;
+        }
+        
+        // Pastikan URL valid
+        try {
+            new URL(url);
+        } catch {
+            return match; // Jika URL tidak valid, kembalikan text asli
+        }
+        
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">${match}</a>`;
+    });
 }
 
 </script>
