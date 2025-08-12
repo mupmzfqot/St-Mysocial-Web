@@ -179,6 +179,11 @@ const styledTag = (value) => {
 const autodetectLinks = (text) => {
     if (!text) return text;
     
+    // Skip if text already contains HTML anchor tags
+    if (/<a\s+href/i.test(text)) {
+        return text;
+    }
+    
     // Regex untuk mendeteksi berbagai format URL
     const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9.-]+\.[a-zA-Z]{2,}[^\s]*)/g;
     
