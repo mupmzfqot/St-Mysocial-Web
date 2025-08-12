@@ -208,6 +208,10 @@ class PostController extends Controller
             ->where('id', $id)
             ->first();
 
+        if (!$post) {
+            return redirect()->route('post.index')->with('error', 'Post not found.');
+        }
+
         return Inertia::render('Posts/Show', compact('post'));
     }
 

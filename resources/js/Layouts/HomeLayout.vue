@@ -1,7 +1,7 @@
 <script setup>
 import {onMounted, ref, watch} from 'vue';
 import {Link, router, usePage} from "@inertiajs/vue3";
-import {CircleCheckBig, Heart, Images, Video, LogOut, MessageSquareMore, Star, UserIcon, House} from "lucide-vue-next";
+import {CircleCheckBig, Heart, Images, Video, LogOut, MessageSquareMore, Star, House, RssIcon} from "lucide-vue-next";
 import {debounce} from "lodash";
 import {useUnreadMessages} from '@/Composables/useUnreadMessages';
 import {useWebSocket} from '@/Composables/useWebSocket';
@@ -211,10 +211,7 @@ function isActiveNav(path) {
                         Messages
                         <span v-if="unreadMessageCount > 0" class="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">{{ unreadMessageCount }}</span>
                     </Link>
-                    <Link :href="route('my-posts')" class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100">
-                        <UserIcon class="w-4 h-4 mr-3 text-blue-600" />
-                        My Posts
-                    </Link>
+                    
                     <Link :href="route('liked-posts')" class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100">
                         <Heart class="w-4 h-4 mr-3 text-red-600" />
                         My Likes
@@ -226,6 +223,10 @@ function isActiveNav(path) {
                     <Link :href="route('photoAlbum.index')" class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100">
                         <Images class="w-4 h-4 mr-3 text-amber-600" />
                         My Photos
+                    </Link>
+                    <Link :href="route('my-posts')" class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100">
+                        <RssIcon class="w-4 h-4 mr-3 text-blue-600" />
+                        My Posts
                     </Link>
                     <Link :href="route('videos.index')" class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100">
                         <Video class="w-4 h-4 mr-3 text-pink-600" />
@@ -270,10 +271,6 @@ function isActiveNav(path) {
                             Messages
                             <span v-if="unreadMessageCount > 0" class="inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium bg-red-500 text-white ms-auto">{{ unreadMessageCount }}</span>
                         </Link>
-                        <Link :href="route('my-posts')" type="button" :class="['inline-flex hover:bg-blue-100 items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/my-posts') ? 'text-blue-600' : '']">
-                            <UserIcon class="shrink-0 size-5 text-blue-800" />
-                            My Posts
-                        </Link>
                         <Link :href="route('liked-posts')" type="button" :class="['inline-flex hover:bg-blue-100 items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/liked-posts') ? 'text-blue-600' : '']">
                             <Heart class="shrink-0 size-5 text-red-600 fill-red-600" />
                             My Likes
@@ -285,6 +282,10 @@ function isActiveNav(path) {
                         <Link :href="route('photoAlbum.index')" type="button" :class="['inline-flex hover:bg-blue-100 items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/photo-album') ? 'text-blue-600' : '']">
                             <Images class="shrink-0 size-5 text-amber-800" />
                             My Photos
+                        </Link>
+                        <Link :href="route('my-posts')" type="button" :class="['inline-flex hover:bg-blue-100 items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/my-posts') ? 'text-blue-600' : '']">
+                            <RssIcon class="shrink-0 size-5 text-blue-800" />
+                            My Posts
                         </Link>
                         <Link :href="route('videos.index')" type="button" :class="['inline-flex hover:bg-blue-100 items-center gap-x-2 py-3 px-4 text-sm font-semibold text-start border border-gray-200 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-neutral-700', isActiveNav('/videos') ? 'text-blue-600' : '']">
                             <Video class="shrink-0 size-5 text-pink-900 fill-pink-200" />

@@ -81,6 +81,10 @@ class HomeController extends Controller
             ->where('id', $id)
             ->first();
 
+        if (!$post) {
+            return redirect()->route('homepage')->with('error', 'Post not found or not published.');
+        }
+
         return Inertia::render('Homepage/PostDetail', compact('post'));
     }
 
@@ -118,6 +122,10 @@ class HomeController extends Controller
             ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media', 'repost.tags')
             ->where('id', $id)
             ->first();
+
+        if (!$post) {
+            return redirect()->route('homepage')->with('error', 'Post not found.');
+        }
 
         $isPrivilegedUser = auth()->user()->hasAnyRole(['admin', 'user']);
         $defaultType = $isPrivilegedUser ? 'st' : 'public';
