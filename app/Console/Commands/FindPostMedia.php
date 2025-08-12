@@ -32,6 +32,7 @@ class FindPostMedia extends Command
         'skipped' => 0,
         'not_found' => 0,
         'errors' => 0,
+        'total_media_found' => 0,
     ];
 
     /**
@@ -53,11 +54,13 @@ class FindPostMedia extends Command
         }
         $this->info("Found {$postIdsWithNoMedia->count()} posts without media.");
 
-        $this->line('Step 2: Fetching image URLs from the secondary database...');
+        $this->line('Step 2: Fetching media URLs from the secondary database...');
+        $this->line('Looking for: imgUrl, originImgUrl, videoUrl, docUrl');
         $postImagesData = $this->fetchImageData($postIdsWithNoMedia);
-        $this->info("Fetched image data for {$postImagesData->count()} posts.");
+        $this->info("Fetched media data for {$postImagesData->count()} posts.");
 
         $this->line('Step 3: Processing and attaching media...');
+        $this->line('Each post can have multiple media files (images, videos, documents)');
         $postsToUpdate = Post::whereIn('id', $postIdsWithNoMedia)->get()->keyBy('id');
         
         $progressBar = $this->output->createProgressBar($postIdsWithNoMedia->count());
@@ -81,7 +84,7 @@ class FindPostMedia extends Command
             ->table('posts')
             ->whereIn('posts.id', $postIds)
             ->leftJoin('post_images', 'post_images.toItemId', '=', 'posts.id')
-            ->select('posts.id as post_id', 'posts.imgUrl', 'post_images.originImgUrl')
+            ->select('posts.id as post_id', 'posts.imgUrl', 'post_images.originImgUrl', 'posts.videoUrl', 'posts.docUrl')
             ->get()
             ->keyBy('post_id');
     }
@@ -97,27 +100,72 @@ class FindPostMedia extends Command
         }
         
         $image = $postImagesData->get($postId);
-        if (!$image || !($image->originImgUrl || $image->imgUrl)) {
+        if (!$image) {
             $this->summary['not_found']++;
             return;
         }
 
-        $imageUrl = $image->originImgUrl ?: $image->imgUrl;
-        $filePath = $this->findFileWithFallback($imageUrl, $this->summary['alt_ext_found']);
-
-        if ($filePath) {
-            $fileName = basename($filePath);
-            if ($post->getMedia('post_media')->where('file_name', $fileName)->isEmpty()) {
-                if (!$isDryRun) {
-                    $this->attachMedia($post, $filePath);
-                }
-                $this->summary['attached']++;
-            } else {
-                $this->summary['skipped']++;
-            }
-        } else {
+        // Buat array dari semua URL yang tersedia
+        $mediaUrls = $this->collectMediaUrls($image);
+        
+        if (empty($mediaUrls)) {
             $this->summary['not_found']++;
+            return;
         }
+
+        // Proses setiap media URL
+        foreach ($mediaUrls as $mediaUrl) {
+            $filePath = $this->findFileWithFallback($mediaUrl, $this->summary['alt_ext_found']);
+
+            if ($filePath) {
+                $fileName = basename($filePath);
+                if ($post->getMedia('post_media')->where('file_name', $fileName)->isEmpty()) {
+                    if (!$isDryRun) {
+                        $this->attachMedia($post, $filePath);
+                    }
+                    $this->summary['attached']++;
+                } else {
+                    $this->summary['skipped']++;
+                }
+            } else {
+                $this->summary['not_found']++;
+            }
+        }
+    }
+
+    /**
+     * Mengumpulkan semua URL media yang tersedia dari data post
+     * Memastikan tidak ada nilai null dalam array
+     */
+    private function collectMediaUrls($image): array
+    {
+        $mediaUrls = [];
+        
+        // Tambahkan imgUrl jika ada dan tidak null
+        if (!empty($image->imgUrl)) {
+            $mediaUrls[] = $image->imgUrl;
+        }
+        
+        // Tambahkan originImgUrl jika ada dan tidak null
+        if (!empty($image->originImgUrl)) {
+            $mediaUrls[] = $image->originImgUrl;
+        }
+        
+        // Tambahkan videoUrl jika ada dan tidak null
+        if (!empty($image->videoUrl)) {
+            $mediaUrls[] = $image->videoUrl;
+        }
+        
+        // Tambahkan docUrl jika ada dan tidak null
+        if (!empty($image->docUrl)) {
+            $mediaUrls[] = $image->docUrl;
+        }
+        
+        // Update counter untuk total media yang ditemukan
+        $this->summary['total_media_found'] += count($mediaUrls);
+        
+        // Hapus duplikat dan nilai kosong
+        return array_filter(array_unique($mediaUrls));
     }
 
     private function findFileWithFallback($url, &$altExtFoundCounter): ?string
@@ -134,7 +182,9 @@ class FindPostMedia extends Command
         $pathInfo = pathinfo($fullPath);
         $dirname = $pathInfo['dirname'];
         $filename = $pathInfo['filename'];
-        $extensions = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
+        
+        // Tentukan ekstensi berdasarkan tipe file yang diharapkan
+        $extensions = $this->getFileExtensions($url);
         
         foreach ($extensions as $ext) {
             $fallbackPath = "{$dirname}/{$filename}.{$ext}";
@@ -145,6 +195,30 @@ class FindPostMedia extends Command
         }
 
         return null;
+    }
+
+    /**
+     * Mendapatkan ekstensi file yang sesuai berdasarkan URL
+     */
+    private function getFileExtensions($url): array
+    {
+        $path = parse_url($url, PHP_URL_PATH);
+        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        
+        // Jika sudah ada ekstensi, gunakan itu
+        if ($extension) {
+            return [$extension];
+        }
+        
+        // Fallback extensions berdasarkan konteks
+        if (str_contains($url, 'video') || str_contains($url, 'mp4') || str_contains($url, 'avi')) {
+            return ['mp4', 'avi', 'mov', 'wmv', 'flv'];
+        } elseif (str_contains($url, 'doc') || str_contains($url, 'pdf')) {
+            return ['pdf', 'doc', 'docx', 'txt'];
+        } else {
+            // Default untuk image
+            return ['png', 'jpg', 'jpeg', 'gif', 'webp'];
+        }
     }
 
     private function attachMedia(Post $post, string $filePath): void
@@ -165,10 +239,11 @@ class FindPostMedia extends Command
             ['Metric', 'Count'],
             [
                 ['Total Posts Processed', $this->summary['processed']],
+                ['Total Media URLs Found', $this->summary['total_media_found']],
                 ['Media Attached', $this->summary['attached']],
                 ['Found with Alt. Extension', $this->summary['alt_ext_found']],
                 ['Media Skipped (duplicate or no URL)', $this->summary['skipped']],
-                ['Image Files Not Found', $this->summary['not_found']],
+                ['Media Files Not Found', $this->summary['not_found']],
                 ['Errors', $this->summary['errors']],
             ]
         );
