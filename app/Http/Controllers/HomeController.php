@@ -59,6 +59,15 @@ class HomeController extends Controller
         ]);
     }
 
+    public function showMyPosts()
+    {
+        return Inertia::render('Homepage/MyPost', [
+            'title' => 'My Posts',
+            'description' => 'Posts created by you',
+            'requestUrl' => route('user-post.my-posts'),
+        ]);
+    }
+
     public function showPost($id)
     {
         if(auth()->user()->hasRole('admin')) {

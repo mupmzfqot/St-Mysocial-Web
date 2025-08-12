@@ -20,6 +20,7 @@ Route::middleware(['auth', 'verified', 'role:user|public_user'])->group(function
     Route::get('/home', [HomeController::class, 'index'])->name('homepage')->middleware('role:user');
     Route::get('/public', [HomeController::class, 'publicPost'])->name('public');
     Route::get('/posts', [HomeController::class, 'createPost'])->name('create-post');
+    Route::get('/my-posts', [HomeController::class, 'showMyPosts'])->name('my-posts');
     Route::get('/posts/{id}', [HomeController::class, 'editPost'])->name('edit-post');
     Route::get('/liked-posts', [HomeController::class, 'showLikedPosts'])->name('liked-posts');
     Route::get('/top-posts', [HomeController::class, 'showTopPosts'])->name('top-posts');
@@ -27,12 +28,12 @@ Route::middleware(['auth', 'verified', 'role:user|public_user'])->group(function
         Route::get('get', [PostController::class, 'get'])->name('get');
         Route::get('top-post', [PostController::class, 'getTopPost'])->name('get-top-post');
         Route::get('liked-post', [PostController::class, 'getLikedPost'])->name('liked-post');
+        Route::get('my-posts', [PostController::class, 'getMyPosts'])->name('my-posts');
         Route::get('recent-post', [PostController::class, 'getRecentPost'])->name('recent-post');
         Route::get('tag-post', [PostController::class, 'getTagPost'])->name('tag-post');
         Route::post('store', [PostController::class, 'store'])->name('store');
         Route::post('update/{id}', [PostController::class, 'update'])->name('update');
         Route::post('delete', [HomeController::class, 'deletePost'])->name('delete');
-       
     });
 
     Route::get('st-user', [UserController::class, 'stIndex'])->name('st-user');

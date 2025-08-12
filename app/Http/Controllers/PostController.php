@@ -261,6 +261,17 @@ class PostController extends Controller
         return response()->json($posts);
     }
 
+    public function getMyPosts(Request $request)
+    {
+        $posts = Post::query()
+            ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media', 'repost.tags')
+            ->orderBy('created_at', 'desc')
+            ->where('user_id', auth()->id())
+            ->simplePaginate(30);
+
+        return response()->json($posts);
+    }
+
     public function getRecentPost(Request $request)
     {
         $posts = Post::query()
