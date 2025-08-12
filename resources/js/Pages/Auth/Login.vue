@@ -6,9 +6,7 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import {Head, Link, useForm} from '@inertiajs/vue3';
 import TogglePassword from "@/Components/TogglePassword.vue";
-import {ref, computed, onUnmounted} from 'vue';
-import { useReCaptcha } from 'vue-recaptcha-v3';
-import { useRecaptchaPlugin } from '@/Composables/useRecaptchaPlugin.js';
+import {ref, computed, onMounted, onUnmounted} from 'vue';
 
 const props = defineProps({
     canResetPassword: {
@@ -26,10 +24,22 @@ const form = useForm({
     captcha: '',
 });
 
-// Install reCAPTCHA plugin safely
-const { isInstalled } = useRecaptchaPlugin();
+const captchaImage = ref('');
+const captchaInput = ref('');
 
-const { executeRecaptcha } = useReCaptcha()
+// Load captcha image on component mount
+const loadCaptcha = async () => {
+    try {
+        const response = await fetch(route('captcha.image'));
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        captchaImage.value = data.captcha;
+    } catch (error) {
+        console.error('Failed to load captcha:', error);
+    }
+};
 
 const loginError = ref({
     message: '',
@@ -39,16 +49,9 @@ const loginError = ref({
     captcha: null,
 });
 
-// Cleanup function to prevent memory leaks
-onUnmounted(() => {
-    // Clear any reCAPTCHA related cleanup if needed
-    if (window.grecaptcha) {
-        try {
-            window.grecaptcha.reset();
-        } catch (e) {
-            // Ignore errors during cleanup
-        }
-    }
+// Load captcha when component mounts
+onMounted(() => {
+    loadCaptcha();
 });
 
 const submit = async() => {
@@ -59,7 +62,7 @@ const submit = async() => {
         unlockAt: null
     };
 
-    form.captcha = await executeRecaptcha('login')
+    form.captcha = captchaInput.value;
 
     form.post(route('login'), {
         onFinish: () => form.reset('password'),
@@ -73,7 +76,9 @@ const submit = async() => {
                     unlockAt: errorDetails.unlock_at ? new Date(errorDetails.unlock_at) : null
                 };
             }
-            form.reset('captcha');
+            // Reload captcha on error
+            loadCaptcha();
+            captchaInput.value = '';
         }
     });
 };
@@ -86,10 +91,7 @@ const formattedUnlockTime = computed(() => {
 });
 
 onUnmounted(() => {
-    const badge = document.querySelector('.grecaptcha-badge')
-    if (badge && badge.parentNode) {
-        badge.parentNode.removeChild(badge)
-    }
+    // Cleanup if needed
 })
 </script>
 
@@ -123,7 +125,7 @@ onUnmounted(() => {
             <div class="flex flex-1 justify-center lg:px-4 lg:py-6 px-4 py-6 sm:p-3 flex flex-col w-full">
                 <h3 class="lg:text-xl sm:text-lg text-center font-bold text-gray-800 dark:text-white">Login</h3>
                 <div :class="[form.errors.email ? 'mt-0': 'mt-3']">
-                    <div class="py-2" v-if="form.errors.email">
+                    <div class="py-2 space-y-2" v-if="form.errors.email">
                         <div class="bg-yellow-50 border border-red-400 text-sm text-red-800 rounded-lg p-4 dark:bg-yellow-800/10 dark:border-yellow-900 dark:text-yellow-500" role="alert" tabindex="-1" aria-labelledby="hs-with-description-label">
                             <div class="flex">
                                 <div class="shrink-0">
@@ -161,6 +163,35 @@ onUnmounted(() => {
                         <div class="lg:mt-4 sm:mt-2">
                             <InputLabel :class="'text-xs'" for="password" value="Password" />
                             <TogglePassword :class="'mt-0.5 block w-full'" v-model="form.password" />
+                        </div>
+
+                        
+
+                        <!-- Captcha Field -->
+                        <div class="lg:mt-4 sm:mt-2">
+                            <InputLabel :class="'text-xs'" for="captcha" value="Captcha" />
+                            <div class="space-y-2 mt-0.5">
+                                <div class="flex-shrink-0">
+                                    <div v-if="captchaImage" v-html="captchaImage" class="cursor-pointer" @click="loadCaptcha"></div>
+                                    <div v-else class="w-32 h-16 bg-gray-200 flex items-center justify-center text-xs text-gray-500">
+                                        Loading...
+                                    </div>
+                                </div>
+                                <div class="flex-1 w-2/3">
+                                    <TextInput
+                                        id="captcha"
+                                        type="text"
+                                        class="block w-1/2"
+                                        v-model="captchaInput"
+                                        required
+                                        placeholder="Enter captcha"
+                                    />
+                                </div>
+                                
+                            </div>
+                            <div v-if="form.errors.captcha" class="mt-1 text-xs text-red-600">
+                                {{ form.errors.captcha }}
+                            </div>
                         </div>
 
                         <div class="block lg:mt-5 sm:mt-2">
