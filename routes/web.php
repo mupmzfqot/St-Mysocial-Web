@@ -17,13 +17,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'create'])->name('home');
 
-// Simple captcha route using built-in helper
-Route::get('captcha-image', function() {
-    return response()->json([
-        'captcha' => captcha_img('flat')
-    ]);
-})->name('captcha.image');
-
 Route::middleware(['auth', 'verified', 'role:user|public_user'])->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('homepage')->middleware('role:user');
     Route::get('/public', [HomeController::class, 'publicPost'])->name('public');

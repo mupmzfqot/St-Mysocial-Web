@@ -20,6 +20,10 @@ export default defineConfig({
         }),
         vueDevTools()
     ],
+    define: {
+        __VUE_OPTIONS_API__: true,
+        __VUE_PROD_DEVTOOLS__: false,
+    },
     server: {
         host: '127.0.0.1', // Force IPv4
         port: 5173,

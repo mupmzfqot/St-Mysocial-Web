@@ -7,6 +7,7 @@ import TextInput from '@/Components/TextInput.vue';
 import {Head, Link, useForm} from '@inertiajs/vue3';
 import TogglePassword from "@/Components/TogglePassword.vue";
 import {ref, computed, onMounted, onUnmounted} from 'vue';
+import { VueReCaptcha } from 'vue-recaptcha-v3';
 
 const props = defineProps({
     canResetPassword: {
@@ -21,37 +22,61 @@ const form = useForm({
     email: '',
     password: '',
     remember: false,
-    captcha: '',
+    recaptcha_token: '',
 });
 
-const captchaImage = ref('');
-const captchaInput = ref('');
-
-// Load captcha image on component mount
-const loadCaptcha = async () => {
-    try {
-        const response = await fetch(route('captcha.image'));
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        captchaImage.value = data.captcha;
-    } catch (error) {
-        console.error('Failed to load captcha:', error);
-    }
-};
+const recaptchaToken = ref('');
+const recaptchaLoaded = ref(false);
 
 const loginError = ref({
     message: '',
     remainAttempts: null,
     maxAttempts: null,
     unlockAt: null,
-    captcha: null,
+    recaptcha: null, // Add reCAPTCHA error field
 });
 
-// Load captcha when component mounts
+// reCAPTCHA v3 configuration
+const recaptchaOptions = {
+    siteKey: import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LcXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX', // Replace with your actual site key
+    loaderOptions: {
+        useRecaptchaNet: true,
+        autoHideBadge: true,
+    }
+};
+
+// Handle reCAPTCHA execution
+const executeRecaptcha = async () => {
+    try {
+        if (typeof window.grecaptcha !== 'undefined') {
+            const token = await window.grecaptcha.execute(recaptchaOptions.siteKey, { action: 'login' });
+            recaptchaToken.value = token;
+            form.recaptcha_token = token;
+            return token;
+        } else {
+            console.error('reCAPTCHA not loaded');
+            return null;
+        }
+    } catch (error) {
+        console.error('reCAPTCHA execution failed:', error);
+        return null;
+    }
+};
+
+// Handle reCAPTCHA load
+const onRecaptchaLoaded = () => {
+    recaptchaLoaded.value = true;
+    console.log('reCAPTCHA loaded successfully');
+};
+
 onMounted(() => {
-    loadCaptcha();
+    // Load reCAPTCHA script
+    const script = document.createElement('script');
+    script.src = `https://www.google.com/recaptcha/api.js?render=${recaptchaOptions.siteKey}`;
+    script.async = true;
+    script.defer = true;
+    script.onload = onRecaptchaLoaded;
+    document.head.appendChild(script);
 });
 
 const submit = async() => {
@@ -59,10 +84,18 @@ const submit = async() => {
         message: '',
         remainAttempts: null,
         maxAttempts: null,
-        unlockAt: null
+        unlockAt: null,
+        recaptcha: null, // Reset reCAPTCHA error
     };
 
-    form.captcha = captchaInput.value;
+    // Execute reCAPTCHA before submitting
+    const token = await executeRecaptcha();
+    if (!token) {
+        loginError.value.recaptcha = 'reCAPTCHA verification failed. Please try again.';
+        return;
+    }
+
+    form.recaptcha_token = token;
 
     form.post(route('login'), {
         onFinish: () => form.reset('password'),
@@ -73,12 +106,13 @@ const submit = async() => {
                     message: errorDetails.message || 'Login failed',
                     remainAttempts: errorDetails.remain_attempts ?? null,
                     maxAttempts: errorDetails.max_attempts ?? null,
-                    unlockAt: errorDetails.unlock_at ? new Date(errorDetails.unlock_at) : null
+                    unlockAt: errorDetails.unlock_at ? new Date(errorDetails.unlock_at) : null,
+                    recaptcha: null,
                 };
             }
-            // Reload captcha on error
-            loadCaptcha();
-            captchaInput.value = '';
+            if (errors.recaptcha_token) {
+                loginError.value.recaptcha = 'reCAPTCHA verification failed. Please try again.';
+            }
         }
     });
 };
@@ -118,12 +152,34 @@ onUnmounted(() => {
             </p>
         </div>
 
+       
+
         <div class="flex flex-row bg-white border-gray-200 shadow-2xs rounded-xl lg:min-h-[24rem] lg:min-w-[35rem] lg:max-w-[35rem] xl:min-w-[40rem] xl:max-w-[40rem] sm:min-h-[23vh] w-full max-w-sm sm:max-w-[550px] dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400">
             <div class="hidden sm:block shrink-0 relative lg:w-[32rem] xl:w-[30rem] sm:w-[250px] rounded-t-xl overflow-hidden pt-[40%] sm:rounded-s-xl sm:max-w-[250px] md:rounded-se-none md:max-w-xs">
                 <img class="size-full absolute top-0 start-0 object-cover" src="../../../images/background.webp" alt="Card Image">
             </div>
             <div class="flex flex-1 justify-center lg:px-4 lg:py-6 px-4 py-6 sm:p-3 flex flex-col w-full">
                 <h3 class="lg:text-xl sm:text-lg text-center font-bold text-gray-800 dark:text-white">Login</h3>
+                <!-- reCAPTCHA Error Message -->
+                <div v-if="loginError.recaptcha" class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+                    <div class="flex">
+                        <div class="shrink-0">
+                            <svg class="shrink-0 size-4 mt-0.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                                <path d="M12 9v4"></path>
+                                <path d="M12 17h.01"></path>
+                            </svg>
+                        </div>
+                        <div class="ms-4">
+                            <h3 class="text-sm font-semibold">
+                                reCAPTCHA Verification Failed!
+                            </h3>
+                            <div class="mt-1 text-xs text-gray-800">
+                                {{ loginError.recaptcha }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div :class="[form.errors.email ? 'mt-0': 'mt-3']">
                     <div class="py-2 space-y-2" v-if="form.errors.email">
                         <div class="bg-yellow-50 border border-red-400 text-sm text-red-800 rounded-lg p-4 dark:bg-yellow-800/10 dark:border-yellow-900 dark:text-yellow-500" role="alert" tabindex="-1" aria-labelledby="hs-with-description-label">
@@ -165,33 +221,13 @@ onUnmounted(() => {
                             <TogglePassword :class="'mt-0.5 block w-full'" v-model="form.password" />
                         </div>
 
-                        
-
-                        <!-- Captcha Field -->
-                        <div class="lg:mt-4 sm:mt-2">
-                            <InputLabel :class="'text-xs'" for="captcha" value="Captcha" />
-                            <div class="space-y-2 mt-0.5">
-                                <div class="flex-shrink-0">
-                                    <div v-if="captchaImage" v-html="captchaImage" class="cursor-pointer" @click="loadCaptcha"></div>
-                                    <div v-else class="w-32 h-16 bg-gray-200 flex items-center justify-center text-xs text-gray-500">
-                                        Loading...
-                                    </div>
-                                </div>
-                                <div class="flex-1 w-2/3">
-                                    <TextInput
-                                        id="captcha"
-                                        type="text"
-                                        class="block w-1/2"
-                                        v-model="captchaInput"
-                                        required
-                                        placeholder="Enter captcha"
-                                    />
-                                </div>
-                                
-                            </div>
-                            <div v-if="form.errors.captcha" class="mt-1 text-xs text-red-600">
-                                {{ form.errors.captcha }}
-                            </div>
+                        <!-- Google reCAPTCHA v3 - Hidden but functional -->
+                        <div class="hidden">
+                            <VueReCaptcha
+                                :site-key="recaptchaOptions.siteKey"
+                                :loader-options="recaptchaOptions.loaderOptions"
+                                @load="onRecaptchaLoaded"
+                            />
                         </div>
 
                         <div class="block lg:mt-5 sm:mt-2">
