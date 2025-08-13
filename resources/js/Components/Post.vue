@@ -1,4 +1,4 @@
-<script setup>
+    <script setup>
 
 import {CheckCircle, Heart, MessageSquareText, MinusCircle, XCircle, Repeat2, EllipsisVertical, PencilLine} from "lucide-vue-next";
 import PostMedia from "@/Components/PostMedia.vue";
@@ -202,7 +202,8 @@ const autodetectLinks = (text) => {
             return match; // Jika URL tidak valid, kembalikan text asli
         }
         
-        return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">${match}</a>`;
+        // Tambahkan word-break dan styling yang lebih baik untuk tampilan rapi
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline break-all hover:break-words inline-block max-w-full">${match}</a>`;
     });
 }
 
@@ -212,11 +213,11 @@ const styledTagWithLinks = (value) => {
     // Pertama, autodetect dan buat links
     let processedValue = autodetectLinks(value);
     
-    // Kemudian, terapkan styling yang sudah ada
+    // Kemudian, terapkan styling yang sudah ada dengan improvement
     return processedValue
-        .replace(/<a /g, '<a class="text-blue-600 hover:text-blue-800 hover:no-underline"')
+        .replace(/<a /g, '<a class="text-blue-600 hover:text-blue-800 hover:no-underline break-all hover:break-words inline-block max-w-full"')
         .replace(/<ul>/g, '<ul class="list-disc list-inside pl-4">')
-        .replace(/<ol>/g, '<ol class="list-decimal list-inside pl-3.5">');
+        .replace(/<ol>/g, '<ol class="list-decimal list-inside pl-3">');
 }
 
 const handleLinkClick = (event) => {
@@ -320,7 +321,7 @@ const handleLinkClick = (event) => {
                     <div class="text-xs text-gray-500 dark:text-neutral-500">{{ content.repost.created_at }}</div>
                 </div>
             </div>
-            <div @click="handleLinkClick" class="mt-2 text-gray-800 text-wrap text-justify text-sm dark:text-neutral-400" v-if="content.repost.post" v-html="styledTagWithLinks(content.repost.post)"></div>
+            <div @click="handleLinkClick" class="mt-2 text-gray-800 text-left text-sm dark:text-neutral-400 leading-relaxed break-words" v-if="content.repost.post" v-html="styledTagWithLinks(content.repost.post)"></div>
 
             <!-- Image Grid -->
             <PostMedia :medias="content.repost.media" v-if="content.repost.media.length > 0" />
@@ -381,7 +382,7 @@ const handleLinkClick = (event) => {
                 </div>
             </div>
         </div>
-        <div @click="handleLinkClick" class="mt-2 text-gray-800 text-wrap text-justify text-sm dark:text-neutral-400" v-if="content.post" v-html="styledTagWithLinks(content.post)"></div>
+        <div @click="handleLinkClick" class="mt-2 text-gray-800 text-left text-sm dark:text-neutral-400 leading-relaxed break-words" v-if="content.post" v-html="styledTagWithLinks(content.post)"></div>
 
         <!-- Image Grid -->
         <PostMedia :medias="content.media" v-if="content.media.length > 0" />
@@ -792,7 +793,7 @@ const handleLinkClick = (event) => {
 
 
                                         </div>
-                                        <div v-if="postDetails.post" @click="handleLinkClick" class="text-gray-800 text-wrap text-justify text-sm dark:text-neutral-400 pt-1" v-html="styledTagWithLinks(postDetails.post)"></div>
+                                        <div v-if="postDetails.post" @click="handleLinkClick" class="text-gray-800 text-left text-sm dark:text-neutral-400 leading-relaxed break-words pt-1" v-html="styledTagWithLinks(postDetails.post)"></div>
 
 
                                     </div>
@@ -813,7 +814,7 @@ const handleLinkClick = (event) => {
                                                 <div class="text-xs text-gray-500 dark:text-neutral-500">{{ postDetails.repost.created_at }}</div>
                                             </div>
                                         </Link>
-                                        <div @click="handleLinkClick" class="mt-2 text-gray-800 text-wrap text-justify text-sm dark:text-neutral-400" v-if="postDetails.repost.post" v-html="styledTagWithLinks(postDetails.repost.post)"></div>
+                                        <div @click="handleLinkClick" class="mt-2 text-gray-800 text-left text-sm dark:text-neutral-400 leading-relaxed break-words" v-if="postDetails.repost.post" v-html="styledTagWithLinks(postDetails.repost.post)"></div>
 
                                         <!-- Image Grid -->
                                         <PostMedia :medias="postDetails.repost.media" :inside_modal="true" v-if="postDetails.repost.media.length > 0" />

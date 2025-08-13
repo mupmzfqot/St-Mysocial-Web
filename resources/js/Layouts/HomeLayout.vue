@@ -172,7 +172,7 @@ function isActiveNav(path) {
                             </div>
                             <div class="p-1 space-y-0.5">
                                 <Link :href="route('profile.edit')" class="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100">
-                                    <UserIcon class="shrink-0 size-4" />Profile
+                                    <RssIcon class="shrink-0 size-4" />Profile
                                 </Link>
                                 <Link :href="route('logout')" as="button" method="post" class="w-full flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100">
                                     <LogOut class="shrink-0 size-4" />Log Out
