@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Channels\FCMChannel;
 use App\Models\Comment;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
@@ -28,7 +29,13 @@ class NewCommentLike extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        $channels = ['database'];
+
+        if (!empty($notifiable->fcm_token)) {
+            $channels[] = FCMChannel::class;
+        }
+
+        return $channels;
     }
 
     /**
@@ -41,8 +48,22 @@ class NewCommentLike extends Notification
         return [
             'id'        => $this->comment->id,
             'name'      => 'Comment Liked',
-            'message'   => "{$this->user->name} like your comment.",
+            'message'   => "{$this->user->name} likes your comment",
             'url'       => route('user-post.show-post', $this->comment->post_id),
+        ];
+    }
+
+    public function toFcm(object $notifiable): array
+    {
+        return [
+            'title' => 'You just got new likes on your comment',
+            'body' => "{$this->user->name} likes your comment",
+            'data' => [
+                'post_id' => $this->comment->post_id,
+                'badge' => $notifiable->unreadNotifications()->count(),
+                'route' => 'post_details',
+                'title' => 'You just got new likes on your comment',
+            ]
         ];
     }
 }

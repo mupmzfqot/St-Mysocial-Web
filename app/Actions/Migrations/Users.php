@@ -75,16 +75,37 @@ class Users
 
     private function uploadImage($url, $newUser, $type): void
     {
-        if($url) {
-            $parsedUrl = parse_url($url);
-            $path = $parsedUrl['path'] ?? null;
-            if($path && file_exists(public_path($path))) {
-                $user = User::find($newUser->id);
-                if ($user) {
-                    $user->addMedia(public_path($parsedUrl['path']))
-                        ->toMediaCollection($type)->update(['is_verified' => true]);
-                }
+        if (!$url || !$newUser) {
+            \Log::warning("Skipping image upload: URL is empty or newUser is null");
+            return;
+        }
+
+        $parsedUrl = parse_url($url);
+        $path = $parsedUrl['path'] ?? null;
+
+        if (!$path) {
+            \Log::warning("Invalid image URL: {$url}");
+            return;
+        }
+
+        $filepath = public_path($path);
+
+        if (!file_exists($filepath)) {
+            \Log::warning("File not found for user {$newUser->id}: {$filepath}");
+            return;
+        }
+
+        try {
+            $user = User::find($newUser->id);
+
+            if (!$user) {
+                \Log::warning("User not found: {$newUser->id}");
+                return;
             }
+
+            $user->addMedia($filepath)->preservingOriginal()->toMediaCollection($type);
+        } catch (\Exception $e) {
+            \Log::error("Failed to upload {$type} for user {$newUser->id}: " . $e->getMessage());
         }
     }
 }

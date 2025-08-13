@@ -1,6 +1,7 @@
 <script setup>
 import {computed, ref, Teleport} from "vue";
-import {Download} from "lucide-vue-next";
+import {Download, ZoomIn, ZoomOut} from "lucide-vue-next";
+import { usePage } from "@inertiajs/vue3";
 
 const props = defineProps({
     medias: {
@@ -20,6 +21,58 @@ let docFiles = props.medias.filter((media) => media.mime_type === "application/p
 const isModalOpen = ref(false);
 const carouselMedia = ref([]);
 const currentIndex = ref(0);
+
+const zoomState = ref({
+    scale: 1,
+    translateX: 0,
+    translateY: 0,
+    isDragging: false,
+    startX: 0,
+    startY: 0
+});
+
+const handleZoomIn = () => {
+    zoomState.value.scale = Math.min(zoomState.value.scale + 0.3, 3);
+}
+
+const handleZoomOut = () => {
+    zoomState.value.scale = Math.max(zoomState.value.scale - 0.3, 1);
+}
+
+const startPan = (e) => {
+    if (zoomState.value.scale <= 1) return;
+    
+    zoomState.value.isDragging = true;
+    zoomState.value.startX = e.clientX - zoomState.value.translateX;
+    zoomState.value.startY = e.clientY - zoomState.value.translateY;
+    
+    e.preventDefault();
+}
+
+const pan = (e) => {
+    if (!zoomState.value.isDragging) return;
+    
+    zoomState.value.translateX = e.clientX - zoomState.value.startX;
+    zoomState.value.translateY = e.clientY - zoomState.value.startY;
+    
+    e.preventDefault();
+}
+
+const endPan = () => {
+    zoomState.value.isDragging = false;
+}
+
+const resetZoom = () => {
+    zoomState.value = {
+        scale: 1,
+        translateX: 0,
+        translateY: 0,
+        isDragging: false,
+        startX: 0,
+        startY: 0
+    };
+}
+
 
 const previewMedia = (media, initialIndex = 0) => {
     if (Array.isArray(media)) {
@@ -103,7 +156,7 @@ const otherMedia = computed(() => {
                 <img v-else-if="inside_modal === true"
                      :src="filteredMedia[0].original_url"
                      :alt="filteredMedia[0].name"
-                     :class="['hover:opacity-90 cursor-pointer object-cover', small === true ? 'h-32' : 'w-full h-80']"
+                     :class="['hover:opacity-90 cursor-pointer object-cover', small === true ? 'h-32' : 'w-full']"
                      @click.stop="previewMedia(filteredMedia[0])"
                 />
             </div>
@@ -115,7 +168,7 @@ const otherMedia = computed(() => {
             <div class="col-span-1">
                 <div v-for="(media, index) in [filteredImages[0]]" :key="index">
                     <img
-                        :src="media.preview_url"
+                        :src="media.original_url"
                         alt="Media"
                         class="w-full h-80 object-cover"
                         @click.stop="previewMedia(filteredMedia, index)"
@@ -138,7 +191,7 @@ const otherMedia = computed(() => {
                         ></video>
                     </div>
                     <img v-else
-                         :src="media.preview_url"
+                         :src="media.original_url"
                          :alt="media.name"
                          :class="['hover:opacity-90 cursor-pointer object-cover', small === true ? 'h-32' : 'w-full h-40']"
                          @click.stop="previewMedia(filteredMedia, index+1)"
@@ -162,9 +215,9 @@ const otherMedia = computed(() => {
                     ></video>
                 </div>
                 <img v-else
-                    :src="media.preview_url"
+                    :src="media.original_url"
                     :alt="media.name"
-                     :class="['hover:opacity-90 cursor-pointer object-cover', small === true ? 'h-32 w-24' : 'w-full h-40']"
+                     :class="['hover:opacity-90 cursor-pointer object-cover', small === true ? 'h-32 w-24' : 'w-full h-48']"
                     @click.stop="previewMedia(filteredMedia, index)"
                 />
                 <!-- Overlay untuk gambar lebih dari 4 -->
@@ -200,7 +253,7 @@ const otherMedia = computed(() => {
     <Teleport to="body">
         <div
         v-if="isModalOpen"
-        class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center" style="position: absolute; z-index: 9999"
+        class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center" style="z-index: 9999"
         @click.stop="(e) => {
             if (e.target === e.currentTarget) {
                 closeModal();
@@ -224,7 +277,7 @@ const otherMedia = computed(() => {
             <!-- Main carousel container -->
             <div class="relative bg-gray-900 rounded-lg overflow-hidden">
                 <!-- Media display -->
-                <div class="flex items-center justify-center min-h-[200px] max-h-[80vh]">
+                <div class="flex items-center justify-center min-h-[200px]">
                     <template v-if="carouselMedia[currentIndex]">
                         <div v-if="isVideo(carouselMedia[currentIndex])" class="w-full h-full">
                             <video
@@ -233,13 +286,51 @@ const otherMedia = computed(() => {
                                 class="max-w-full max-h-[80vh] mx-auto"
                             ></video>
                         </div>
-                        <img
-                            v-else
-                            :src="carouselMedia[currentIndex].original_url"
-                            :alt="carouselMedia[currentIndex].name"
-                            class="max-w-full max-h-[80vh] object-contain"
-                        />
+                        <div v-else
+                            class="zoomable-container w-full h-full flex items-center justify-center relative"
+                            @mousedown="startPan"
+                            @mousemove="pan"
+                            @mouseup="endPan"
+                            @mouseleave="endPan"
+                        >
+                            <img
+                                :src="carouselMedia[currentIndex].original_url"
+                                :alt="carouselMedia[currentIndex].name"
+                                class="max-w-full max-h-[80vh] object-contain cursor-move"
+                                :style="{ 
+                                    transform: `scale(${zoomState.scale}) translate(${zoomState.translateX}px, ${zoomState.translateY}px)`, 
+                                    transition: 'transform 0.3s ease',
+                                    width: zoomState.scale > 1 ? `${100 * zoomState.scale}%` : '100%',
+                                    height: zoomState.scale > 1 ? `${100 * zoomState.scale}%` : '100%',
+                                    transformOrigin: 'center center'
+                                }"
+                            />
+                        </div>
                     </template>
+                    <!-- Zoom and Fullscreen Controls -->
+            <div class="absolute top-4 right-4 flex space-x-2 z-50" v-if="!isVideo(carouselMedia[currentIndex])">
+                <button 
+                    class="text-white hover:text-gray-300 bg-black bg-opacity-50 p-2 rounded-full"
+                    @click.stop.prevent="handleZoomOut"
+                    title="Zoom Out"
+                >
+                    <ZoomOut class="size-6"/>
+                </button>
+                <button 
+                    class="text-white hover:text-gray-300 bg-black bg-opacity-50 p-2 rounded-full"
+                    @click.stop.prevent="resetZoom"
+                    title="Reset Zoom"
+                >
+                    1:1
+                </button>
+                <button 
+                    class="text-white hover:text-gray-300 bg-black bg-opacity-50 p-2 rounded-full"
+                    @click.stop.prevent="handleZoomIn"
+                    title="Zoom In"
+                >
+                    <ZoomIn class="size-6"/>
+                </button>
+            </div>
                 </div>
 
                 <!-- Navigation arrows -->
@@ -317,10 +408,43 @@ const otherMedia = computed(() => {
 
 .hs-overlay {
     transition: opacity 0.3s ease, transform 0.3s ease;
+    opacity: 0;
+    pointer-events: none;
 }
 
 .hs-overlay[style*="display: none"] {
     opacity: 0;
     pointer-events: none;
 }
+
+.zoomable-container {
+    overflow: hidden;
+    max-width: 100%;
+    max-height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.zoomable-container.zoomed {
+  overflow: auto;
+}
+.zoomable-container::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.zoomable-container::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.zoomable-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 5px;
+}
+
+.zoomable-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
 </style>

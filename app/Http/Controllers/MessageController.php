@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Messages\OpenConversation;
+use App\Actions\Messages\SendMessage;
 use App\Events\MessageSent;
+use App\Events\NewMessage;
 use App\Models\Conversation;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -76,52 +78,9 @@ class MessageController extends Controller
         return response()->noContent();
     }
 
-    public function sendMessage(Request $request, $conversation_id)
+    public function sendMessage(Request $request, $conversation_id, SendMessage $sendMessage)
     {
-        try {
-            $request->validate([
-                'message' => 'required',
-                'files' => 'nullable|array',
-                'files.*' => [
-                    'file',
-                    'mimetypes:image/jpeg,image/png,image/gif,video/mp4,
-                        video/quicktime,video/mpeg,video/ogg,video/webm,video/avi,application/pdf',
-                    'max:10240' // 10MB
-                ],
-            ]);
-            $conversation = Conversation::query()->find($conversation_id);
-            Gate::authorize('send', $conversation);
-
-            $message = $conversation->messages()->create([
-                'sender_id' => auth()->id(),
-                'content' => $request->message,
-            ]);
-
-            if ($request->hasFile('files')) {
-                foreach ($request->file('files') as $file) {
-                    $message->addMedia($file)
-                        ->toMediaCollection('message_media');
-                }
-            }
-
-            $message->load('sender', 'media');
-
-//            broadcast(new MessageSent($message));
-
-            return response()->json([
-                'id' => $message->id,
-                'conversation_id' => $message->conversation_id,
-                'content' => $message->content,
-                'sender_id' => $message->sender_id,
-                'sender_name' => $message->sender->name,
-                'media' => array_values($message->getMedia('message_media')->toArray())
-            ]);
-        } catch (\Exception $exception) {
-            return response()->json([
-                'message' => $exception->getMessage(),
-            ]);
-        }
-
+        return $sendMessage->handle($request, $conversation_id);
     }
 
     public function getUnreadCount()

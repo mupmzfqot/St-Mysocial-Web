@@ -33,7 +33,6 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
         return 'users.'.$this->id;
     }
 
-
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -60,6 +59,11 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
         ];
     }
 
+    protected function getNameAttribute($value): string
+    {
+        return ucwords(strtolower($value));
+    }
+
     public function getCreatedDateAttribute()
     {
         return $this->created_at?->format('d M Y');
@@ -78,15 +82,13 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
     public function getAvatarAttribute(): ?string
     {
         return $this->getMedia('avatar')
-            ->where('is_verified', true)
             ->first()?->original_url ?? asset('default-avatar.webp');
     }
 
     public function getCoverImageAttribute(): ?string
     {
         return $this->getMedia('cover_image')
-            ->where('is_verified', true)
-            ->first()?->original_url ?? asset('background.png');
+            ->first()?->original_url ?? asset('background.webp');
     }
 
     public function conversations()
@@ -124,6 +126,11 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
     protected function serializeDate(DateTimeInterface $date)
     {
         return $date->timezone(config('app.timezone'));
+    }
+
+    public function devices(): HasMany
+    {
+        return $this->hasMany(UserDevice::class);
     }
 
 }

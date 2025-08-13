@@ -20,9 +20,19 @@ use Gate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use App\Actions\Posts\UpdatePost;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use App\Services\PostCacheService;
 
 class PostController extends Controller
 {
+    protected $postCacheService;
+    
+    public function __construct(PostCacheService $postCacheService)
+    {
+        $this->postCacheService = $postCacheService;
+    }
+
     public function index(Request $request)
     {
         try {
@@ -32,20 +42,38 @@ class PostController extends Controller
             }
             $searchTerm = $request->query('search');
             $perPage = $request->query('per_page', 20);
-            $posts = Post::query()
-                ->when($searchTerm, function ($query, $search) {
-                    $query->where('post', 'like', '%' . $search . '%');
-                })
-                ->where('type', $type)
-                ->published()
-                ->orderBy('created_at', 'desc')
-                ->with(['author', 'media'])
-                ->paginate($perPage)
-                ->withQueryString();
+            
+            $posts = $this->postCacheService->getCachedPosts(
+                $type, 
+                $searchTerm, 
+                $perPage, 
+                $request->getQueryString()
+            );
 
             return response()->json([
                 'error' => 0,
-                'data' => PostResource::collection($posts->load('repost'))
+                'data' => PostResource::collection($posts->load('repost')),
+                'pagination' => [
+                    'current_page' => $posts->currentPage(),
+                    'last_page' => $posts->lastPage(),
+                    'per_page' => $posts->perPage(),
+                    'total' => $posts->total(),
+                    'from' => $posts->firstItem(),
+                    'to' => $posts->lastItem(),
+                    'has_more_pages' => $posts->hasMorePages(),
+                    'next_page_url' => $posts->nextPageUrl(),
+                    'prev_page_url' => $posts->previousPageUrl(),
+                    'first_page_url' => $posts->url(1),
+                    'last_page_url' => $posts->url($posts->lastPage()),
+                    'path' => $posts->path(),
+                    'links' => $posts->linkCollection()->toArray(),
+                ],
+                'meta' => [
+                    'type' => $type,
+                    'search_term' => $searchTerm,
+                    'per_page' => (int) $perPage,
+                    'query_string' => $request->getQueryString(),
+                ]
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -67,25 +95,40 @@ class PostController extends Controller
 
         return response()->json([
             'error' => 0,
-            'data' => new PostResource($post->load('comments'))
+            'data' => new PostResource($post->load('comments', 'repost'))
         ]);
     }
 
     public function store(Request $request, CreatePostAPI $createPost)
     {
         $created = $createPost->handle($request);
+
+        if ($created instanceof Post) {
+            // Invalidate cache for the post type (double safety with observer)
+            $this->postCacheService->clearCache($created->type);
+            
+            return response()->json([
+                'error' => 0,
+                'data' => new PostResource($created)
+            ]);
+        }
+
         return response()->json([
-            'error' => 0,
-            'data' => new PostResource($created)
-        ]);
+            'error' => 1,
+            'message' => $created
+        ], 400);
     }
 
-    public function update(Request $request, $id, CreatePostAPI $createPost)
+    public function update(Request $request, $id, UpdatePost $updatePost)
     {
         try {
             $post = Post::find($id);
             Gate::authorize('modify', $post);
-            $updatedPost = $createPost->handle($request, $id);
+            $updatedPost = $updatePost->handle($request, $post);
+            
+            // Invalidate cache for the post type (double safety with observer)
+            $this->postCacheService->clearCache($updatedPost->type);
+            
             return response()->json([
                 'error' => 0,
                 'data' => new PostResource($updatedPost->load('repost'))
@@ -103,7 +146,11 @@ class PostController extends Controller
     {
         try {
             Gate::authorize('modify', $post);
+            $postType = $post->type; // Store type before deletion
             $post->delete();
+
+            // Invalidate cache for the post type (double safety with observer)
+            $this->postCacheService->clearCache($postType);
 
             return response()->json([
                 'message' => 'Post has been deleted',
@@ -127,26 +174,49 @@ class PostController extends Controller
 
         return response()->json([
             'error' => 0,
-            'data' => PostResource::collection($posts->load('repost'))
+            'data' => PostResource::collection($posts->load('repost')),
+            'pagination' => [
+                'current_page' => $posts->currentPage(),
+                'last_page' => $posts->lastPage(),
+                'per_page' => $posts->perPage(),
+                'total' => $posts->total(),
+                'from' => $posts->firstItem(),
+                'to' => $posts->lastItem(),
+                'has_more_pages' => $posts->hasMorePages(),
+                'next_page_url' => $posts->nextPageUrl(),
+                'prev_page_url' => $posts->previousPageUrl(),
+                'first_page_url' => $posts->url(1),
+                'last_page_url' => $posts->url($posts->lastPage()),
+                'path' => $posts->path(),
+                'links' => $posts->linkCollection()->toArray(),
+            ],
+            'meta' => [
+                'type' => 'top_posts',
+                'per_page' => 10,
+                'query_string' => $request->getQueryString(),
+            ]
         ]);
     }
 
     public function storeComments(Request $request, CreateComment $createComment)
     {
         try {
-            $createComment->handle($request);
+            $comment = $createComment->handle($request);
+            
+            // Invalidate cache for specific post (double safety with observer)
+            $this->postCacheService->invalidatePostCache($comment->post_id);
+            
             return response()->json([
                 'error'     => 0,
                 'message'   => 'Comment has been sent.',
             ], 201);
-        } Catch (\Exception $e) {
+        } catch (\Exception $e) {
             return response()->json([
-                'error'     => 0,
+                'error'     => 1,
                 'message'   => 'Failed to send comment.',
                 'response' => $e->getMessage(),
             ]);
         }
-
     }
 
     public function getComments(Request $request, $postId)
@@ -178,7 +248,10 @@ class PostController extends Controller
 
     public function storeLike(Request $request)
     {
-        $liked = PostLiked::query()->where('post_id', $request->post_id)->where('user_id', $request->user()->id)->first();
+        $liked = PostLiked::query()
+            ->where('post_id', $request->post_id)
+            ->where('user_id', $request->user()->id)
+            ->first();
 
         if(!$liked) {
             $postLiked = PostLiked::query()->create([
@@ -190,6 +263,9 @@ class PostController extends Controller
             if($post->user_id != auth()->id()) {
                 Notification::send($post?->author, new NewLike($postLiked, User::find(auth()->id())));
             }
+
+            // Invalidate cache for specific post (double safety with observer)
+            $this->postCacheService->invalidatePostCache($request->post_id);
         }
 
         return response()->json([
@@ -200,7 +276,13 @@ class PostController extends Controller
 
     public function unlikePost(Request $request)
     {
-        PostLiked::query()->where('post_id', $request->post_id)->where('user_id', auth()->id())->delete();
+        PostLiked::query()
+            ->where('post_id', $request->post_id)
+            ->where('user_id', auth()->id())
+            ->delete();
+
+        // Invalidate cache for specific post (double safety with observer)
+        $this->postCacheService->invalidatePostCache($request->post_id);
 
         return response()->json([
             'error'     => 0,
@@ -223,6 +305,9 @@ class PostController extends Controller
                 Notification::send($comment?->user, new NewCommentLike($comment, User::find(auth()->id())));
             }
 
+            // Invalidate cache for the post (double safety with observer)
+            $this->postCacheService->invalidatePostCache($comment->post_id);
+
             return response()->json([
                 'error'     => 0,
                 'message'   => 'Comment has been liked',
@@ -232,7 +317,15 @@ class PostController extends Controller
 
     public function unlikeComment(Request $request)
     {
-        CommentLiked::query()->where('comment_id', $request->comment_id)->where('user_id', auth()->id())->delete();
+        $comment = CommentLiked::query()->where('comment_id', $request->comment_id)->where('user_id', auth()->id())->first();
+        
+        if ($comment) {
+            $commentModel = Comment::query()->find($request->comment_id);
+            CommentLiked::query()->where('comment_id', $request->comment_id)->where('user_id', auth()->id())->delete();
+
+            // Invalidate cache for the post (double safety with observer)
+            $this->postCacheService->invalidatePostCache($commentModel->post_id);
+        }
 
         return response()->json([
             'error'     => 0,
@@ -279,7 +372,27 @@ class PostController extends Controller
 
             return response()->json([
                 'error' => 0,
-                'data'  => PostResource::collection($posts->load('repost'))
+                'data'  => PostResource::collection($posts->load('repost')),
+                'pagination' => [
+                    'current_page' => $posts->currentPage(),
+                    'last_page' => $posts->lastPage(),
+                    'per_page' => $posts->perPage(),
+                    'total' => $posts->total(),
+                    'from' => $posts->firstItem(),
+                    'to' => $posts->lastItem(),
+                    'has_more_pages' => $posts->hasMorePages(),
+                    'next_page_url' => $posts->nextPageUrl(),
+                    'prev_page_url' => $posts->previousPageUrl(),
+                    'first_page_url' => $posts->url(1),
+                    'last_page_url' => $posts->url($posts->lastPage()),
+                    'path' => $posts->path(),
+                    'links' => $posts->linkCollection()->toArray(),
+                ],
+                'meta' => [
+                    'user_id' => $request->user_id,
+                    'per_page' => (int) $perPage,
+                    'query_string' => $request->getQueryString(),
+                ]
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -308,6 +421,10 @@ class PostController extends Controller
                 });
                 $comment->delete();
                 DB::commit();
+                
+                // Invalidate cache for specific post (double safety with observer)
+                $this->postCacheService->invalidatePostCache($comment->post_id);
+                
                 return response()->json([
                     'error' => 0,
                     'message' => 'Comment has been deleted'
@@ -326,5 +443,53 @@ class PostController extends Controller
             ]);
         }
 
+    }
+
+    public function deleteMediaByUrl(Request $request)
+    {
+        try {
+            $request->validate([
+                'media_url' => 'required|string'
+            ]);
+
+            $parseUrl = parse_url($request->media_url);
+            $path = $parseUrl['path'];
+            $segments = explode('/', $path);
+
+            if (count($segments) < 5) {
+                throw new \Exception('Invalid media URL format');
+            }
+
+            $media_id = $segments[3];
+            $filename = $segments[4];
+
+            $media = Media::query()
+                ->where('id', $media_id)
+                ->where('file_name', $filename)
+                ->where('model_type', Post::class)
+                ->first();
+
+            if (!$media) {
+                return response()->json([
+                    'error' => 1,
+                    'message' => 'Media not found',
+                ], 404);
+            }
+
+            $post = Post::find($media->model_id);
+            Gate::authorize('modify', $post);
+
+            $media->delete();
+
+            return response()->json([
+                'error' => 0,
+                'message' => 'Media has been deleted',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 1,
+                'message' => $e->getMessage(),
+            ]);
+        }
     }
 }

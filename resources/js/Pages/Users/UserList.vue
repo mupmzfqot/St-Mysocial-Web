@@ -10,8 +10,9 @@ import Pagination from "@/Components/Pagination.vue";
 
 const props = defineProps({
     users: Object,
-    userCount: '',
-    publicUserCount: '',
+    userCount: Number,
+    adminCount: Number,
+    publicUserCount: Number,
     searchTerm: String
 });
 
@@ -69,7 +70,7 @@ const setAdmin = (user) => {
                             </p>
                             <div class="mt-1 flex items-center gap-x-2">
                                 <h3 class="text-xl sm:text-2xl font-medium text-gray-800 dark:text-neutral-200">
-                                    {{ userCount + publicUserCount }}
+                                    {{ userCount+adminCount + publicUserCount }}
                                 </h3>
                             </div>
                         </div>
@@ -128,7 +129,7 @@ const setAdmin = (user) => {
         <!-- Card -->
         <div class="flex flex-col">
             <div class="-m-1.5 overflow-x-auto">
-                <div class="p-1.5 min-w-full inline-block align-middle">
+                <div class="p-1.5 w-full inline-block align-middle">
                     <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden dark:bg-neutral-900 dark:border-neutral-700">
                         <!-- Header -->
                         <div class="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-b border-gray-200 dark:border-neutral-700">
@@ -161,7 +162,7 @@ const setAdmin = (user) => {
                                         </span>
                                     </div>
                                 </th>
-                                <th scope="col" class="px-6 py-3 text-start w-4/6">
+                                <th scope="col" class="px-6 py-3 text-start">
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                           User
@@ -169,7 +170,7 @@ const setAdmin = (user) => {
                                     </div>
                                 </th>
 
-                                <th scope="col" class="px-6 py-3 text-start w-1/6">
+                                <th scope="col" class="px-6 py-3 text-start">
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                           Account State
@@ -177,7 +178,7 @@ const setAdmin = (user) => {
                                     </div>
                                 </th>
 
-                                <th scope="col" class="px-6 py-3 text-start w-2/6">
+                                <th scope="col" class="px-6 py-3 text-start">
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                           Signup Date
@@ -193,7 +194,7 @@ const setAdmin = (user) => {
                                     </div>
                                 </th>
 
-                                <th scope="col" class="px-6 py-3 text-start w-1/6">
+                                <th scope="col" class="px-6 py-3 text-start">
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                             User Category
@@ -223,7 +224,7 @@ const setAdmin = (user) => {
                                 <td class="size-px whitespace-nowrap align-top">
                                     <a class="block p-6" href="#">
                                         <div class="flex items-center gap-x-3">
-                                            <img :src="user.avatar" class="size-10 shrink-0 rounded-full" alt="avatar">
+                                            <img :src="user.avatar" class="size-10 shrink-0 rounded-full object-cover" alt="avatar">
                                             <div class="grow">
                                                 <span class="block text-sm font-semibold text-gray-800 dark:text-neutral-200">{{ user.name }}</span>
                                                 <span class="block text-sm text-gray-500 dark:text-neutral-500">{{ user.email }}</span>
@@ -231,7 +232,7 @@ const setAdmin = (user) => {
                                         </div>
                                     </a>
                                 </td>
-                                <td class="h-px w-72 min-w-72 align-top">
+                                <td class="h-px align-top">
                                     <a class="block p-6" href="#">
                                         <span v-if="user.is_active" class="py-1 px-3 inline-flex items-center gap-x-1 text-xs font-medium bg-teal-100 text-teal-800 rounded-full dark:bg-teal-500/10 dark:text-teal-500">
                                           <CheckCircle class="size-3" />Active

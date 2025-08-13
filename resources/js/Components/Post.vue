@@ -1,9 +1,9 @@
 <script setup>
 
-import {CheckCircle, Heart, MessageSquareText, MinusCircle, XCircle, Repeat2} from "lucide-vue-next";
+import {CheckCircle, Heart, MessageSquareText, MinusCircle, XCircle, Repeat2, EllipsisVertical, PencilLine} from "lucide-vue-next";
 import PostMedia from "@/Components/PostMedia.vue";
 import {Link, router, usePage} from "@inertiajs/vue3";
-import {ref} from "vue";
+import {onMounted, ref} from "vue";
 import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from "@headlessui/vue";
 import Comment from "@/Components/Comment.vue";
 
@@ -21,6 +21,10 @@ const props = defineProps({
         default: false,
     }
 });
+
+onMounted(() => {
+    window.HSStaticMethods.autoInit();
+})
 
 const likedByUsers = ref([]);
 const taggedUsers = ref([]);
@@ -166,7 +170,51 @@ const formatTags = (tags) => {
     return `${firstTwoTags.join(', ')}, and ${remainingCount} other${remainingCount > 1 ? 's' : ''}`;
 }
 const styledTag = (value) => {
-    return value.replace(/<a /g, '<a class="text-blue-600 hover:text-blue-800 hover:no-underline" ')
+    if(!value) return;
+    return value.replace(/<a /g, '<a class="text-blue-600 hover:text-blue-800 hover:no-underline"')
+        .replace(/<ul>/g, '<ul class="list-disc list-inside pl-4">')
+        .replace(/<ol>/g, '<ol class="list-decimal list-inside pl-3.5">');
+}
+
+const autodetectLinks = (text) => {
+    if (!text) return text;
+    
+    // Skip if text already contains HTML anchor tags
+    if (/<a\s+href/i.test(text)) {
+        return text;
+    }
+    
+    // Regex untuk mendeteksi berbagai format URL
+    const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9.-]+\.[a-zA-Z]{2,}[^\s]*)/g;
+    
+    return text.replace(urlRegex, (match, httpUrl, wwwUrl, domainUrl) => {
+        let url = match;
+        
+        // Jika tidak ada protocol, tambahkan https://
+        if (!httpUrl && (wwwUrl || domainUrl)) {
+            url = `https://${match}`;
+        }
+        
+        // Pastikan URL valid
+        try {
+            new URL(url);
+        } catch {
+            return match; // Jika URL tidak valid, kembalikan text asli
+        }
+        
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">${match}</a>`;
+    });
+}
+
+const styledTagWithLinks = (value) => {
+    if(!value) return '';
+    
+    // Pertama, autodetect dan buat links
+    let processedValue = autodetectLinks(value);
+    
+    // Kemudian, terapkan styling yang sudah ada
+    return processedValue
+        .replace(/<a /g, '<a class="text-blue-600 hover:text-blue-800 hover:no-underline"')
         .replace(/<ul>/g, '<ul class="list-disc list-inside pl-4">')
         .replace(/<ol>/g, '<ol class="list-decimal list-inside pl-3.5">');
 }
@@ -200,10 +248,10 @@ const handleLinkClick = (event) => {
 </script>
 
 <template>
-    <div class="cursor-pointer" @click="showPost(content.id)" v-if="content.repost">
+    <div v-if="content.repost">
         <div class="flex items-center">
             <Link :href="route('profile.show', content.author.id)" class="shrink-0">
-                <img class="size-10 rounded-full" :src="content.author.avatar" alt="Avatar">
+                <img class="size-10 rounded-full object-cover" :src="content.author.avatar" alt="Avatar">
             </Link>
             <div class="ms-4">
                 <div class="flex items-center">
@@ -217,20 +265,47 @@ const handleLinkClick = (event) => {
                 </div>
                 <div class="text-xs text-gray-500 dark:text-neutral-500">{{ content.created_at }}</div>
             </div>
-            <span v-if="!content.published && status" class="py-1 px-3 inline-flex items-center gap-x-1 ms-auto text-xs font-medium bg-red-100 text-red-800 rounded-full dark:bg-red-500/10 dark:text-red-500">
+            <div class="ms-auto flex items-center" v-if="$page.props.auth.user.id === content.user_id" style="z-index: 100;">
+                <div class="me-1">
+                    <span v-if="!content.published && status" class="py-1 px-3 inline-flex items-center gap-x-1 ms-auto text-xs font-medium bg-red-100 text-red-800 rounded-full dark:bg-red-500/10 dark:text-red-500">
                       <MinusCircle class="size-3" />Not Published
                     </span>
-            <span v-if="content.published && status" class="py-1 px-3 inline-flex items-center gap-x-1 ms-auto text-xs font-medium bg-teal-100 text-teal-800 rounded-full dark:bg-teal-500/10 dark:text-teal-500">
+                    <span v-if="content.published && status" class="py-1 px-3 inline-flex items-center gap-x-1 ms-auto text-xs font-medium bg-teal-100 text-teal-800 rounded-full dark:bg-teal-500/10 dark:text-teal-500">
                       <CheckCircle class="size-3" />Published
                     </span>
+                </div>
+                <div class="hs-dropdown relative inline-flex">
+                    <button id="hs-dropdown-custom-icon-trigger" type="button" class="hs-dropdown-toggle flex justify-center 
+                        items-center size-9 text-sm font-semibold rounded-full bg-white text-gray-800 shadow-2xs 
+                        hover:bg-blue-100 focus:outline-hidden hover:text-blue-900 
+                        disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 
+                        dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 
+                        dark:focus:bg-neutral-800" aria-haspopup="menu" aria-expanded="false" aria-label="Dropdown">
+                        <EllipsisVertical class="size-4 font-bold shrink-0" />
+                    </button>
+
+                    <div class="hs-dropdown-menu transition-[opacity,margin] duration hidden min-w-[10rem] bg-white border border-gray-200 shadow-md rounded-lg mt-2 dark:bg-neutral-800 dark:border dark:border-neutral-700" role="menu" aria-orientation="vertical" aria-labelledby="hs-dropdown-custom-icon-trigger">
+                        <div class="p-1 space-y-0.5">
+                            <Link :href="route('edit-post', content.id)"
+                                class="flex items-center gap-x-2 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700">
+                                <PencilLine class="shrink-0 size-5 text-gray-800" />Edit post
+                            </Link>
+                            <a href="#" @click.prevent="openDeleteConfirm(content.id)"
+                                class="flex items-center gap-x-2 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700">
+                                <XCircle class="shrink-0 size-5 text-gray-800" />Delete post
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="mt-2 text-gray-800 text-wrap text-justify text-sm dark:text-neutral-400" v-html="styledTag(content.post)"></div>
+        <div v-if="content.post" class="mt-2 text-gray-800 text-wrap text-justify text-sm dark:text-neutral-400" v-html="styledTagWithLinks(content.post)"></div>
 
         <div class="my-3 border border-gray-200 px-3 pb-2 rounded-xl">
             <div class="flex items-center mt-2">
                 <Link :href="route('profile.show', content.repost.author.id)" class="shrink-0">
-                    <img class="size-10 rounded-full" :src="content.repost.author.avatar" alt="Avatar">
+                    <img class="size-10 rounded-full object-cover" :src="content.repost.author.avatar" alt="Avatar">
                 </Link>
                 <div class="ms-4">
                     <div class="flex items-center">
@@ -245,7 +320,7 @@ const handleLinkClick = (event) => {
                     <div class="text-xs text-gray-500 dark:text-neutral-500">{{ content.repost.created_at }}</div>
                 </div>
             </div>
-            <div @click="handleLinkClick" class="mt-2 text-gray-800 text-wrap text-justify text-sm dark:text-neutral-400" v-html="styledTag(content.repost.post)"></div>
+            <div @click="handleLinkClick" class="mt-2 text-gray-800 text-wrap text-justify text-sm dark:text-neutral-400" v-if="content.repost.post" v-html="styledTagWithLinks(content.repost.post)"></div>
 
             <!-- Image Grid -->
             <PostMedia :medias="content.repost.media" v-if="content.repost.media.length > 0" />
@@ -254,10 +329,10 @@ const handleLinkClick = (event) => {
     </div>
 
     <!-- if repost empty -->
-    <div class="cursor-pointer" @click="showPost(content.id)" v-else>
+    <div v-else>
         <div class="flex items-center">
             <Link :href="route('profile.show', content.author.id)" class="shrink-0">
-                <img class="size-10 rounded-full" :src="content.author.avatar" alt="Avatar">
+                <img class="size-10 rounded-full object-cover" :src="content.author.avatar" alt="Avatar">
             </Link>
             <div class="ms-4">
                 <div class="flex items-center">
@@ -271,14 +346,42 @@ const handleLinkClick = (event) => {
                 </div>
                 <div class="text-xs text-gray-500 dark:text-neutral-500">{{ content.created_at }}</div>
             </div>
-            <span v-if="!content.published && status" class="py-1 px-3 inline-flex items-center gap-x-1 ms-auto text-xs font-medium bg-red-100 text-red-800 rounded-full dark:bg-red-500/10 dark:text-red-500">
+            
+            <div class="ms-auto flex items-center" v-if="$page.props.auth.user.id === content.user_id" style="z-index: 100;">
+                <div class="me-1">
+                    <span v-if="!content.published && status" class="py-1 px-3 inline-flex items-center gap-x-1 ms-auto text-xs font-medium bg-red-100 text-red-800 rounded-full dark:bg-red-500/10 dark:text-red-500">
                       <MinusCircle class="size-3" />Not Published
                     </span>
-            <span v-if="content.published && status" class="py-1 px-3 inline-flex items-center gap-x-1 ms-auto text-xs font-medium bg-teal-100 text-teal-800 rounded-full dark:bg-teal-500/10 dark:text-teal-500">
+                    <span v-if="content.published && status" class="py-1 px-3 inline-flex items-center gap-x-1 ms-auto text-xs font-medium bg-teal-100 text-teal-800 rounded-full dark:bg-teal-500/10 dark:text-teal-500">
                       <CheckCircle class="size-3" />Published
                     </span>
+                </div>
+                <div class="hs-dropdown relative inline-flex">
+                    <button id="hs-dropdown-custom-icon-trigger" type="button" class="hs-dropdown-toggle flex justify-center 
+                        items-center size-9 text-sm font-semibold rounded-full bg-white text-gray-800 shadow-2xs 
+                        hover:bg-blue-100 focus:outline-hidden hover:text-blue-900 
+                        disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 
+                        dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 
+                        dark:focus:bg-neutral-800" aria-haspopup="menu" aria-expanded="false" aria-label="Dropdown">
+                        <EllipsisVertical class="size-4 font-bold shrink-0" />
+                    </button>
+
+                    <div class="hs-dropdown-menu transition-[opacity,margin] duration hidden min-w-[10rem] bg-white border border-gray-200 shadow-md rounded-lg mt-2 dark:bg-neutral-800 dark:border dark:border-neutral-700" role="menu" aria-orientation="vertical" aria-labelledby="hs-dropdown-custom-icon-trigger">
+                        <div class="p-1 space-y-0.5">
+                            <Link :href="route('edit-post', content.id)"
+                                class="flex items-center gap-x-2 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700">
+                                <PencilLine class="shrink-0 size-5 text-gray-800" />Edit post
+                            </Link>
+                            <a href="#" @click.prevent="openDeleteConfirm(content.id)"
+                                class="flex items-center gap-x-2 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700">
+                                <XCircle class="shrink-0 size-5 text-gray-800" />Delete post
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div @click="handleLinkClick" class="mt-2 text-gray-800 text-wrap text-justify text-sm dark:text-neutral-400" v-html="styledTag(content.post)"></div>
+        <div @click="handleLinkClick" class="mt-2 text-gray-800 text-wrap text-justify text-sm dark:text-neutral-400" v-if="content.post" v-html="styledTagWithLinks(content.post)"></div>
 
         <!-- Image Grid -->
         <PostMedia :medias="content.media" v-if="content.media.length > 0" />
@@ -307,13 +410,9 @@ const handleLinkClick = (event) => {
             {{ content.comment_count }} Comments
         </a>
 
-        <a @click.prevent="openShareModal(content.id)" class="inline-flex items-center gap-x-2 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600" href="#">
+        <a @click.prevent="openShareModal(content.repost ? content.repost.id : content.id)" class="inline-flex items-center gap-x-2 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600" href="#">
             <Repeat2 class="shrink-0 size-5 text-gray-800" />
             Share
-        </a>
-
-        <a href="#" @click.prevent="openDeleteConfirm(content.id)" v-if="$page.props.auth.user.id === content.user_id" class="inline-flex items-center gap-x-1 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-red-900 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600">
-            <XCircle class="shrink-0 size-5 text-gray-800" />Delete post
         </a>
     </div>
 
@@ -341,8 +440,6 @@ const handleLinkClick = (event) => {
         </div>
     </div>
     <!-- end of if repost empty -->
-
-
 
     <!-- Delete Confirmation Modal -->
     <TransitionRoot appear :show="showDeleteConfirmModal" as="template" style="position: absolute; z-index: 99999">
@@ -617,8 +714,8 @@ const handleLinkClick = (event) => {
     </TransitionRoot>
 
     <!-- Post Details Modal -->
-    <TransitionRoot appear :show="showPostModal" as="template">
-        <Dialog as="div" @close="showPostModal = false" class="relative z-[9999]">
+    <TransitionRoot appear :show="showPostModal" as="template" :persistent="true" :close-on-click-modal="false">
+        <Dialog as="div" class="relative z-[100]">
             <TransitionChild
                 as="template"
                 enter="duration-300 ease-out"
@@ -631,7 +728,7 @@ const handleLinkClick = (event) => {
                 <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" />
             </TransitionChild>
 
-            <div class="fixed inset-0 overflow-y-auto">
+            <div class="fixed inset-0 overflow-y-auto ">
                 <div class="flex min-h-full items-center justify-center p-4 text-center">
 
                     <TransitionChild
@@ -644,46 +741,61 @@ const handleLinkClick = (event) => {
                         leave-to="opacity-0 scale-95"
                     >
                         <DialogPanel
-                            class="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white dark:bg-neutral-800 p-6 text-left align-middle shadow-xl transition-all relative max-h-[90vh] flex flex-col"
+                            class="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white dark:bg-neutral-800 py-2 ps-4 pe-1 text-left align-middle shadow-xl transition-all relative max-h-[90vh] flex flex-col"
                         >
                             <!-- Modal Header -->
                             <DialogTitle
                                 as="h3"
                                 class="text-lg font-medium leading-6 text-gray-900 dark:text-white pb-2 sticky top-0 bg-white dark:bg-neutral-800"
                             >
+                                <div class="absolute z-10 -top-1 -right-0">
+                                    <button type="button" @click="showPostModal = false"  class="size-8 inline-flex justify-center items-center gap-x-2 rounded-full border border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200 focus:outline-none focus:bg-gray-200 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-700 dark:hover:bg-neutral-600 dark:text-neutral-400 dark:focus:bg-neutral-600" aria-label="Close" data-hs-overlay="#hs-basic-modal">
+                                        <span class="sr-only">Close</span>
+                                        <svg class="shrink-0 size-4 text-red-600" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M18 6 6 18"></path>
+                                            <path d="m6 6 12 12"></path>
+                                        </svg>
+                                    </button>
+                                </div>
                                 <!-- Post Content -->
-                                <div v-if="postDetails" class="space-y-2">
 
-                                    <!-- Post Header -->
-                                    <div class="flex items-center">
-                                        <Link :href="route('profile.show', postDetails.author.id)" class="shrink-0">
-                                            <img class="size-10 rounded-full" :src="postDetails.author.avatar" alt="Avatar">
-                                        </Link>
-                                        <div class="ms-4">
-                                            <div class="flex items-center">
-                                                <Link :href="route('profile.show', postDetails.author.id)" class="text-base font-semibold text-gray-800 dark:text-neutral-400 hover:text-blue-700 me-1">{{ content.author.name }}</Link>
-                                                <div class="flex flex-wrap gap-x-1" v-if="postDetails.tags && postDetails.tags.length > 0">
-                                                    <p class="text-sm text-gray-800 dark:text-gray-200">with </p>
-                                                    <p class="text-sm text-blue-700 dark:text-gray-200">
-                                                        {{ formatTags(postDetails.tags.map(tag => tag.name)) }}
-                                                    </p>
+                            </DialogTitle>
+
+                            <!-- Scrollable Content -->
+                            <div class="flex-grow overflow-y-auto custom-scrollbar pe-2 [&::-webkit-scrollbar]:w-1
+                      [&::-webkit-scrollbar-track]:rounded-full
+                      [&::-webkit-scrollbar-track]:bg-gray-100
+                      [&::-webkit-scrollbar-thumb]:rounded-full
+                      [&::-webkit-scrollbar-thumb]:bg-gray-300
+                      dark:[&::-webkit-scrollbar-track]:bg-neutral-700
+                      dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500">
+                                <div>
+                                    <div v-if="postDetails" class="space-y-2">
+
+                                        <!-- Post Header -->
+                                        <div class="flex items-center">
+                                            <Link :href="route('profile.show', postDetails.author.id)" class="shrink-0">
+                                                <img class="size-10 rounded-full object-cover" :src="postDetails.author.avatar" alt="Avatar">
+                                            </Link>
+                                            <div class="ms-4">
+                                                <div class="flex items-center">
+                                                    <Link :href="route('profile.show', postDetails.author.id)" class="text-base font-semibold text-gray-800 dark:text-neutral-400 hover:text-blue-700 me-1">{{ content.author.name }}</Link>
+                                                    <div class="flex flex-wrap gap-x-1" v-if="postDetails.tags && postDetails.tags.length > 0">
+                                                        <p class="text-sm text-gray-800 dark:text-gray-200">with </p>
+                                                        <p class="text-sm text-blue-700 dark:text-gray-200">
+                                                            {{ formatTags(postDetails.tags.map(tag => tag.name)) }}
+                                                        </p>
+                                                    </div>
                                                 </div>
+                                                <div class="text-xs text-gray-500 dark:text-neutral-500">{{ postDetails.created_at }}</div>
                                             </div>
-                                            <div class="text-xs text-gray-500 dark:text-neutral-500">{{ postDetails.created_at }}</div>
-                                        </div>
 
-                                        <div class="absolute z-10 -top-4 -right-4">
-                                            <button type="button" @click="showPostModal = false"  class="size-8 inline-flex justify-center items-center gap-x-2 rounded-full border border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200 focus:outline-none focus:bg-gray-200 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-700 dark:hover:bg-neutral-600 dark:text-neutral-400 dark:focus:bg-neutral-600" aria-label="Close" data-hs-overlay="#hs-basic-modal">
-                                                <span class="sr-only">Close</span>
-                                                <svg class="shrink-0 size-4 text-red-600" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M18 6 6 18"></path>
-                                                    <path d="m6 6 12 12"></path>
-                                                </svg>
-                                            </button>
+
                                         </div>
+                                        <div v-if="postDetails.post" @click="handleLinkClick" class="text-gray-800 text-wrap text-justify text-sm dark:text-neutral-400 pt-1" v-html="styledTagWithLinks(postDetails.post)"></div>
+
+
                                     </div>
-                                    <div @click="handleLinkClick" class="text-gray-800 text-wrap text-justify text-sm dark:text-neutral-400 pt-1" v-html="styledTag(postDetails.post)"></div>
-
                                     <!-- Post Media -->
                                     <PostMedia
                                         v-if="postDetails.media && postDetails.media.length > 0"
@@ -694,14 +806,14 @@ const handleLinkClick = (event) => {
                                     <div class="my-3 border border-gray-200 px-3 pb-2 rounded-xl" v-if="postDetails.repost">
                                         <Link :href="route('profile.show', postDetails.repost.author.id)" class="flex items-center mt-2">
                                             <div class="shrink-0">
-                                                <img class="size-10 rounded-full" :src="postDetails.repost.author.avatar" alt="Avatar">
+                                                <img class="size-10 rounded-full object-cover" :src="postDetails.repost.author.avatar" alt="Avatar">
                                             </div>
                                             <div class="ms-4">
                                                 <div class="text-base font-semibold text-gray-800 dark:text-neutral-400 hover:text-blue-700">{{ postDetails.repost.author.name }}</div>
                                                 <div class="text-xs text-gray-500 dark:text-neutral-500">{{ postDetails.repost.created_at }}</div>
                                             </div>
                                         </Link>
-                                        <div @click="handleLinkClick" class="mt-2 text-gray-800 text-wrap text-justify text-sm dark:text-neutral-400" v-html="styledTag(postDetails.repost.post)"></div>
+                                        <div @click="handleLinkClick" class="mt-2 text-gray-800 text-wrap text-justify text-sm dark:text-neutral-400" v-if="postDetails.repost.post" v-html="styledTagWithLinks(postDetails.repost.post)"></div>
 
                                         <!-- Image Grid -->
                                         <PostMedia :medias="postDetails.repost.media" :inside_modal="true" v-if="postDetails.repost.media.length > 0" />
@@ -709,8 +821,8 @@ const handleLinkClick = (event) => {
 
                                     </div>
 
-                                    <hr class="border-1 -mx-6">
-                                    <div class="flex items-center justify-between">
+                                    <hr class="border-1 mt-2">
+                                    <div class="flex items-center justify-between py-2">
                                         <div class="inline-flex items-center gap-x-1 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600">
                                             <a href="#" v-if="content.is_liked" @click.prevent="unlike(content.id)">
                                                 <Heart class="shrink-0 size-5 fill-red-500 text-transparent" v-if="content.is_liked" />
@@ -743,14 +855,10 @@ const handleLinkClick = (event) => {
                                             <XCircle class="shrink-0 size-5 text-gray-800" />Delete post
                                         </a>
                                     </div>
-                                    <hr class="border-1 -mx-6">
+                                    <hr class="border-1">
                                 </div>
-                            </DialogTitle>
-
-                            <!-- Scrollable Content -->
-                            <div class="flex-grow overflow-y-auto custom-scrollbar">
                                 <!-- Comments Section -->
-                                <div class="mt-1">
+                                <div class="mt-3">
                                     <p class="text-md font-semibold mb-3 text-gray-800 dark:text-white">
                                         Comments
                                     </p>

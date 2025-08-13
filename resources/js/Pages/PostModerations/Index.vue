@@ -33,10 +33,54 @@ const changeStatus = (post, status) => {
     confirmData.data = { is_active: status };
 }
 const styledTag = (value) => {
+    if(!value) return;
     return value.replace(
         /<a /g,
         '<a class="text-blue-500 underline hover:text-red-500 hover:no-underline" '
     );
+}
+
+const autodetectLinks = (text) => {
+    if (!text) return text;
+    
+    // Skip if text already contains HTML anchor tags
+    if (/<a\s+href/i.test(text)) {
+        return text;
+    }
+    
+    // Regex untuk mendeteksi berbagai format URL
+    const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9.-]+\.[a-zA-Z]{2,}[^\s]*)/g;
+    
+    return text.replace(urlRegex, (match, httpUrl, wwwUrl, domainUrl) => {
+        let url = match;
+        
+        // Jika tidak ada protocol, tambahkan https://
+        if (!httpUrl && (wwwUrl || domainUrl)) {
+            url = `https://${match}`;
+        }
+        
+        // Pastikan URL valid
+        try {
+            new URL(url);
+        } catch {
+            return match; // Jika URL tidak valid, kembalikan text asli
+        }
+        
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-500 underline hover:text-red-500 hover:no-underline">${match}</a>`;
+    });
+}
+
+const styledTagWithLinks = (value) => {
+    if(!value) return '';
+    
+    // Pertama, autodetect dan buat links
+    let processedValue = autodetectLinks(value);
+    
+    // Kemudian, terapkan styling yang sudah ada
+    return processedValue
+        .replace(/<a /g, '<a class="text-blue-500 underline hover:text-red-500 hover:no-underline"')
+        .replace(/<ul>/g, '<ul class="list-disc list-inside pl-4">')
+        .replace(/<ol>/g, '<ol class="list-decimal list-inside pl-3.5">');
 }
 
 
@@ -157,7 +201,7 @@ const styledTag = (value) => {
                                     </a>
                                 </td>
                                 <td class="size-px whitespace-nowrap p-6 align-top">
-                                    <span class="text-sm text-gray-600 dark:text-neutral-400 text-wrap" v-html="styledTag(post.post)"></span>
+                                    <span class="text-sm text-gray-600 dark:text-neutral-400 text-wrap" v-if="post.post" v-html="styledTagWithLinks(post.post)"></span>
                                 </td>
                                 <td class="size-px whitespace-nowrap text-center">
                                     <div v-if="post.media && post.media.length > 0" class="flex -space-x-2">

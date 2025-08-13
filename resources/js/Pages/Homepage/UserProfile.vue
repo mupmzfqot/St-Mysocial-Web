@@ -21,7 +21,7 @@ defineProps({
     <HomeLayout>
         <div class="bg-white shadow-md rounded-lg overflow-hidden">
             <!-- Background -->
-            <div class="h-40 bg-cover bg-center" :style="{ backgroundImage: `url(${user.cover_image})` }">
+            <div class="h-40" :style="{ backgroundImage: `url(${user.cover_image})` }">
             </div>
             <!-- Profile Section -->
             <div class="p-4 text-center">

@@ -41,7 +41,7 @@ class NewProfileImage extends Notification
         return [
             'id'        => $this->user->id,
             'name'      => 'New profile '. $this->type,
-            'message'   => "{$this->user->name} has uploaded new profile {$this->type}.",
+            'message'   => "{$this->user->name} has uploaded new profile {$this->type}",
             'url'       => route('profile-photos'),
         ];
     }

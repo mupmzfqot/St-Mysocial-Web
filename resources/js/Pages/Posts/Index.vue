@@ -3,9 +3,10 @@ import {Head, Link, router} from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import {ChevronRight, Search} from "lucide-vue-next";
 import Breadcrumbs from "@/Components/Breadcrumbs.vue";
-import {ref, watch} from "vue";
+import {reactive,ref, watch} from "vue";
 import {debounce} from "lodash";
 import Pagination from "@/Components/Pagination.vue";
+import ConfirmDialog from "@/Components/ConfirmDialog.vue";
 
 const props = defineProps({
     posts: Object,
@@ -13,6 +14,14 @@ const props = defineProps({
 });
 
 const search = ref(props.searchTerm);
+const confirmData = reactive({
+    confirmId: ''
+})
+const deletePost = (id) => {
+    confirmData.id = id;
+    confirmData.message = `Do you want to remove this post?`;
+    confirmData.url = route('post.delete', id);
+}
 
 watch(
     search, debounce(
@@ -24,6 +33,7 @@ watch(
 );
 
 const styledTag = (value) => {
+    if(!value) return;
     return value.replace(
         /<a /g,
         '<a class="text-blue-500 underline hover:text-red-500 hover:no-underline" '
@@ -144,7 +154,7 @@ const styledTag = (value) => {
                                     </a>
                                 </td>
                                 <td class="size-px whitespace-nowrap py-2 w-96">
-                                    <span class="text-sm text-gray-600 dark:text-neutral-400 text-wrap" v-html="styledTag(post.post)"></span>
+                                    <span class="text-sm text-gray-600 dark:text-neutral-400 text-wrap" v-if="post.post" v-html="styledTag(post.post)"></span>
                                 </td>
                                 <td class="size-px whitespace-nowrap">
                                     <div v-if="post.media && post.media.length > 0" class="flex -space-x-2">
@@ -180,19 +190,19 @@ const styledTag = (value) => {
                                             <button id="hs-table-dropdown-1" type="button" class="hs-dropdown-toggle py-1.5 px-2 inline-flex justify-center items-center gap-2 rounded-lg text-gray-700 align-middle disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-blue-600 transition-all text-sm dark:text-neutral-400 dark:hover:text-white dark:focus:ring-offset-gray-800" aria-haspopup="menu" aria-expanded="false" aria-label="Dropdown">
                                                 <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
                                             </button>
-                                            <div class="hs-dropdown-menu transition-[opacity,margin] duration hs-dropdown-open:opacity-100 opacity-0 hidden divide-y divide-gray-200 min-w-40 z-20 bg-white shadow-2xl rounded-lg p-2 mt-2 dark:divide-neutral-700 dark:bg-neutral-800 dark:border dark:border-neutral-700" role="menu" aria-orientation="vertical" aria-labelledby="hs-table-dropdown-1">
-                                                <div class="py-2 first:pt-0 last:pb-0">
+                                            <div class="hs-dropdown-menu transition-[opacity,margin] duration hs-dropdown-open:opacity-100 opacity-0 hidden min-w-40 z-20 bg-white shadow-2xl rounded-lg p-2 mt-2 dark:divide-neutral-700 dark:bg-neutral-800 dark:border dark:border-neutral-700" role="menu" aria-orientation="vertical" aria-labelledby="hs-table-dropdown-1">
+                                                <div class="first:pt-0 last:pb-0">
                                                     <Link :href="route('post.edit', post.id)" class="flex items-center gap-x-3 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700 dark:focus:text-neutral-300" href="#">
                                                         Edit
                                                     </Link>
                                                 </div>
-                                               <div class="py-2 first:pt-0 last:pb-0">
+                                               <div class="first:pt-0 last:pb-0">
                                                    <Link :href="route('post.show', post.id)" class="flex items-center gap-x-3 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700 dark:focus:text-neutral-300" href="#" >
                                                        View
                                                    </Link>
                                                </div>
-                                                <div class="py-2 first:pt-0 last:pb-0">
-                                                    <a href="#" class="flex items-center gap-x-3 py-2 px-3 rounded-lg text-sm text-red-600 hover:bg-gray-100 focus:ring-2 focus:ring-blue-500 dark:text-red-500 dark:hover:bg-neutral-700 dark:hover:text-neutral-300" aria-haspopup="dialog" aria-expanded="false" aria-controls="hs-scale-animation-modal" data-hs-overlay="#confirm-dialog">
+                                                <div class="first:pt-0 last:pb-0">
+                                                    <a href="#" @click="deletePost(post.id)" class="flex items-center gap-x-3 py-2 px-3 rounded-lg text-sm text-red-600 hover:bg-gray-100 focus:ring-2 focus:ring-blue-500 dark:text-red-500 dark:hover:bg-neutral-700 dark:hover:text-neutral-300" aria-haspopup="dialog" aria-expanded="false" aria-controls="hs-scale-animation-modal" data-hs-overlay="#confirm-dialog">
                                                         Remove
                                                     </a>
                                                 </div>
@@ -219,6 +229,8 @@ const styledTag = (value) => {
             </div>
         </div>
         <!-- End Card -->
+
+        <ConfirmDialog :data="confirmData"/>
     </AuthenticatedLayout>
 </template>
 

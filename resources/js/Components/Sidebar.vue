@@ -17,7 +17,7 @@ watch(() => page.props.pendingApprovals, (newApprovals) => {}, { immediate: true
 
 <template>
     <!-- Sidebar -->
-    <div id="hs-application-sidebar" class="hs-overlay  [--auto-close:lg] bg-gradient-blue-reverse
+    <div id="hs-application-sidebar" class="hs-overlay  [--auto-close:lg] bg-primary-gradient
       hs-overlay-open:translate-x-0
       -translate-x-full transition-all duration-300 transform
       w-[260px] h-full
@@ -76,33 +76,39 @@ watch(() => page.props.pendingApprovals, (newApprovals) => {}, { immediate: true
                             </Link>
                         </li>
 
-                        <li class="hs-accordion" id="account-accordion">
-                            <button type="button" class="hs-accordion-toggle w-full text-start flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 active:text-gray-800" aria-expanded="true" aria-controls="account-accordion-child">
-                                <MessageSquareMore class="shrink-0 size-4" /> User Post
-
-                                <svg class="hs-accordion-active:block ms-auto hidden size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
-
-                                <svg class="hs-accordion-active:hidden ms-auto block size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                            </button>
-
-                            <div id="account-accordion-child" class="hs-accordion-content w-full overflow-hidden transition-[height] duration-300 hidden" role="region" aria-labelledby="account-accordion">
-                                <ul class="ps-8 pt-1 space-y-1">
-                                    <li>
-                                        <Link :href="route('post-moderation.index-st')" type="button" :class="['flex items-center gap-x-3.5 py-2 px-2.5 text-sm font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:bg-gray-100', isActiveNav('/post-moderation/st') ? 'bg-blue-100 text-gray-800': 'text-white']" aria-expanded="true" aria-controls="users-accordion-child">
-                                            ST User Post
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link :href="route('post-moderation.index')" type="button" :class="['flex items-center gap-x-3.5 py-2 px-2.5 text-sm font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:bg-gray-100', isActiveNav('/post-moderation') ? 'bg-blue-100 text-gray-800': 'text-white']" aria-expanded="true" aria-controls="users-accordion-child">
-                                            Public User Post
-                                            <span class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full ms-auto text-xs font-medium bg-gray-100 text-red-800 dark:bg-white/10 dark:text-white">
-                                                {{ pendingApprovals.pendingPosts }}
-                                            </span>
-                                        </Link>
-                                    </li>
-                                </ul>
-                            </div>
+                        <li>
+                            <Link :href="route('post-moderation.index-st')" type="button" :class="['flex items-center gap-x-3.5 py-2 px-2.5 text-sm font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:bg-gray-100', isActiveNav('/post-moderation/st') ? 'bg-blue-100 text-gray-800': 'text-white']" aria-expanded="true" aria-controls="users-accordion-child">
+                                <MessageSquareMore class="shrink-0 size-4" /> ST User Post
+                            </Link>
                         </li>
+
+<!--                        <li class="hs-accordion" id="account-accordion">-->
+<!--                            <button type="button" class="hs-accordion-toggle w-full text-start flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 active:text-gray-800" aria-expanded="true" aria-controls="account-accordion-child">-->
+<!--                                <MessageSquareMore class="shrink-0 size-4" /> User Post-->
+
+<!--                                <svg class="hs-accordion-active:block ms-auto hidden size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>-->
+
+<!--                                <svg class="hs-accordion-active:hidden ms-auto block size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>-->
+<!--                            </button>-->
+
+<!--                            <div id="account-accordion-child" class="hs-accordion-content w-full overflow-hidden transition-[height] duration-300 hidden" role="region" aria-labelledby="account-accordion">-->
+<!--                                <ul class="ps-8 pt-1 space-y-1">-->
+<!--                                    <li>-->
+<!--                                        <Link :href="route('post-moderation.index-st')" type="button" :class="['flex items-center gap-x-3.5 py-2 px-2.5 text-sm font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:bg-gray-100', isActiveNav('/post-moderation/st') ? 'bg-blue-100 text-gray-800': 'text-white']" aria-expanded="true" aria-controls="users-accordion-child">-->
+<!--                                            ST User Post-->
+<!--                                        </Link>-->
+<!--                                    </li>-->
+<!--                                    <li>-->
+<!--                                        <Link :href="route('post-moderation.index')" type="button" :class="['flex items-center gap-x-3.5 py-2 px-2.5 text-sm font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:bg-gray-100', isActiveNav('/post-moderation') ? 'bg-blue-100 text-gray-800': 'text-white']" aria-expanded="true" aria-controls="users-accordion-child">-->
+<!--                                            Public User Post-->
+<!--                                            <span class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full ms-auto text-xs font-medium bg-gray-100 text-red-800 dark:bg-white/10 dark:text-white">-->
+<!--                                                {{ pendingApprovals.pendingPosts }}-->
+<!--                                            </span>-->
+<!--                                        </Link>-->
+<!--                                    </li>-->
+<!--                                </ul>-->
+<!--                            </div>-->
+<!--                        </li>-->
 
                         <li>
                             <Link :href="route('user.public')" :class="['flex items-center gap-x-3.5 py-2 px-2.5 text-sm font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:bg-gray-100', isActiveNav('/user/public-account') ? 'bg-blue-100 text-gray-800': 'text-white']">
@@ -122,7 +128,7 @@ watch(() => page.props.pendingApprovals, (newApprovals) => {}, { immediate: true
                         </li>
 
                         <li>
-                            <Link :href="route('app-setting')" class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:bg-gray-100">
+                            <Link :href="route('setting.index')" class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-white font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:bg-gray-100">
                                 <SlidersHorizontal class="shrink-0 size-4" /> Settings
                             </Link>
                         </li>

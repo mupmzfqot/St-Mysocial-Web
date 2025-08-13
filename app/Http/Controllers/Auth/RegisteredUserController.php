@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Notifications\NewRegisteredUserNotification;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
@@ -32,32 +33,65 @@ class RegisteredUserController extends Controller
      */
     public function store(RegistrationRequest $request)
     {
-        $user = User::query()->create([
-            'name' => $request->name,
-            'username' => $request->username,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+        DB::beginTransaction();
+        try {
+            $random_password = $this->generateStrongPassword();
+            $user = User::query()->create([
+                'name' => $request->name,
+                'username' => $request->username,
+                'email' => $request->email,
+                'password' => Hash::make($random_password),
+            ]);
 
-        $domain = substr(strrchr($request->email, "@"), 1);
-        if($domain === config('mail.st_user_email_domain')) {
-            event(new Registered($user));
-            $user->update(['is_active' => true]);
-            $user->assignRole('user');
-        } else {
-            $user->assignRole('public_user');
+            session(['generated_random_password' => $random_password]);
 
-            dispatch(function () use ($user) {
-                Mail::to($user->email)->send(new RegistrationSuccess($user));
-            });
+            $domain = substr(strrchr($request->email, "@"), 1);
+            if($domain === config('mail.st_user_email_domain')) {
+                event(new Registered($user));
+                $user->update(['is_active' => true]);
+                $user->assignRole('user');
+            } else {
+                $user->assignRole('public_user');
+
+                dispatch(function () use ($user) {
+                    Mail::to($user->email)->send(new RegistrationSuccess($user));
+                });
+            }
+
+            $admins = getUserAdmin();
+
+            Notification::send($admins, new NewRegisteredUserNotification($user));
+
+            Auth::login($user);
+            DB::commit();
+            return redirect()->route('registration-success');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            logger()->error($e->getMessage());
+
+            return redirect()->back()->withErrors(['message' => 'Registration failed. Please contact support.']);
         }
 
-        $admins = getUserAdmin();
+    }
 
-        Notification::send($admins, new NewRegisteredUserNotification($user));
-
-        Auth::login($user);
-        return redirect()->route('registration-success');
-
+    private function generateStrongPassword($length = 16) {
+        $upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $lower = 'abcdefghijklmnopqrstuvwxyz';
+        $numbers = '0123456789';
+        $symbols = '!@#$%^&*()-_=+[]{}<>?';
+    
+        $all = $upper . $lower . $numbers . $symbols;
+    
+        $password = '';
+        $password .= $upper[random_int(0, strlen($upper) - 1)];
+        $password .= $lower[random_int(0, strlen($lower) - 1)];
+        $password .= $numbers[random_int(0, strlen($numbers) - 1)];
+        $password .= $symbols[random_int(0, strlen($symbols) - 1)];
+    
+        for ($i = 4; $i < $length; $i++) {
+            $password .= $all[random_int(0, strlen($all) - 1)];
+        }
+    
+        return str_shuffle($password);
     }
 }

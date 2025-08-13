@@ -109,8 +109,8 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', 'Example'),
+        'address' => config('mail.from.address') ?? env('MAIL_FROM_ADDRESS',  'support@st.gov.my'),
+        'name' => config('mail.from.name') ??env('MAIL_FROM_NAME', 'TeamST'),  
     ],
 
     'st_user_email_domain' => env('ST_USER_EMAIL_DOMAIN'),

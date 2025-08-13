@@ -12,13 +12,13 @@ use Illuminate\Support\Facades\Notification;
 
 class CreateComment
 {
-    public function handle(Request $request): bool
+    public function handle(Request $request): Comment
     {
         DB::beginTransaction();
         try {
             $comment = Comment::query()->create([
                 'post_id' => $request->post_id,
-                'message' => $request->message,
+                'message' => strip_tags($request->message, '<p><b><i><a>'),
                 'user_id' => auth()->id()
             ]);
 
@@ -35,10 +35,11 @@ class CreateComment
             }
 
             DB::commit();
-            return true;
-        } Catch (\Exception $e) {
+            return $comment;
+        } catch (\Exception $e) {
+            DB::rollBack();
             logger($e->getMessage());
-            return false;
+            throw $e;
         }
     }
 }

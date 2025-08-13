@@ -45,22 +45,30 @@ class UserController extends Controller
     public function getTeams(Request $request)
     {
         $authId = $request->user()->id;
-        $cacheKey = 'team_users_' . $authId;
-        $cacheDuration = now()->addMinutes(10);
+        $searchTerm = $request->search;
+        $cacheKey = 'team_users_' . $authId . '_' . md5($searchTerm);
+        $cacheDuration = now()->addMinutes(1);
 
-        return \Cache::remember($cacheKey, $cacheDuration, function() use($authId) {
+        return \Cache::remember($cacheKey, $cacheDuration, function() use ($authId, $searchTerm) {
             $query = User::query()
+                ->when($searchTerm, function ($query, $searchTerm) {
+                    $query->where(function ($q) use ($searchTerm) {
+                        $q->where('name', 'like', "%$searchTerm%")
+                            ->orWhere('email', 'like', "%$searchTerm%")
+                            ->orWhere('username', 'like', "%$searchTerm%");
+                    });
+                })
                 ->whereHas('roles', function ($query) {
                     $query->where('name', 'user');
                 })
                 ->whereNotNull('email_verified_at')
-                ->isActive();
-
-            $query->where('id', '!=', $authId);
+                ->isActive()
+                ->where('id', '!=', $authId)
+                ->get();
 
             return response()->json([
                 'error' => 0,
-                'data' => UserResource::collection($query->get())
+                'data' => UserResource::collection($query)
             ]);
         });
     }
@@ -138,5 +146,22 @@ class UserController extends Controller
                 'content' => $items->pluck('original_url')->all(),
             ];
         })->values();
+    }
+
+    public function updateFcmToken(Request $request)
+    {
+        $request->validate([
+            'fcm_token' => 'required|string',
+        ]);
+
+        $user = $request->user();
+        $user->fcm_token = $request->fcm_token;
+        $user->save();
+
+        return response()->json([
+            'error' => 0,
+            'message' => 'FCM token updated successfully',
+            'fcm_token' => $user->fcm_token
+        ]);
     }
 }

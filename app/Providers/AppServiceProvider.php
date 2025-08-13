@@ -2,9 +2,13 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\ServiceProvider;
-use Inertia\Inertia;
+use App\Models\Post;
+use App\Models\Comment;
+use App\Models\PostLiked;
+use App\Observers\PostObserver;
+use App\Observers\CommentObserver;
+use App\Observers\PostLikedObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,13 +25,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Share data with all Inertia responses
-        Inertia::share([
-            // Always share the authenticated user
-            'auth.user' => function () {
-                return Auth::user() ? Auth::user()->only('id', 'name', 'email', 'avatar', 'cover-image') : null;
-            },
-
-        ]);
+        Post::observe(PostObserver::class);
+        Comment::observe(CommentObserver::class);
+        PostLiked::observe(PostLikedObserver::class);
     }
 }

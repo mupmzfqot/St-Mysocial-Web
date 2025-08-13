@@ -1,22 +1,21 @@
 <script setup>
 import {Head, useForm, Link, router} from "@inertiajs/vue3";
-import {AlertCircle, ChevronDown, Loader2, X, Paperclip, SmilePlus, SendHorizontal, LinkIcon, List, ListOrdered} from "lucide-vue-next";
+import {AlertCircle, ChevronDown, Loader2, X, PencilLine, Paperclip, SmilePlus, SendHorizontal, LinkIcon, List, ListOrdered} from "lucide-vue-next";
 import {computed, onMounted, ref} from "vue";
 import HomeLayout from "@/Layouts/HomeLayout.vue";
 import PostContent from "@/Components/PostContent.vue";
 import MultiSelect from "@/Components/MultiSelect.vue";
-import {Delta, QuillEditor} from '@vueup/vue-quill';
-import '@vueup/vue-quill/dist/vue-quill.snow.css';
+import QuillEditor from '@/Components/QuillEditor.vue';
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue';
 import EmojiPicker from 'vue3-emoji-picker';
 import 'vue3-emoji-picker/css';
 import {toast} from "vue3-toastify";
+import { Cropper } from 'vue-advanced-cropper'
+import 'vue-advanced-cropper/dist/style.css';
 
 const MAX_FILES = 10;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4', 'video/quicktime', 'application/pdf'];
-const MAX_CONTENT_LENGTH = 1000;
-
 const fileInput = ref(null);
 const previews = ref([]);
 const dragOver = ref(false);
@@ -31,6 +30,13 @@ const showLinkModal = ref(false);
 const linkUrl = ref('');
 const linkText = ref('');
 const selectedRange = ref(null);
+const showCropModalVisible = ref(false);
+const cropImageUrl = ref('');
+const cropImageDefault = ref('');
+const croppedFile = ref(null);
+const cropImageType = ref('');
+const cropImageIndex = ref(null);
+const cropper = ref(null);
 
 const props = defineProps({
     stUsers: Object,
@@ -48,10 +54,6 @@ const form = useForm({
     userTags: []
 });
 
-const remainingChars = computed(() => {
-    return MAX_CONTENT_LENGTH - form.content.length;
-});
-
 const isValid = computed(() => {
     return form.content.trim().length > 0 || form.files.length > 0;
 });
@@ -59,6 +61,48 @@ const isValid = computed(() => {
 const triggerFileInput = () => {
     fileInput.value.click();
 };
+
+const showCropModal = (file, index) => {
+    cropImageUrl.value = file.url
+    cropImageType.value = file.type
+    cropImageDefault.value = file
+    showCropModalVisible.value = true
+    cropImageIndex.value = index
+}
+
+const handleCropImage = (croppedImage) => {
+  croppedFile.value = croppedImage
+  showCropModalVisible.value = false
+}
+
+const handleCrop = (defaultImage, index) => {
+    const { coordinates, canvas, } = cropper.value.getResult();
+    const filename = defaultImage.name.split('.')[0];
+
+    coordinates.value = coordinates;
+    // use canvas.toDataURL with format PNG
+    const croppedImageDataURL = canvas.toDataURL('image/png'); 
+    const byteString = atob(croppedImageDataURL.split(',')[1]);
+    const arrayBuffer = new ArrayBuffer(byteString.length);
+    const uint8Array = new Uint8Array(arrayBuffer);
+
+    // convert byte string to array buffer
+    for (let i = 0; i < byteString.length; i++) {
+        uint8Array[i] = byteString.charCodeAt(i);
+    }
+
+    // remove previous image from list
+    removeMedia(index);
+
+    // create file MIME_TYPE image/png
+    const file = new File([uint8Array], `${filename}.png`, { type: 'image/png' });
+    handleFiles({ target: { files: [file] } });
+    showCropModalVisible.value = false;
+}
+
+onMounted(() => {
+    cropper.value = ref('cropper')
+})
 
 const validateFile = (file) => {
     if (!ALLOWED_TYPES.includes(file.type)) {
@@ -75,7 +119,7 @@ const validateFile = (file) => {
 const handleFiles = (event) => {
     const files = event.target?.files || event.dataTransfer?.files;
     errors.value = {};
-
+    
     if (files.length + previews.value.length > MAX_FILES) {
         errors.value.file = `Maximum ${MAX_FILES} files allowed`;
         return;
@@ -106,12 +150,6 @@ const removeMedia = (index) => {
     form.files.splice(index, 1);
 };
 
-const handleDrop = (e) => {
-    e.preventDefault();
-    dragOver.value = false;
-    handleFiles(e);
-};
-
 const handleDragOver = (e) => {
     e.preventDefault();
     dragOver.value = true;
@@ -122,6 +160,19 @@ const handleDragLeave = (e) => {
     dragOver.value = false;
 };
 
+const cleanDataBeforeSubmit = () => {
+    let editorContent = quillEditor.value.getContent();
+    editorContent = editorContent.replace(/(<p><br><\/p>)+$/, '');
+    editorContent = editorContent.replace(/<script[^>]*>([\S\s]*?)<\/script>/g, '');
+    editorContent = editorContent.replace(/<iframe[^>]*>[\S\s]*?<\/iframe>/g, ''); 
+
+    if (!editorContent.trim()) {
+        console.error("Editor content is empty after cleaning.");
+    }
+
+    return editorContent;
+}
+
 const submit = () => {
     if (!isValid.value) return;
 
@@ -129,6 +180,7 @@ const submit = () => {
     errors.value = {};
     showSuccessMessage.value = false;
     showErrorMessage.value = false;
+    form.content = cleanDataBeforeSubmit();
 
     form.post(route('user-post.store'), {
         onSuccess: (page) => {
@@ -146,7 +198,7 @@ const submit = () => {
             isLoading.value = false;
             setTimeout(function () {
                 router.visit(route('home'))
-            }, 3000)
+            }, 500)
         },
         onError: (error) => {
             errorMessage.value = Object.values(error)[0];
@@ -158,17 +210,17 @@ const submit = () => {
 };
 
 const openLinkDialog = () => {
-    selectedRange.value = quillEditor.value.getQuill().getSelection();
-    if (selectedRange.value && selectedRange.value.length > 0) {
-        linkText.value = quillEditor.value.getQuill().getText(selectedRange.value.index, selectedRange.value.length);
-    }
     showLinkModal.value = true;
+    if (selectedRange.value) {
+        const quillContent = quillEditor.value.getContent();
+        const selectedText = quillContent.ops[selectedRange.value.index].insert;
+        linkText.value = selectedText;
+    }
 };
 
 const insertLink = () => {
     if (linkUrl.value) {
         const displayText = linkText.value || linkUrl.value;
-        const quill = quillEditor.value.getQuill();
 
         let finalUrl = linkUrl.value;
         if(linkUrl.value.includes('.') && !linkUrl.value.startsWith('http://') && !linkUrl.value.startsWith('https://')) {
@@ -177,84 +229,52 @@ const insertLink = () => {
 
         if (selectedRange.value) {
             if (selectedRange.value.length > 0) {
-                quill.deleteText(selectedRange.value.index, selectedRange.value.length);
+                quillEditor.value.deleteText(selectedRange.value.index, selectedRange.value.length);
             }
-            quill.insertText(selectedRange.value.index, displayText, { 'link': finalUrl });
+            quillEditor.value.insertText(selectedRange.value.index, displayText);
+            quillEditor.value.formatText(selectedRange.value.index, displayText.length, 'link', finalUrl);
         } else {
-            quill.insertText(quill.getLength() - 1, displayText, { 'link': finalUrl });
+            const currentIndex = quillEditor.value.getLength() - 1;
+            quillEditor.value.insertText(currentIndex, displayText);
+            quillEditor.value.formatText(currentIndex, displayText.length, 'link', finalUrl);
         }
     }
 
-    // Reset the form
     linkUrl.value = '';
     linkText.value = '';
     showLinkModal.value = false;
     selectedRange.value = null;
 };
 
-onMounted(() => {
-    if (quillEditor.value) {
-        const q = quillEditor.value.getQuill();
-        q.on('text-change', (d, _, source) => {
-            if (source !== 'api') {
-                const sel = q.getSelection();
-                if (!sel) return;
-
-                const [line, ] = q.getLine(sel.index);
-                if (!line.children) { return }
-
-                const val = line.children.head.value();
-                if (val.length && val[0] === val[0].toLowerCase()) {
-                    q.updateContents(
-                        new Delta().retain(q.getIndex(line.children.head)).delete(1).insert(val[0].toUpperCase())
-                        , 'api')
-                }
-            }
-        });
-    }
-});
-
 const showEmojiPicker = ref(false);
 const onSelectEmoji = (emoji) => {
     if (quillEditor.value) {
-        const quill = quillEditor.value.getQuill();
-        const range = quill.getSelection() || { index: quill.getLength() };
-        quill.insertText(range.index, emoji.i);
-        quill.setSelection(range.index + emoji.i.length);
+        const range = quillEditor.value.getSelection();
+        quillEditor.value.insertText(range ? range.index: 0, emoji.i);
     }
     showEmojiPicker.value = false;
 };
 
 const addNumberList = () => {
     if (quillEditor.value) {
-        const quill = quillEditor.value.getQuill();
-        const selection = quill.getSelection();
-
-        if (selection) {
-            quill.format('list', false);
-            quill.format('list', 'ordered');
-        }
+        quillEditor.value.format('list', false);
+        quillEditor.value.format('list', 'ordered');
     }
 };
+
 const addBulletList = () => {
     if (quillEditor.value) {
-        const quill = quillEditor.value.getQuill();
-        const selection = quill.getSelection();
-
-        if (selection) {
-            quill.format('list', false);
-            quill.format('list', 'bullet');
-        }
+        quillEditor.value.format('list', false);
+        quillEditor.value.format('list', 'bullet');
     }
 };
-
 
 </script>
 
 <template>
     <Head title="Create New Post" />
     <HomeLayout>
-        <!-- Card Section -->
+        <!-- Card section -->
         <div class="w-full">
             <div class="mx-auto p-4 bg-white border border-gray-300 rounded-lg shadow-sm">
                 <div class="mb-2">
@@ -301,40 +321,32 @@ const addBulletList = () => {
                             <!-- Remove button -->
                             <button
                                 @click="removeMedia(index)"
-                                class="absolute top-2 right-2 p-1 bg-black bg-opacity-50 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                                class="absolute top-1 right-2 p-1 bg-red-500 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
                                 title="Remove media"
                             >
                                 <X class="size-4" />
                             </button>
+                            <button
+                                v-if="file.type.startsWith('image/')"
+                                @click="showCropModal(file, index)"
+                                class="absolute top-1 right-9 p-1 bg-orange-400 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                                title="Crop Image"
+                            >
+                                <PencilLine class="size-4" />
+                            </button>
                         </div>
                     </div>
                 </div>
-                <form @submit.prevent="submit" mt-2>
+
+                <form @submit.prevent="submit">
                     <MultiSelect :stUsers="stUsers" v-model="form.userTags" v-if="!$page.props.auth.user.roles.includes('public_user')" />
 
-                    <!-- Quill Editor with drag-drop zone -->
-                    <div
-                        class="mb-0 relative"
+                    <div class="mb-0 relative"
                         @drop="handleDrop"
                         @dragover="handleDragOver"
                         @dragleave="handleDragLeave"
                     >
-                        <QuillEditor
-                            ref="quillEditor"
-                            v-model:content="form.content"
-                            contentType="html"
-                            :options="{
-                                    placeholder: 'What\'s on your mind?',
-                                    modules: {
-                                        toolbar: false
-                                    }
-                                }"
-                            :style="{
-                                    height: '150px',
-                                    marginBottom: '5px'
-                                }"
-                            class="dark:bg-neutral-900 rounded-lg first-letter-cap"
-                        />
+                        <QuillEditor ref="quillEditor" @update:value="form.content = $event" class="min-h-[120px] text-sm border border-gray-200"/>
                         <div
                             v-if="dragOver"
                             class="absolute inset-0 bg-blue-500 bg-opacity-10 border-2 border-blue-500 border-dashed rounded-lg flex items-center justify-center"
@@ -342,9 +354,9 @@ const addBulletList = () => {
                             <p class="text-blue-500 font-medium">Drop files here</p>
                         </div>
                     </div>
-
+                    
                     <!-- Action Buttons -->
-                    <div class="flex items-center justify-between">
+                    <div class="flex items-center justify-between mt-1">
                         <!-- Left Icons -->
                         <div class="flex space-x-1 text-gray-00">
                             <div class="relative" v-if="defaultType === 'st'">
@@ -353,7 +365,7 @@ const addBulletList = () => {
                                     class="appearance-none h-[40px] pl-4 pr-10 min-w-[120px] rounded-lg border border-gray-200 text-sm dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 focus:border-blue-500 focus:ring-blue-500 bg-gray-50 dark:bg-neutral-700"
                                 >
                                     <option value="st">Team ST</option>
-                                    <option value="public">Public</option>
+                                    <option value="public" v-if="defaultType !== 'st'">Public</option>
                                 </select>
                                 <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-500 dark:text-neutral-400">
                                     <ChevronDown class="size-4" />
@@ -448,8 +460,7 @@ const addBulletList = () => {
                             </button>
                         </div>
                     </div>
-
-
+                    
                 </form>
 
                 <!-- Error messages -->
@@ -466,11 +477,10 @@ const addBulletList = () => {
                 <div v-if="showErrorMessage" class="w-full mt-4 px-3 py-2 rounded-lg bg-red-50 dark:bg-red-900 text-sm inline-flex items-center gap-x-2 text-red-800 dark:text-red-200">
                     <AlertCircle class="shrink-0 size-4" /><span>{{ errorMessage }}</span>
                 </div>
-
             </div>
         </div>
-
-
+        <!-- End card section -->
+    
         <!-- My Posts -->
         <div>
             <p class="relative py-4 mx-2 text-lg font-bold text-gray-800 dark:text-white">
@@ -553,18 +563,46 @@ const addBulletList = () => {
             </div>
         </Dialog>
     </TransitionRoot>
+
+    <TransitionRoot
+        :show="showCropModalVisible"
+        as="template"
+        enter="duration-300 ease-out"
+        enter-from="opacity-0"
+        enter-to="opacity-100"
+        leave="duration-200 ease-in"
+        leave-from="opacity-100"
+        leave-to="opacity-0"
+        >
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+            <div class="bg-white rounded-lg shadow-lg p-4 w-1/2">
+                <Cropper
+                    :src="cropImageUrl"
+                    :type="cropImageType"
+                    :aspect-ratio="1"
+                    :rectangular="true"
+                    style="max-height: 80svh;"
+                    :size-restrictions-algorithm="pixelsRestriction"
+                    ref="cropper"
+                    @uploaded="handleCropImage"
+                />
+                <div class="flex justify-end gap-x-2 pt-4">
+                    <button @click="showCropModalVisible = false" type="button" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm 
+                        font-medium rounded-lg border border-gray-400 text-gray-700 hover:text-red-600 
+                        focus:outline-hidden focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
+                        Cancel
+                    </button>
+                    <button @click="handleCrop(cropImageDefault, cropImageIndex)" type="button" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-hidden focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
+                        Crop Image
+                    </button>
+                </div>
+            </div>
+        </div>
+    </TransitionRoot>
 </template>
 
 <style scoped>
 .aspect-square {
     aspect-ratio: 1 / 1;
-}
-
-.first-letter-cap :deep(.ql-editor p:first-of-type::first-letter) {
-    text-transform: uppercase !important;
-}
-
-.ql-editor {
-  text-transform: capitalize !important;
 }
 </style>

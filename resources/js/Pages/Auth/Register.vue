@@ -4,6 +4,7 @@ import TextInput from '@/Components/TextInput.vue';
 import {Head, Link, useForm} from '@inertiajs/vue3';
 import StrongPassword from "@/Components/StrongPassword.vue";
 import TogglePassword from "@/Components/TogglePassword.vue";
+import { ref } from 'vue';
 
 const form = useForm({
     name: '',
@@ -13,10 +14,14 @@ const form = useForm({
     password_confirmation: '',
 });
 
+const error_message = ref('');
+
 const submit = () => {
     form.post(route('register'), {
         onFinish: () => form.reset('password', 'password_confirmation'),
         onError: async (errors) => {
+            error_message.value = Object.values(errors)[0];
+            console.log(Object.values(errors));
         }
     });
 };
@@ -39,9 +44,29 @@ const submit = () => {
                 </div>
 
                 <div class="mt-5">
-
                     <hr class="mb-5">
-
+                    <div v-if="error_message" class="mb-5 bg-red-50 border-s-4 border-red-500 p-4 dark:bg-red-800/30" role="alert" tabindex="-1" aria-labelledby="hs-bordered-red-style-label">
+                        <div class="flex">
+                        <div class="shrink-0">
+                            <!-- Icon -->
+                            <span class="inline-flex justify-center items-center size-8 rounded-full border-4 border-red-100 bg-red-200 text-red-800 dark:border-red-900 dark:bg-red-800 dark:text-red-400">
+                            <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 6 6 18"></path>
+                                <path d="m6 6 12 12"></path>
+                            </svg>
+                            </span>
+                            <!-- End Icon -->
+                        </div>
+                        <div class="ms-3">
+                            <h3 id="hs-bordered-red-style-label" class="text-gray-800 font-semibold dark:text-white">
+                            Error!
+                            </h3>
+                            <p class="text-sm text-gray-700 dark:text-neutral-400">
+                            {{ error_message }}
+                            </p>
+                        </div>
+                        </div>
+                    </div>
 
                     <!-- Form -->
                     <form @submit.prevent="submit">
@@ -100,26 +125,23 @@ const submit = () => {
                             <!-- End Form Group -->
 
                             <!-- Form Group -->
-                            <div>
+                            <!-- <div>
                                 <label for="password" class="block text-sm mb-2 dark:text-white">Password</label>
                                 <div class="relative">
                                     <StrongPassword required v-model="form.password" />
                                 </div>
                                 <p class="text-sm text-red-600 mt-2" v-if="form.errors.password">{{ form.errors.password }}</p>
-                            </div>
+                            </div> -->
                             <!-- End Form Group -->
 
                             <!-- Form Group -->
-                            <div>
+                            <!-- <div>
                                 <label for="confirm-password" class="block text-sm mb-2 dark:text-white">Confirm Password</label>
                                 <TogglePassword v-model="form.password_confirmation" placeholder="Confirm Password" />
-                            </div>
+                            </div> -->
                             <!-- End Form Group -->
-                            <div v-if="form.errors.recaptcha">
-                                <p class="text-sm text-red-600 mt-2">{{ form.errors.recaptcha }}</p>
-                            </div>
 
-                            <button type="submit" class="w-full py-3 mt-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
+                            <button type="submit" class="w-full py-3 mt-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent btn-primary text-white hover:bg-gray-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
                                 Register
                             </button>
                         </div>
@@ -131,3 +153,8 @@ const submit = () => {
 
     </GuestLayout>
 </template>
+<style scoped>
+.btn-primary {
+    background: rgb(68,30,167)
+}
+</style>

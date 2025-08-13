@@ -4,6 +4,9 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
+        <!-- Content Security Policy to prevent mixed content -->
+        <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+
         <title inertia>Team ST</title>
         <link rel="icon" href="{{ asset('favicon.ico') }}">
         <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">

@@ -30,14 +30,15 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
-            'captcha' => ['required', 'captcha']
+            'captcha' => ['required', 'string', 'captcha'],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'captcha' => 'Captcha not match',
+            'captcha.required' => 'Please enter the captcha code',
+            'captcha.captcha' => 'The captcha verification failed. Please try again.',
         ];
     }
 

@@ -1,10 +1,25 @@
 <script setup>
-import { ref, nextTick } from 'vue';
+import { ref, nextTick, onMounted } from 'vue';
 import { useForm } from "@inertiajs/vue3";
-import { Heart, XCircle, X, SmilePlus, Paperclip } from "lucide-vue-next";
+import { Heart, XCircle, X, PencilLine, SmilePlus, Paperclip } from "lucide-vue-next";
 import PostMedia from "@/Components/PostMedia.vue";
 import EmojiPicker from 'vue3-emoji-picker';
 import 'vue3-emoji-picker/css';
+import { Cropper } from 'vue-advanced-cropper'
+import 'vue-advanced-cropper/dist/style.css';
+import { TransitionRoot } from '@headlessui/vue';
+
+const fileInput = ref(null);
+const previews = ref([]);
+const commentsContainer = ref(null);
+const showCropModalVisible = ref(false);
+const cropImageUrl = ref('');
+const cropImageDefault = ref('');
+const croppedFile = ref(null);
+const cropImageType = ref('');
+const cropImageIndex = ref(null);
+const cropper = ref(null);
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg'];
 
 const props = defineProps({
     postId: {
@@ -43,19 +58,23 @@ const form = useForm({
     files: []
 });
 
-const fileInput = ref(null);
-const previews = ref([]);
-const commentsContainer = ref(null);
-
 const triggerFileInput = () => {
     fileInput.value.click();
 };
+
+const validateFile = (file) => {
+    if (!ALLOWED_TYPES.includes(file.type)) {
+        alert('File type not supported');
+        return false;
+    }
+    return true;
+}
 
 const handleFiles = (event) => {
     const files = event.target?.files;
     if (files) {
         Array.from(files).forEach((file) => {
-            if (file.size <= 5 * 1024 * 1024) {
+            if (file.size <= 5 * 1024 * 1024 && validateFile(file)) {
                 const fileReader = new FileReader();
                 fileReader.onload = (e) => {
                     previews.value.push({
@@ -131,6 +150,50 @@ const onSelectEmoji = (emoji) => {
     form.message += emoji.i;
     showEmojiPicker.value = false;
 };
+
+const showCropModal = (file, index) => {
+    console.log(file)
+    cropImageUrl.value = file.url
+    cropImageType.value = file.type
+    cropImageDefault.value = file
+    showCropModalVisible.value = true
+    cropImageIndex.value = index
+}
+
+const handleCropImage = (croppedImage) => {
+  croppedFile.value = croppedImage
+  showCropModalVisible.value = false
+}
+
+const handleCrop = (defaultImage, index) => {
+    const { coordinates, canvas, } = cropper.value.getResult();
+    const filename = defaultImage.name.split('.')[0];
+
+    coordinates.value = coordinates;
+    // use canvas.toDataURL with format PNG
+    const croppedImageDataURL = canvas.toDataURL('image/png'); 
+    const byteString = atob(croppedImageDataURL.split(',')[1]);
+    const arrayBuffer = new ArrayBuffer(byteString.length);
+    const uint8Array = new Uint8Array(arrayBuffer);
+
+    // convert byte string to array buffer
+    for (let i = 0; i < byteString.length; i++) {
+        uint8Array[i] = byteString.charCodeAt(i);
+    }
+
+    // remove previous image from list
+    removeMedia(index);
+
+    // create file MIME_TYPE image/png
+    const file = new File([uint8Array], `${filename}.png`, { type: 'image/png' });
+    handleFiles({ target: { files: [file] } });
+    showCropModalVisible.value = false;
+}
+
+onMounted(() => {
+    cropper.value = ref('cropper')
+})
+
 </script>
 
 <template>
@@ -160,7 +223,7 @@ const onSelectEmoji = (emoji) => {
                 <!-- Icon -->
                 <div class="relative last:after:hidden after:absolute after:top-10 after:bottom-0 after:start-5 after:w-px after:-translate-x-[0.5px] after:bg-gray-200 dark:after:bg-neutral-700">
                     <div class="relative z-10 size-10 flex justify-center items-center">
-                        <img class="shrink-0 size-10 rounded-full" :src="comment.user.avatar" alt="Avatar">
+                        <img class="shrink-0 size-10 rounded-full object-cover" :src="comment.user.avatar" alt="Avatar">
                     </div>
                 </div>
                 <!-- End Icon -->
@@ -212,7 +275,7 @@ const onSelectEmoji = (emoji) => {
         <div class="z-[9999]" >
             <div
                 v-if="currentUser"
-                class="bg-gray-100 fixed bottom-0 left-0 right-0 dark:bg-neutral-900 shadow-lg p-4 border-t"
+                :class="['p-4 border-t', currentUser.roles.some(role => role.name === 'admin') ? '' : 'left-0 right-0 bg-gray-100 shadow-lg fixed bottom-0']"
             >
                 <!-- Chat Input Area -->
                 <div class="flex items-center space-x-2" >
@@ -220,7 +283,7 @@ const onSelectEmoji = (emoji) => {
                     <img
                         :src="currentUser.avatar"
                         :alt="`${currentUser.name}'s avatar`"
-                        class="w-10 h-10 rounded-full v-"
+                        class="w-10 h-10 rounded-full"
                     />
 
                     <!-- Chat Input -->
@@ -228,6 +291,7 @@ const onSelectEmoji = (emoji) => {
                         id="chat-input"
                         v-model="form.message"
                         contenteditable="true"
+                        accept="image/png, image/gif, image/jpeg, image/jpg"
                         class="flex-1 py-2 px-3 text-sm border rounded-lg border-gray-300 bg-white focus:ring-1 focus:ring-blue-500 focus:outline-none break-words"
                         placeholder="Type a message..."
                     >
@@ -250,7 +314,7 @@ const onSelectEmoji = (emoji) => {
                             ref="fileInput"
                             @change="handleFiles"
                             multiple
-                            accept="image/*,video/*"
+                            accept="image/*"
                             class="hidden"
                         />
                         <button
@@ -279,21 +343,70 @@ const onSelectEmoji = (emoji) => {
                         :key="index"
                         class="relative"
                     >
-                        <img
+                        <img v-if="preview.type.startsWith('image/')"
                             :src="preview.url"
+                            :alt="preview.name"
+                            class="w-20 h-20 object-cover rounded-lg"
+                        />
+                        <img  v-else-if="preview.type === 'application/pdf'"
+                            src="../../images/pdf-icon.svg"
+                            :alt="preview.name"
                             class="w-20 h-20 object-cover rounded-lg"
                         />
                         <button
                             @click="removeMedia(index)"
-                            class="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
+                            class="absolute top-0 -right-2 bg-red-500 text-white rounded-full p-1" title="remove media"
                         >
-                            <X class="w-4 h-4" />
+                            <X class="w-3 h-3" />
+                        </button>
+                        <button v-if="preview.type.startsWith('image/')"
+                            @click="showCropModal(preview, index)"
+                            class="absolute -top-0.5 right-4 bg-orange-500 text-white rounded-full p-1" title="crop image"
+                        >
+                            <PencilLine class="w-3 h-3" />
                         </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <TransitionRoot
+        :show="showCropModalVisible"
+        as="template"
+        enter="duration-300 ease-out"
+        enter-from="opacity-0"
+        enter-to="opacity-100"
+        leave="duration-200 ease-in"
+        leave-from="opacity-100"
+        leave-to="opacity-0"
+        class="z-[9999]"
+        >
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+            <div class="bg-white rounded-lg shadow-lg p-4 w-full">
+                <Cropper
+                    :src="cropImageUrl"
+                    :type="cropImageType"
+                    :aspect-ratio="1"
+                    :rectangular="true"
+                    style="max-height: 80svh;"
+                    :size-restrictions-algorithm="pixelsRestriction"
+                    ref="cropper"
+                    @uploaded="handleCropImage"
+                />
+                <div class="flex justify-end gap-x-2 pt-4">
+                    <button @click="showCropModalVisible = false" type="button" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm 
+                        font-medium rounded-lg border border-gray-400 text-gray-700 hover:text-red-600 
+                        focus:outline-hidden focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
+                        Cancel
+                    </button>
+                    <button @click="handleCrop(cropImageDefault, cropImageIndex)" type="button" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-hidden focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
+                        Crop Image
+                    </button>
+                </div>
+            </div>
+        </div>
+    </TransitionRoot>
 </template>
 
 <style scoped>

@@ -14,32 +14,34 @@ use App\Http\Controllers\TeamController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
+
 Route::get('/', [App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'create'])->name('home');
+
+// Simple captcha route using built-in helper
+Route::get('captcha-image', function() {
+    return response()->json([
+        'captcha' => captcha_img('flat')
+    ]);
+})->name('captcha.image');
 
 Route::middleware(['auth', 'verified', 'role:user|public_user'])->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('homepage')->middleware('role:user');
     Route::get('/public', [HomeController::class, 'publicPost'])->name('public');
     Route::get('/posts', [HomeController::class, 'createPost'])->name('create-post');
+    Route::get('/my-posts', [HomeController::class, 'showMyPosts'])->name('my-posts');
+    Route::get('/posts/{id}', [HomeController::class, 'editPost'])->name('edit-post');
     Route::get('/liked-posts', [HomeController::class, 'showLikedPosts'])->name('liked-posts');
     Route::get('/top-posts', [HomeController::class, 'showTopPosts'])->name('top-posts');
     Route::prefix('user-post')->name('user-post.')->group(function () {
         Route::get('get', [PostController::class, 'get'])->name('get');
-        Route::get('get-post/{id}', [PostController::class, 'postById'])->name('get-post');
         Route::get('top-post', [PostController::class, 'getTopPost'])->name('get-top-post');
         Route::get('liked-post', [PostController::class, 'getLikedPost'])->name('liked-post');
+        Route::get('my-posts', [PostController::class, 'getMyPosts'])->name('my-posts');
         Route::get('recent-post', [PostController::class, 'getRecentPost'])->name('recent-post');
         Route::get('tag-post', [PostController::class, 'getTagPost'])->name('tag-post');
         Route::post('store', [PostController::class, 'store'])->name('store');
-        Route::post('share', [PostController::class, 'share'])->name('share');
-        Route::post('store', [PostController::class, 'store'])->name('store');
-        Route::get('liked-by/{id}', [HomeController::class, 'postLikedBy'])->name('liked-by');
+        Route::post('update/{id}', [PostController::class, 'update'])->name('update');
         Route::post('delete', [HomeController::class, 'deletePost'])->name('delete');
-        Route::post('comment', [HomeController::class, 'storeComment'])->name('store-comment');
-        Route::post('like', [HomeController::class, 'storeLike'])->name('send-like');
-        Route::post('unlike', [HomeController::class, 'unlike'])->name('unlike');
-        Route::post('like-comment', [HomeController::class, 'storeCommentLike'])->name('send-comment-like');
-        Route::post('unlike-comment', [HomeController::class, 'unlikeComment'])->name('unlike-comment');
-        Route::post('delete-comment', [HomeController::class, 'deleteComment'])->name('delete-comment');
     });
 
     Route::get('st-user', [UserController::class, 'stIndex'])->name('st-user');
@@ -56,9 +58,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/profile/update-status-image/{id}', [ProfileController::class, 'updateProfileImageStatus'])->name('profile.update-status-image');
-
-        Route::get('/photo-album', [PhotoAlbumController::class, 'index'])->name('photoAlbum.index');
-        Route::get('/videos', [PhotoAlbumController::class, 'videos'])->name('videos.index');
+    
+    Route::post('user-post/comment', [HomeController::class, 'storeComment'])->name('user-post.store-comment');
+    Route::post('like', [HomeController::class, 'storeLike'])->name('user-post.send-like');
+    Route::post('unlike', [HomeController::class, 'unlike'])->name('user-post.unlike');
+    Route::post('like-comment', [HomeController::class, 'storeCommentLike'])->name('user-post.send-comment-like');
+    Route::post('unlike-comment', [HomeController::class, 'unlikeComment'])->name('user-post.unlike-comment');
+    Route::post('delete-comment', [HomeController::class, 'deleteComment'])->name('user-post.delete-comment');
+    Route::get('get-post/{id}', [PostController::class, 'postById'])->name('user-post.get-post');
+    Route::post('share', [PostController::class, 'share'])->name('user-post.share');
+    Route::get('liked-by/{id}', [HomeController::class, 'postLikedBy'])->name('user-post.liked-by');
+    
+    Route::get('/photo-album', [PhotoAlbumController::class, 'index'])->name('photoAlbum.index');
+    Route::get('/videos', [PhotoAlbumController::class, 'videos'])->name('videos.index');
 
     Route::get('user-post/show/{id}', [HomeController::class, 'showPost'])->name('user-post.show-post');
     Route::get('user-post/tagged-user/{id}', [PostController::class, 'getTaggedUser'])->name('user-post.tagged-user');
@@ -102,6 +114,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         Route::post('delete/{id}', [UserController::class, 'destroy'])->name('delete');
         Route::get('profile/{id?}', [ProfileController::class, 'index'])->name('profile');
         Route::post('set-admin/{id}', [UserController::class, 'setAsAdmin'])->name('set-admin');
+        Route::post('set-user/{id}', [UserController::class, 'setAsUser'])->name('set-user');
         Route::post('reset-password/{id}', [UserController::class, 'resetPassword'])->name('reset-password');
         Route::post('update/{id}', [UserController::class, 'update'])->name('update');
         Route::post('verify/{id}', [UserController::class, 'verifyAccount'])->name('verify');
@@ -126,9 +139,10 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('profile-photos', [ProfileController::class, 'indexPhotos'])->name('profile-photos');
     Route::get('profile-covers', [ProfileController::class, 'indexCovers'])->name('profile-covers');
 
-
-    Route::get('app-setting', [SettingController::class, 'index'])->name('app-setting');
+    Route::name('setting.')->prefix('setting')->group(function () {
+        Route::get('/', [SettingController::class, 'index'])->name('index');
+        Route::post('/smtp/{id?}', [SettingController::class, 'save_smtp'])->name('smtp');
+    });
 });
-
 
 require __DIR__.'/auth.php';

@@ -8,15 +8,16 @@ use App\Http\Controllers\API\ProfileController;
 use App\Http\Controllers\API\UserController;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 Route::post('/forgot-password', [AuthController::class, 'sendResetPasswordLink']);
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('refresh-token', [AuthController::class, 'refresh_token']);
+    Route::post('refresh-token', [AuthController::class, 'refresh_token'])->middleware('throttle:5,1');
 
     Route::resource('user-profile', ProfileController::class)->only(['index', 'update']);
+    Route::post('fcm-token', [UserController::class, 'updateFcmToken']);
     Route::resource('posts', PostController::class);
     Route::get('profile', [ProfileController::class, 'get']);
     Route::post('profile/change-password', [ProfileController::class, 'changePassword']);
@@ -38,8 +39,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('posts/unlike', [PostController::class, 'unlikePost']);
     Route::post('posts/unlike-comment', [PostController::class, 'unlikeComment']);
     Route::post('posts/repost', [PostController::class, 'repost']);
-    Route::post('posts/repost', [PostController::class, 'repost']);
-
+    Route::post('posts/update/{post_id}', [PostController::class, 'update']);
+    Route::post('posts/media/delete', [PostController::class, 'deleteMediaByUrl']);
 
     Route::group(['prefix' => 'message'], function () {
         Route::get('conversation-list', [MessageController::class, 'conversationList']);

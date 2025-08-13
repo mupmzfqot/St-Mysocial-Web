@@ -11,6 +11,7 @@ use App\Models\PostLiked;
 use App\Models\User;
 use App\Notifications\NewCommentLike;
 use App\Notifications\NewLike;
+use App\Services\PostCacheService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -18,6 +19,13 @@ use Inertia\Inertia;
 
 class HomeController extends Controller
 {
+    protected $postCacheService;
+    
+    public function __construct(PostCacheService $postCacheService)
+    {
+        $this->postCacheService = $postCacheService;
+    }
+
     public function index()
     {
         return Inertia::render('Home', [
@@ -51,6 +59,15 @@ class HomeController extends Controller
         ]);
     }
 
+    public function showMyPosts()
+    {
+        return Inertia::render('Homepage/MyPost', [
+            'title' => 'My Posts',
+            'description' => 'Posts created by you',
+            'requestUrl' => route('user-post.my-posts'),
+        ]);
+    }
+
     public function showPost($id)
     {
         if(auth()->user()->hasRole('admin')) {
@@ -63,6 +80,10 @@ class HomeController extends Controller
             ->published()
             ->where('id', $id)
             ->first();
+
+        if (!$post) {
+            return redirect()->route('homepage')->with('error', 'Post not found or not published.');
+        }
 
         return Inertia::render('Homepage/PostDetail', compact('post'));
     }
@@ -88,6 +109,34 @@ class HomeController extends Controller
         ]);
     }
 
+    public function editPost($id)
+    {
+        $stUsers = User::query()->select('id', 'name')->whereHas('roles', function ($query) {
+                $query->where('name', 'user');
+            })
+            ->where('is_active', true)
+            ->whereNotNull('email_verified_at')
+            ->get();
+
+        $post = Post::query()
+            ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media', 'repost.tags')
+            ->where('id', $id)
+            ->first();
+
+        if (!$post) {
+            return redirect()->route('homepage')->with('error', 'Post not found.');
+        }
+
+        $isPrivilegedUser = auth()->user()->hasAnyRole(['admin', 'user']);
+        $defaultType = $isPrivilegedUser ? 'st' : 'public';
+
+        return Inertia::render('Homepage/EditPost', [
+            'post' => $post,
+            'stUsers' => $stUsers,
+            'defaultType' => $defaultType,
+        ]);
+    }
+
     public function storePost(Request $request, CreatePost $createPost)
     {
         $request->validate([
@@ -95,18 +144,35 @@ class HomeController extends Controller
             'group'   => 'required'
         ]);
 
-        $createPost->handle($request);
+        $post = $createPost->handle($request);
+        
+        // Invalidate cache for the post type
+        if ($post instanceof Post) {
+            $this->postCacheService->clearCache($post->type);
+        }
+        
         //return redirect()->route('homepage');
     }
 
     public function storeComment(Request $request, CreateComment $createComment)
     {
-        $createComment->handle($request);
+        try {
+            $comment = $createComment->handle($request);
+            
+            // Invalidate cache for the post (double safety with observer)
+            $this->postCacheService->invalidatePostCache($comment->post_id);
+        } catch (\Exception $e) {
+            // Handle error if needed
+            logger($e->getMessage());
+        }
     }
 
     public function storeLike(Request $request)
     {
-        $liked = PostLiked::query()->where('post_id', $request->post_id)->where('user_id', auth()->id())->first();
+        $liked = PostLiked::query()
+            ->where('post_id', $request->post_id)
+            ->where('user_id', auth()->id())
+            ->first();
 
         if(!$liked) {
             $postLiked = PostLiked::query()->create([
@@ -118,13 +184,18 @@ class HomeController extends Controller
             if($post->user_id != auth()->id()) {
                 Notification::send($post?->author, new NewLike($postLiked, User::find(auth()->id())));
             }
+            
+            // Invalidate cache for the post (double safety with observer)
+            $this->postCacheService->invalidatePostCache($request->post_id);
         }
-
     }
 
     public function storeCommentLike(Request $request)
     {
-        $liked = CommentLiked::query()->where('comment_id', $request->comment_id)->where('user_id', auth()->id())->first();
+        $liked = CommentLiked::query()
+            ->where('comment_id', $request->comment_id)
+            ->where('user_id', auth()->id())
+            ->first();
 
         if(!$liked) {
             $commentLiked = CommentLiked::query()->create([
@@ -136,18 +207,35 @@ class HomeController extends Controller
             if($comment->user_id != auth()->id()) {
                 Notification::send($comment?->user, new NewCommentLike($comment, User::find(auth()->id())));
             }
+            
+            // Invalidate cache for the post (double safety with observer)
+            $this->postCacheService->invalidatePostCache($comment->post_id);
         }
-
     }
 
     public function unlike(Request $request)
     {
-        PostLiked::query()->where('post_id', $request->post_id)->where('user_id', auth()->id())->delete();
+        PostLiked::query()
+            ->where('post_id', $request->post_id)
+            ->where('user_id', auth()->id())
+            ->delete();
+            
+        // Invalidate cache for the post (double safety with observer)
+        $this->postCacheService->invalidatePostCache($request->post_id);
     }
 
     public function unlikeComment(Request $request)
     {
-        CommentLiked::query()->where('comment_id', $request->comment_id)->where('user_id', auth()->id())->delete();
+        $comment = Comment::query()->find($request->comment_id);
+        CommentLiked::query()
+            ->where('comment_id', $request->comment_id)
+            ->where('user_id', auth()->id())
+            ->delete();
+            
+        // Invalidate cache for the post (double safety with observer)
+        if ($comment) {
+            $this->postCacheService->invalidatePostCache($comment->post_id);
+        }
     }
 
     public function deleteComment(Request $request)
@@ -155,10 +243,15 @@ class HomeController extends Controller
         DB::beginTransaction();
         try {
             $comment = Comment::query()->find($request->content_id);
-            $comment->likes()->delete();
-            $comment->delete();
-            DB::commit();
-        } Catch (\Exception $e) {
+            if ($comment) {
+                $comment->likes()->delete();
+                $comment->delete();
+                DB::commit();
+                
+                // Invalidate cache for the post (double safety with observer)
+                $this->postCacheService->invalidatePostCache($comment->post_id);
+            }
+        } catch (\Exception $e) {
             DB::rollBack();
         }
     }
@@ -177,10 +270,21 @@ class HomeController extends Controller
 
     public function deletePost(Request $request)
     {
-        $post = Post::query()->where('user_id', auth()->id())->whereId($request->content_id)->first();
-        $post->comments()->delete();
-        $post->likes()->delete();
-        $post->delete();
+        $post = Post::query()
+            ->where('user_id', auth()->id())
+            ->whereId($request->content_id)
+            ->first();
+            
+        if ($post) {
+            $postType = $post->type; // Store type before deletion
+            
+            $post->comments()->delete();
+            $post->likes()->delete();
+            $post->delete();
+            
+            // Invalidate cache for the post type
+            $this->postCacheService->clearCache($postType);
+        }
     }
 
     public function postLikedBy(Request $request, $postId)
@@ -200,5 +304,4 @@ class HomeController extends Controller
 
         return response()->json($user);
     }
-
 }

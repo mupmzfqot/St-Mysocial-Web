@@ -16,9 +16,14 @@ class UserCount
             $query->where('name', 'public_user');
         })->count();
 
+        $adminCount = User::query()->whereHas('roles', function ($query) {
+            $query->where('name', 'admin');
+        })->count();
+
         return [
             'user_count' => $userCount,
             'public_user_count' => $publicUserCount,
+            'admin_count' => $adminCount,
         ];
     }
 }

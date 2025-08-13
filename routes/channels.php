@@ -9,3 +9,7 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 Broadcast::channel('conversation.{conversationId}', function ($user, $conversationId) {
     return $user->conversations->contains($conversationId);
 });
+
+Broadcast::channel('message.notification', function ($user) {
+    return auth()->check();
+});
