@@ -23,9 +23,6 @@ class MessageController extends Controller
             })
             ->whereHas('messages')
             ->withCount('users')
-            ->withCount(['messages' => function ($query) {
-                $query->where('is_read', false);
-            }])
             ->having('users_count', 2)
             ->with([
                 'users' => function ($query) use ($currentUserId) {
@@ -38,14 +35,14 @@ class MessageController extends Controller
             ])
             ->get();
 
-        $conversation = $results->map(function ($conversation) {
+        $conversation = $results->map(function ($conversation) use ($request) {
             return [
                 'id' => $conversation->id,
                 'user_id' => $conversation->users->first()->id,
                 'name' => $conversation->users->first()->name,
                 'avatar' => $conversation->users->first()->avatar,
                 'content' => $conversation->messages,
-                'unread_message_count' => $conversation->messages_count,
+                'unread_message_count' => $conversation->unreadMessagesCount($request->user()->id), 
             ];
         });
 

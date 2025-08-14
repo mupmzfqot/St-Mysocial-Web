@@ -25,7 +25,11 @@ class OpenConversation
             $conversation->users()->attach([$authUserId, $user_id], ['joined_at' => now()]);
         }
 
-        $markAsRead = $conversation->messages()->where('sender_id', '!=', $authUserId)->update(['is_read' => true]);
+        // Mark only unread messages as read (messages received by current user)
+        $markAsRead = $conversation->messages()
+            ->where('sender_id', '!=', $authUserId)  
+            ->where('is_read', false)                
+            ->update(['is_read' => true]);
 
         $messages = $conversation->messages()
             ->with('sender', 'media')

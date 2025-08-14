@@ -27,6 +27,31 @@ class Conversation extends Model
         return $this->hasMany(Message::class);
     }
 
+    /**
+     * Count unread messages for a specific user
+     * Excludes messages sent by the user themselves
+     */
+    public function unreadMessagesCount($userId): int
+    {
+        return $this->messages()
+            ->where('is_read', false)
+            ->where('sender_id', '!=', $userId)
+            ->count();
+    }
+
+    /**
+     * Get unread messages for a specific user
+     * Excludes messages sent by the user themselves
+     */
+    public function unreadMessages($userId)
+    {
+        return $this->messages()
+            ->where('is_read', false)
+            ->where('sender_id', '!=', $userId)
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
     public function otherUser($currentUserId)
     {
         return $this->users()->where('users.id', '!=', $currentUserId);
