@@ -73,10 +73,7 @@ class SendMessage
                 ]);
                 
                 Event::dispatch(new MessageSent($message));
-                Log::info('MessageSent event dispatched successfully');
-                
                 Event::dispatch(new NewMessage($conversation_id));
-                Log::info('NewMessage event dispatched successfully');
                 
             } catch (\Exception $e) {
                 // Log the WebSocket error but don't fail the request
@@ -113,7 +110,16 @@ class SendMessage
                     'content' => $message->content,
                     'sender_id' => $message->sender_id,
                     'sender_name' => $message->sender->name,
-                    'media' => array_values($message->getMedia('message_media')->toArray())
+                    'media' => $message->getMedia('message_media')->map(function ($media) {
+                        return [
+                            'uuid' => $media->uuid,
+                            'file_name' => $media->file_name,
+                            'preview_url' => $media->preview_url,
+                            'original_url' => $media->original_url,
+                            'extension' => $media->extension,
+                            'mime_type' => $media->mime_type,
+                        ];
+                    }),
                 ]
             ]);
         } catch (\Exception $exception) {

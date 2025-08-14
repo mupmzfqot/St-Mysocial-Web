@@ -42,7 +42,16 @@ class OpenConversation
                     'content' => $message->content,
                     'sender_id' => $message->sender_id,
                     'sender_name' => $message->sender->name,
-                    'media' => $message->getMedia('message_media'),
+                    'media' => $message->getMedia('message_media')->map(function ($media) {
+                        return [
+                            'uuid' => $media->uuid,
+                            'file_name' => $media->file_name,
+                            'preview_url' => $media->preview_url,  // Use property instead of method
+                            'original_url' => $media->original_url, // Use property instead of method
+                            'extension' => $media->extension,
+                            'mime_type' => $media->mime_type,      // Add mime_type for frontend handling
+                        ];
+                    }),
                 ];
             });
 
