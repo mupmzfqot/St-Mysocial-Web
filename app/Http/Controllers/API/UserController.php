@@ -124,12 +124,14 @@ class UserController extends Controller
                 ->select([
                     'media.id',
                     'media.file_name',
+                    'media.name',
                     'media.mime_type',
-                    'media.extension',
                     'media.model_id',
                     'media.model_type',
                     'media.created_at',
-                    'media.size'
+                    'media.size',
+                    'media.collection_name',
+                    'media.disk'
                 ])
                 ->join('posts', 'media.model_id', '=', 'posts.id')
                 ->where('posts.user_id', $user)
@@ -184,14 +186,21 @@ class UserController extends Controller
                 continue;
             }
             
+            // Extract extension from filename
+            $extension = pathinfo($item->file_name, PATHINFO_EXTENSION);
+            
             // Build media item data
             $mediaItem = [
                 'id'            => $item->id,
                 'filename'      => $item->file_name,
-                'preview_url'   => $item->preview_url ?? null,
-                'original_url'  => $item->original_url ?? null,
-                'extension'     => $item->extension,
+                'name'          => $item->name,
+                'preview_url'   => $item->getUrl() ?? null,
+                'original_url'  => $item->getUrl() ?? null,
+                'extension'     => $extension,
                 'mime_type'     => $item->mime_type,
+                'size'          => $item->size,
+                'collection'    => $item->collection_name,
+                'disk'          => $item->disk,
                 'created_at'    => $item->created_at?->toISOString(),
             ];
             
@@ -209,8 +218,8 @@ class UserController extends Controller
             $grouped[$type]['count']++;
             
             // Add URL if available
-            if ($item->original_url) {
-                $grouped[$type]['urls'][] = $item->original_url;
+            if ($item->getUrl()) {
+                $grouped[$type]['urls'][] = $item->getUrl();
             }
         }
         
@@ -314,26 +323,38 @@ class UserController extends Controller
         // Get query parameters with defaults
         $perPage = $request->get('per_page', 15);
         $page = $request->get('page', 1);
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
         
         // Validate and cap limits
         $perPage = min(max($perPage, 1), 100);
         
-        // Optimized query with pagination
+        // Build dynamic order by clause
+        $orderBy = match($sortBy) {
+            'file_name' => 'media.file_name',
+            'size' => 'media.size',
+            default => 'media.created_at'
+        };
+        
+        // Optimized query with pagination and sorting
         $medias = Media::query()
             ->select([
                 'media.id',
                 'media.file_name',
+                'media.name',
                 'media.mime_type',
-                'media.extension',
                 'media.model_id',
                 'media.model_type',
-                'media.created_at'
+                'media.created_at',
+                'media.size',
+                'media.collection_name',
+                'media.disk'
             ])
             ->join('posts', 'media.model_id', '=', 'posts.id')
             ->where('posts.user_id', $user)
             ->where('media.model_type', Post::class)
             ->where('media.mime_type', 'like', 'video/%')
-            ->orderBy('media.created_at', 'desc')
+            ->orderBy($orderBy, $sortOrder)
             ->paginate($perPage, ['*'], 'page', $page);
 
         // Group media by type
