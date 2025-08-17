@@ -64,3 +64,67 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+# ST Social Media System
+
+A comprehensive social media platform built with Laravel and Vue.js.
+
+## Features
+
+- User authentication and authorization
+- Post creation and management
+- Real-time messaging
+- Photo and video sharing
+- User profiles and settings
+- Admin dashboard
+- **Google reCAPTCHA v3 protection for login**
+
+## Setup
+
+### Prerequisites
+
+- PHP 8.1+
+- Composer
+- Node.js & NPM
+- MySQL/PostgreSQL
+- Redis (optional)
+
+### Installation
+
+1. Clone the repository
+2. Install PHP dependencies: `composer install`
+3. Install Node.js dependencies: `npm install`
+4. Copy `.env.example` to `.env` and configure
+5. Generate application key: `php artisan key:generate`
+6. Run migrations: `php artisan migrate`
+7. Build assets: `npm run build`
+
+### reCAPTCHA v3 Setup
+
+This application uses Google reCAPTCHA v3 for login protection. See [reCAPTCHA Setup Guide](docs/recaptcha-setup.md) for detailed configuration instructions.
+
+**Quick Setup:**
+1. Get reCAPTCHA v3 keys from [Google Console](https://www.google.com/recaptcha/admin)
+2. Add to `.env`:
+   ```env
+   RECAPTCHA_SITE_KEY=your_site_key
+   RECAPTCHA_SECRET_KEY=your_secret_key
+   VITE_RECAPTCHA_SITE_KEY=your_site_key
+   ```
+
+## Development
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `php artisan serve` - Start Laravel server
+
+## Security
+
+- CSRF protection enabled
+- Rate limiting on login attempts
+- Google reCAPTCHA v3 bot protection
+- Input validation and sanitization
+
+## License
+
+This project is proprietary software.

@@ -31,7 +31,7 @@ class AppServiceProvider extends ServiceProvider
         PostLiked::observe(PostLikedObserver::class);
 
         // Register broadcast routes for hybrid authentication
-        // $this->registerBroadcastRoutes();
+        $this->registerBroadcastRoutes();
     }
 
     /**
@@ -43,6 +43,9 @@ class AppServiceProvider extends ServiceProvider
         Broadcast::routes(['middleware' => ['web']]);
         
         // API routes (token-based authentication) - for mobile apps
-        Broadcast::routes(['middleware' => ['auth:sanctum'], 'prefix' => 'api']);
+        Broadcast::routes([
+            'middleware' => ['api', \App\Http\Middleware\WebSocketAuth::class], 
+            'prefix' => 'api'
+        ]);
     }
 }

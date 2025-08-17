@@ -66,3 +66,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/markasread', [NotificationController::class, 'markAsRead']);
     });
 });
+
+// WebSocket test route
+Route::middleware('auth:sanctum')->get('/websocket/test', function () {
+    return response()->json([
+        'message' => 'WebSocket authentication working',
+        'user' => auth()->user()->only(['id', 'name', 'email']),
+        'timestamp' => now()->toISOString()
+    ]);
+});

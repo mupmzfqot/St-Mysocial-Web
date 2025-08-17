@@ -3,34 +3,35 @@
 use Illuminate\Support\Facades\Broadcast;
 use Laravel\Sanctum\PersonalAccessToken;
 
-Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
-    // Support both session and token auth
+// Helper function to get authenticated user from either session or token
+function getAuthenticatedUser()
+{
+    // Check if request has Authorization header (API request)
     if (request()->hasHeader('Authorization')) {
         $token = request()->bearerToken();
-        $user = PersonalAccessToken::findToken($token)?->tokenable;
+        if ($token) {
+            return PersonalAccessToken::findToken($token)?->tokenable;
+        }
     }
     
-    return $user && (int) $user->id === (int) $id;
+    // Fall back to session-based authentication (web request)
+    return auth()->user();
+}
+
+// Use existing channels with dual authentication support
+Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
+    $authenticatedUser = getAuthenticatedUser();
+    return $authenticatedUser && (int) $authenticatedUser->id === (int) $id;
 });
 
 Broadcast::channel('conversation.{conversationId}', function ($user, $conversationId) {
-    // Support both session and token auth
-    if (request()->hasHeader('Authorization')) {
-        $token = request()->bearerToken();
-        $user = PersonalAccessToken::findToken($token)?->tokenable;
-    }
+    $authenticatedUser = getAuthenticatedUser();
+    if (!$authenticatedUser) return false;
     
-    if (!$user) return false;
-    
-    return $user->conversations->contains($conversationId);
+    return $authenticatedUser->conversations->contains($conversationId);
 });
 
 Broadcast::channel('message.notification', function ($user) {
-    // Support both session and token auth
-    if (request()->hasHeader('Authorization')) {
-        $token = request()->bearerToken();
-        $user = PersonalAccessToken::findToken($token)?->tokenable;
-    }
-    
-    return $user && auth()->check();
+    $authenticatedUser = getAuthenticatedUser();
+    return $authenticatedUser && auth()->check();
 });
