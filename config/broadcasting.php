@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'default' => env('BROADCAST_CONNECTION', 'reverb'),
+    'default' => env('BROADCAST_CONNECTION', 'null'),
 
     /*
     |--------------------------------------------------------------------------
@@ -48,6 +48,8 @@ return [
             'client_options' => [
                 // Guzzle client options: https://docs.guzzlephp.org/en/stable/request-options.html
             ],
+            // Add support for dual authentication methods
+            'auth_methods' => ['session', 'token'],
         ],
 
         'pusher' => [

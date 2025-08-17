@@ -1,24 +1,36 @@
 <?php
 
 use Illuminate\Support\Facades\Broadcast;
+use Laravel\Sanctum\PersonalAccessToken;
 
 Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
-    // Ensure user is authenticated from either web session or API token
-    if (!$user) {
-        return false;
+    // Support both session and token auth
+    if (request()->hasHeader('Authorization')) {
+        $token = request()->bearerToken();
+        $user = PersonalAccessToken::findToken($token)?->tokenable;
     }
-    return (int) $user->id === (int) $id;
+    
+    return $user && (int) $user->id === (int) $id;
 });
 
 Broadcast::channel('conversation.{conversationId}', function ($user, $conversationId) {
-    // Ensure user is authenticated from either web session or API token
-    if (!$user) {
-        return false;
+    // Support both session and token auth
+    if (request()->hasHeader('Authorization')) {
+        $token = request()->bearerToken();
+        $user = PersonalAccessToken::findToken($token)?->tokenable;
     }
+    
+    if (!$user) return false;
+    
     return $user->conversations->contains($conversationId);
 });
 
 Broadcast::channel('message.notification', function ($user) {
-    // Ensure user is authenticated from either web session or API token
-    return $user !== null;
+    // Support both session and token auth
+    if (request()->hasHeader('Authorization')) {
+        $token = request()->bearerToken();
+        $user = PersonalAccessToken::findToken($token)?->tokenable;
+    }
+    
+    return $user && auth()->check();
 });

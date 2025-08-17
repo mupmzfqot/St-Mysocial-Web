@@ -109,7 +109,6 @@ const sendMessage = async (conversationId) => {
         
         // Check if response indicates success with data
         if (response.data && response.data.message === 'Message sent successfully' && response.data.data) {
-            
             // Clear form and return early
             if (quillEditor.value.getContent()) {
                 quillEditor.value.setContent('');
@@ -186,17 +185,17 @@ const setupWebSocket = async () => {
         const existingMessage = activeMessages.value.find(msg => msg.id === messageData.id);
         if (!existingMessage) {
             handleNewMessage(messageData);
-        }
+        } 
     };
 
     const errorCallback = (error) => {
+        console.error('❌ WebSocket channel error:', error);
         isWebSocketConnected.value = false;
         // Fallback to polling if WebSocket fails
         startPolling();
     };
 
     try {
-        
         // OPTIMIZED: Use useWebSocket composable with multiple event name attempts
         const channel = await subscribeToChannel(channelName, 'MessageSent', messageCallback, errorCallback);
 
@@ -205,7 +204,6 @@ const setupWebSocket = async () => {
             stopPolling();
         } else {
             
-            // FALLBACK: Direct Echo subscription with multiple event names
             try {
                 const directChannel = window.Echo.private(channelName);
                 const eventNames = detectEventName();
@@ -432,11 +430,11 @@ const styledTag = (value) => {
     // First, autodetect and make links clickable
     let processedValue = autodetectLinks(value);
     
-    // Then apply existing styling with improvements for limited width containers
+    // Then apply existing styling
     return processedValue
-        .replace(/<a /g, '<a class="text-blue-600 hover:text-blue-800 hover:no-underline break-all hover:break-words inline-block max-w-full" target="_blank" rel="noopener noreferrer"')
+        .replace(/<a /g, '<a class="text-blue-600 hover:text-blue-800 hover:no-underline" target="_blank" rel="noopener noreferrer"')
         .replace(/<ul>/g, '<ul class="list-disc list-inside pl-4">')
-        .replace(/<ol>/g, '<ol class="list-decimal list-inside pl-3">');
+        .replace(/<ol>/g, '<ol class="list-decimal list-inside pl-3.5">');
 }
 
 const autodetectLinks = (text) => {
@@ -460,8 +458,7 @@ const autodetectLinks = (text) => {
             return match; // Jika URL tidak valid, kembalikan text asli
         }
         
-        // Tambahkan word-break dan styling yang lebih baik untuk container dengan lebar terbatas
-        return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline break-all hover:break-words inline-block max-w-full">${match}</a>`;
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">${match}</a>`;
     });
 }
 
@@ -514,7 +511,7 @@ const autodetectLinks = (text) => {
                                 :medias="message.media"
                                 :small="true"
                             />
-                            <p class="text-sm mt-1 break-words leading-relaxed" v-html="styledTag(message.content)"></p>
+                            <p class="text-sm mt-1" v-html="styledTag(message.content)"></p>
                         </div>
 
                         <div class="bg-white border border-gray-200 rounded-xl px-2 py-2" v-else>
@@ -523,7 +520,7 @@ const autodetectLinks = (text) => {
                                 :medias="message.media"
                                 :small="true"
                             />
-                            <p class="text-sm text-gray-800 break-words leading-relaxed" v-html="styledTag(message.content)"></p>
+                            <p class="text-sm text-gray-800" v-html="styledTag(message.content)"></p>
                         </div>
                     </li>
                 </ul>

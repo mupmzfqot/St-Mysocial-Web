@@ -31,7 +31,7 @@ class AppServiceProvider extends ServiceProvider
         PostLiked::observe(PostLikedObserver::class);
 
         // Register broadcast routes for hybrid authentication
-        $this->registerBroadcastRoutes();
+        // $this->registerBroadcastRoutes();
     }
 
     /**
