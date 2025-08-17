@@ -1,6 +1,9 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { useWebSocketLogger } from './useWebSocketLogger';
 
 export function useWebSocket() {
+    const logger = useWebSocketLogger();
+    
     // Connection state
     const isConnected = ref(false);
     const connectionStatus = ref('disconnected'); // 'connecting', 'connected', 'disconnected', 'failed'
@@ -82,34 +85,35 @@ export function useWebSocket() {
             
             // Connection established
             socket.on('connect', () => {
-                console.log('✅ WebSocket connected');
                 isConnected.value = true;
                 connectionStatus.value = 'connected';
                 connectionAttempts.value = 0;
                 errorCount.value = 0;
                 lastError.value = null;
+                logger.logConnection('connected');
             });
 
             // Connection lost
             socket.on('disconnect', (reason) => {
-                console.log('❌ WebSocket disconnected:', reason);
                 isConnected.value = false;
                 connectionStatus.value = 'disconnected';
+                logger.logConnection('disconnected', { reason });
                 
                 // Attempt reconnection
                 if (connectionAttempts.value < maxReconnectAttempts) {
                     scheduleReconnect();
                 } else {
                     connectionStatus.value = 'failed';
+                    logger.logConnection('failed', { reason: 'Max reconnection attempts reached' });
                 }
             });
 
             // Connection error
             socket.on('connect_error', (error) => {
-                console.error('🔌 WebSocket connection error:', error);
                 lastError.value = error;
                 errorCount.value++;
                 connectionStatus.value = 'failed';
+                logger.error('Connection error', error);
             });
         }
         
@@ -124,6 +128,7 @@ export function useWebSocket() {
 
         hasAttemptedConnection.value = true;
         connectionStatus.value = 'connecting';
+        logger.logConnection('connecting');
         
         try {
             // Wait for Echo to be ready
@@ -133,6 +138,7 @@ export function useWebSocket() {
             if (getConnectionState() === 'connected') {
                 isConnected.value = true;
                 connectionStatus.value = 'connected';
+                logger.logConnection('connected', { note: 'Already connected' });
                 return;
             }
             
@@ -142,9 +148,9 @@ export function useWebSocket() {
             }
             
         } catch (error) {
-            console.error('❌ WebSocket setup failed:', error);
             lastError.value = error;
             connectionStatus.value = 'failed';
+            logger.error('Connection setup failed', error);
         }
     };
 
@@ -156,6 +162,7 @@ export function useWebSocket() {
 
         connectionAttempts.value++;
         connectionStatus.value = 'reconnecting';
+        logger.logConnection('reconnecting', { attempt: connectionAttempts.value });
         
         reconnectTimer.value = setTimeout(() => {
             connect();
@@ -182,6 +189,8 @@ export function useWebSocket() {
                 throw new Error(`Failed to create channel: ${channelName}`);
             }
             
+            logger.logChannel('subscribed', channelName);
+            
             // OPTIMIZED EVENT LISTENING - Try multiple event name formats
             const eventNames = [
                 eventName, // Original event name (e.g., 'MessageSent')
@@ -193,13 +202,10 @@ export function useWebSocket() {
             // Listen for all possible event name formats
             eventNames.forEach(name => {
                 channel.listen(name, (data) => {
-                
                     // Ensure data is properly structured
                     if (data && typeof data === 'object') {
+                        logger.logEvent(name, channelName, data);
                         callback(data);
-                    } else {
-                        console.warn(`⚠️ Received invalid data for event ${name}:`, data);
-                        console.warn(`⚠️ Data type:`, typeof data);
                     }
                 });
             });
@@ -207,14 +213,15 @@ export function useWebSocket() {
             // Also listen for any event on the channel (fallback)
             channel.listen('.', (data) => {
                 if (data && typeof data === 'object') {
+                    logger.logEvent('wildcard', channelName, data);
                     callback(data);
                 }
             });
 
             // Handle channel errors
             channel.error((error) => {
-                console.error(`❌ Channel error for ${channelName}:`, error);
                 lastError.value = error;
+                logger.error(`Channel error for ${channelName}`, error);
                 
                 if (errorCallback) {
                     errorCallback(error);
@@ -226,8 +233,8 @@ export function useWebSocket() {
             return channel;
             
         } catch (error) {
-            console.error(`❌ Failed to subscribe to channel ${channelName}:`, error);
             lastError.value = error;
+            logger.error(`Failed to subscribe to channel ${channelName}`, error);
             
             if (errorCallback) {
                 errorCallback(error);
@@ -245,8 +252,9 @@ export function useWebSocket() {
                 // Properly unsubscribe from the channel
                 window.Echo.leave(channelName);
                 channels.value.delete(channelName);
+                logger.logChannel('unsubscribed', channelName);
             } catch (error) {
-                console.error(`❌ Error unsubscribing from channel ${channelName}:`, error);
+                // Silent error handling for unsubscription
             }
         }
     };
@@ -257,10 +265,11 @@ export function useWebSocket() {
             try {
                 window.Echo.leave(channelName);
             } catch (error) {
-                console.error(`❌ Error cleaning up channel ${channelName}:`, error);
+                // Silent error handling for cleanup
             }
         });
         channels.value.clear();
+        logger.log('All channels cleaned up');
     };
 
     // Force reconnection
@@ -269,6 +278,7 @@ export function useWebSocket() {
         echoReady.value = false;
         hasAttemptedConnection.value = false;
         cleanupChannels();
+        logger.log('Force reconnection initiated');
         connect();
     };
 
@@ -303,10 +313,11 @@ export function useWebSocket() {
                     connectionAttempts.value = 0;
                     errorCount.value = 0;
                     lastError.value = null;
+                    logger.logConnection('connected', { note: 'Detected during monitoring' });
                 } else if (currentState === 'disconnected' && isConnected.value) {
-                    console.log('❌ WebSocket disconnection detected during monitoring');
                     isConnected.value = false;
                     connectionStatus.value = 'disconnected';
+                    logger.logConnection('disconnected', { note: 'Detected during monitoring' });
                 }
             }
         }, 3000); // Check every 3 seconds
@@ -369,5 +380,8 @@ export function useWebSocket() {
         forceReconnect,
         waitForEcho,
         startConnectionMonitoring,
+        
+        // Logger utility
+        logger,
     };
 }

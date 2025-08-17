@@ -56,10 +56,6 @@ const scrollToBottom = () => {
 };
 
 const handleNewMessage = (message) => {
-    console.log('📨 Handling new message:', message);
-    console.log('📨 Message type:', typeof message);
-    console.log('📨 Message keys:', message ? Object.keys(message) : 'null');
-    
     // Ensure message is an object and has required properties
     if (typeof message !== 'object' || message === null) {
         console.error('❌ Invalid message object:', message);
@@ -78,7 +74,6 @@ const handleNewMessage = (message) => {
             media: Array.isArray(message.media) ? message.media : []
         };
         
-        console.log('✅ Adding safe message to active messages:', safeMessage);
         activeMessages.value.push(safeMessage);
         scrollToBottom();
     } catch (error) {
@@ -100,19 +95,12 @@ const sendMessage = async (conversationId) => {
         form.files.forEach((file, index) => {
             formData.append(`files[${index}]`, file);
         });
-
-        console.log('🚀 Sending message to:', route('message.send', conversationId));
-        console.log('📝 Message content:', message);
         
         const response = await axios.post(route('message.send', conversationId), formData, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             }
         });
-
-        console.log('📨 Raw response:', response);
-        console.log('📨 Response data:', response.data);
-        console.log('📨 Response status:', response.status);
 
         // Check if there's an error in the response
         if (response.data && response.data.error === 1) {
@@ -121,7 +109,6 @@ const sendMessage = async (conversationId) => {
         
         // Check if response indicates success with data
         if (response.data && response.data.message === 'Message sent successfully' && response.data.data) {
-            console.log('✅ Message sent successfully with data:', response.data.data);
             
             // Clear form and return early
             if (quillEditor.value.getContent()) {
@@ -133,9 +120,6 @@ const sendMessage = async (conversationId) => {
             return;
         }
 
-        // If we reach here, it means we don't have proper data
-        console.log('⚠️ No proper data in response, clearing form only');
-        
         if (quillEditor.value.getContent()) {
             quillEditor.value.setContent('');
         }
@@ -171,7 +155,6 @@ const detectEventName = () => {
         'message.sent' // Alternative convention
     ];
     
-    console.log('🎯 Available event names to try:', eventNames);
     return eventNames;
 };
 
@@ -179,10 +162,6 @@ const setupWebSocket = async () => {
     const channelName = `conversation.${props.conversation.id}`;
 
     const messageCallback = (event) => {
-        console.log('📨 Received WebSocket message:', event);
-        console.log('📨 Event type:', typeof event);
-        console.log('📨 Event keys:', event ? Object.keys(event) : 'null');
-        
         // Ensure event is a valid message object
         if (typeof event !== 'object' || event === null) {
             console.error('❌ Invalid WebSocket event:', event);
@@ -206,32 +185,25 @@ const setupWebSocket = async () => {
         // Check if this message is already in the list
         const existingMessage = activeMessages.value.find(msg => msg.id === messageData.id);
         if (!existingMessage) {
-            console.log('✅ Adding new message from WebSocket:', messageData);
             handleNewMessage(messageData);
-        } else {
-            console.log('⚠️ Message already exists, skipping:', messageData.id);
         }
     };
 
     const errorCallback = (error) => {
-        console.error('❌ WebSocket channel error:', error);
         isWebSocketConnected.value = false;
         // Fallback to polling if WebSocket fails
         startPolling();
     };
 
     try {
-        console.log('🔌 Setting up WebSocket for channel:', channelName);
         
         // OPTIMIZED: Use useWebSocket composable with multiple event name attempts
         const channel = await subscribeToChannel(channelName, 'MessageSent', messageCallback, errorCallback);
 
         if (channel) {
-            console.log('✅ WebSocket setup successful via composable');
             isWebSocketConnected.value = true;
             stopPolling();
         } else {
-            console.log('⚠️ Composable method failed, trying direct Echo...');
             
             // FALLBACK: Direct Echo subscription with multiple event names
             try {
@@ -240,42 +212,29 @@ const setupWebSocket = async () => {
                 
                 eventNames.forEach(eventName => {
                     directChannel.listen(eventName, (data) => {
-                        console.log(`📨 Direct Echo received ${eventName}:`, data);
                         messageCallback(data);
                     });
                 });
                 
                 // Also listen for any event
                 directChannel.listen('.', (data) => {
-                    console.log('📨 Direct Echo received any event:', data);
                     messageCallback(data);
                 });
                 
                 directChannel.error((error) => {
-                    console.error('❌ Direct Echo channel error:', error);
                     errorCallback(error);
                 });
                 
-                console.log('✅ Direct Echo setup successful');
                 isWebSocketConnected.value = true;
                 stopPolling();
                 
             } catch (directError) {
-                console.error('❌ Direct Echo setup failed:', directError);
                 isWebSocketConnected.value = false;
                 startPolling();
             }
         }
         
-        // Test the WebSocket connection
-        console.log('🔍 Testing WebSocket connection...');
-        setTimeout(() => {
-            console.log('🔍 WebSocket connection status:', isConnected.value);
-            console.log('🔍 Active channels:', activeChannels.value);
-        }, 2000);
-        
     } catch (error) {
-        console.error('❌ Failed to setup WebSocket:', error);
         isWebSocketConnected.value = false;
         startPolling();
     }
@@ -361,55 +320,6 @@ const setupInteractionListeners = () => {
         messageContainer.addEventListener('click', markAsReadOnInteraction);
     }
 };
-
-const testEventListening = () => {
-    console.log('🧪 Manual Event Listening Test');
-    
-    const channelName = `conversation.${props.conversation.id}`;
-    console.log('Testing channel:', channelName);
-    
-    if (!window.Echo) {
-        console.error('❌ Echo is not available');
-        return;
-    }
-    
-    try {
-        const testChannel = window.Echo.private(channelName);
-        const eventNames = detectEventName();
-        
-        console.log('🎯 Setting up event listeners for:', eventNames);
-        
-        // Listen for all possible event names
-        eventNames.forEach(eventName => {
-            testChannel.listen(eventName, (data) => {
-                console.log(`✅ SUCCESS: Received ${eventName} event:`, data);
-                console.log('Event data structure:', {
-                    hasId: !!data.id,
-                    hasContent: !!data.content,
-                    hasSenderId: !!data.sender_id,
-                    keys: Object.keys(data)
-                });
-            });
-        });
-        
-        // Listen for any event
-        testChannel.listen('.', (data) => {
-            console.log('✅ SUCCESS: Received any event:', data);
-        });
-        
-        console.log('✅ Event listeners setup complete');
-        console.log('📝 Now send a message to test if events are received');
-        
-    } catch (error) {
-        console.error('❌ Event listening test failed:', error);
-    }
-};
-
-// Add to window for manual testing
-onMounted(() => {
-    window.testEventListening = testEventListening;
-    console.log('🔧 Event listening test available: window.testEventListening()');
-});
 
 onMounted(async () => {
     // Initialize WebSocket with delay to ensure Echo is ready
