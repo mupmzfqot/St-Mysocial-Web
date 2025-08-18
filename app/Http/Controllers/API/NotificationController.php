@@ -50,8 +50,8 @@ class NotificationController extends Controller
             return [
                 'id' => $result->id,
                 'message' => $result->data['message'],
-                'notifiable_url' => ($result->data['id']) ? url('api/posts/'.$result->data['id']) : null,
-                'post_id' => $result->data['id'] ?? null,
+                'notifiable_url' => ($result->data['url']) ? $result->data['url'] : null,
+                'post_id' => ($result->data['url']) ? (int) basename(parse_url($result->data['url'], PHP_URL_PATH)) : null,
                 'read_at' => $result->read_at,
                 'created_at' => $result->created_at,
                 'updated_at' => $result->updated_at,
