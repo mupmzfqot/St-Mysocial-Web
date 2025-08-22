@@ -9,6 +9,7 @@ use App\Http\Resources\UserResource;
 use App\Models\Conversation;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;    
 
 class MessageController extends Controller
 {
@@ -80,6 +81,22 @@ class MessageController extends Controller
                 'message' => $e->getMessage()
             ]);
         }
+    }
+
+    public function markAsRead($conversation_id, Request $request)
+    {
+        $conversation = Conversation::query()->find($conversation_id);
+        Gate::authorize('view', $conversation);
+
+        $conversation->messages()
+            ->where('is_read', false)
+            ->whereNot('sender_id', $request->user()->id)
+            ->update(['is_read' => true]);
+
+        return response()->json([
+            'error' => 0,
+            'message' => 'Marked as read'
+        ]);
     }
 
     public function sendMessage(Request $request, SendMessage $sendMessage)
