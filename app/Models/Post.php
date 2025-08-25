@@ -22,7 +22,7 @@ class Post extends Model implements HasMedia
 
     protected $guarded = [];
 
-    protected $appends = ['is_liked', 'commented'];
+    protected $appends = ['is_liked', 'commented', 'created_at_for_humans'];
 
     protected $casts = [
         'content' => CleanHtmlInput::class
@@ -63,8 +63,13 @@ class Post extends Model implements HasMedia
     protected function casts(): array
     {
         return [
-            'created_at' => 'datetime:d F Y h:i A',
+            'created_at' => 'datetime',
         ];
+    }
+
+    public function getCreatedAtForHumansAttribute()
+    {
+        return $this->created_at->diffForHumans();
     }
 
     public function scopePublished($query)

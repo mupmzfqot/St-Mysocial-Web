@@ -264,7 +264,7 @@ const handleLinkClick = (event) => {
                         </p>
                     </div>
                 </div>
-                <div class="text-xs text-gray-500 dark:text-neutral-500">{{ content.created_at }}</div>
+                <div class="text-xs text-gray-500 dark:text-neutral-500">{{ content.created_at_for_humans }}</div>
             </div>
             <div class="ms-auto flex items-center" v-if="$page.props.auth.user.id === content.user_id" style="z-index: 100;">
                 <div class="me-1">
@@ -318,7 +318,7 @@ const handleLinkClick = (event) => {
                             </p>
                         </div>
                     </div>
-                    <div class="text-xs text-gray-500 dark:text-neutral-500">{{ content.repost.created_at }}</div>
+                    <div class="text-xs text-gray-500 dark:text-neutral-500">{{ content.repost.created_at_for_humans }}</div>
                 </div>
             </div>
             <div @click="handleLinkClick" class="mt-2 text-gray-800 text-left text-sm dark:text-neutral-400 leading-relaxed break-words" v-if="content.repost.post" v-html="styledTagWithLinks(content.repost.post)"></div>
@@ -345,7 +345,7 @@ const handleLinkClick = (event) => {
                         </p>
                     </div>
                 </div>
-                <div class="text-xs text-gray-500 dark:text-neutral-500">{{ content.created_at }}</div>
+                <div class="text-xs text-gray-500 dark:text-neutral-500">{{ content.created_at_for_humans }}</div>
             </div>
             
             <div class="ms-auto flex items-center" v-if="$page.props.auth.user.id === content.user_id" style="z-index: 100;">
@@ -788,7 +788,7 @@ const handleLinkClick = (event) => {
                                                         </p>
                                                     </div>
                                                 </div>
-                                                <div class="text-xs text-gray-500 dark:text-neutral-500">{{ postDetails.created_at }}</div>
+                                                <div class="text-xs text-gray-500 dark:text-neutral-500">{{ postDetails.created_at_for_humans }}</div>
                                             </div>
 
 
@@ -811,7 +811,7 @@ const handleLinkClick = (event) => {
                                             </div>
                                             <div class="ms-4">
                                                 <div class="text-base font-semibold text-gray-800 dark:text-neutral-400 hover:text-blue-700">{{ postDetails.repost.author.name }}</div>
-                                                <div class="text-xs text-gray-500 dark:text-neutral-500">{{ postDetails.repost.created_at }}</div>
+                                                <div class="text-xs text-gray-500 dark:text-neutral-500">{{ postDetails.repost.created_at_for_humans }}</div>
                                             </div>
                                         </Link>
                                         <div @click="handleLinkClick" class="mt-2 text-gray-800 text-left text-sm dark:text-neutral-400 leading-relaxed break-words" v-if="postDetails.repost.post" v-html="styledTagWithLinks(postDetails.repost.post)"></div>
