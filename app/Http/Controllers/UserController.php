@@ -20,11 +20,7 @@ class UserController extends Controller
                 $query->where('name', 'admin');
             })
             ->when($searchTerm, function ($query, $search) {
-                $query->where('name', 'like', '%' . $search . '%')
-                    ->orWhere('email', 'like', '%' . $search . '%')
-                    ->whereHas('roles', function ($query) {
-                        $query->where('name', 'admin');
-                    });
+                $query->where('name', 'like', '%' . $search . '%');
             })
             ->orderBy('created_at', 'desc')
             ->paginate(10);
