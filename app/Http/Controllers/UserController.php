@@ -233,9 +233,7 @@ class UserController extends Controller
         $searchTerm = $request->search;
         $users = User::query()
             ->when($searchTerm, function ($query, $searchTerm) {
-                $query->where('name', 'like', '%' . $searchTerm . '%')
-                    ->orWhere('email', 'like', '%' . $searchTerm . '%')
-                    ->orWhere('username', 'like', '%' . $searchTerm . '%');
+                $query->where('name', 'like', '%' . $searchTerm . '%');
             })
             ->whereNot('id', auth()->user()->id)
             ->orderBy('name', 'asc')
