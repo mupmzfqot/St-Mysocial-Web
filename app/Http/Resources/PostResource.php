@@ -33,14 +33,20 @@ class PostResource extends JsonResource
                 'profile_img'   => $this->author->avatar,
             ],
             'user_tags'     => $this->tags->select('user_id', 'name') ?? [],
-            'media'         => $this->getMedia('*')->map(fn ($item) => [
-                    'id'            => $item->id,
-                    'filename'      => $item->file_name,
-                    'preview_url'   => $item->preview_url,
-                    'original_url'  => $item->original_url,
-                    'extension'     => $item->extension,
-                    'mime_type'     => $item->mime_type,
-                ])->groupBy(function ($item) {
+            'media'         => $this->getMedia('*')->map(function ($item) {
+                    $isVideo = str_starts_with($item->mime_type, 'video/');
+                    
+                    return [
+                        'id'            => $item->id,
+                        'filename'      => $item->file_name,
+                        'preview_url'   => $item->preview_url,
+                        'original_url'  => $item->original_url,
+                        'extension'     => $item->extension,
+                        'mime_type'     => $item->mime_type,
+                        'url'           => $isVideo ? url("/stream-video/{$item->file_name}") : $item->original_url,
+                        'is_video'      => $isVideo,
+                    ];
+                })->groupBy(function ($item) {
                     if (str_starts_with($item['mime_type'], 'video/')) {
                         return 'video';
                     } elseif (str_starts_with($item['mime_type'], 'image/')) {
@@ -50,10 +56,19 @@ class PostResource extends JsonResource
                     }
                     return 'other';
                 })->map(function ($items, $type) {
-                    return [
-                        'type' => $type,
-                        'content' => $items->pluck('original_url')->all(),
-                    ];
+                    if ($type === 'video') {
+                        // For videos, use streaming URLs
+                        return [
+                            'type' => $type,
+                            'content' => $items->pluck('url')->all(), // Use streaming URL
+                        ];
+                    } else {
+                        // For non-videos, use original URLs
+                        return [
+                            'type' => $type,
+                            'content' => $items->pluck('original_url')->all(),
+                        ];
+                    }
                 })->values(),
             'link'          => $this->link,
             'comments'      => CommentResource::collection($this->whenLoaded('comments')),

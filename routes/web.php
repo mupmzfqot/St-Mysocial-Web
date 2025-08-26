@@ -12,10 +12,18 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\VideoStreamingController;
 use Illuminate\Support\Facades\Route;
 
 
 Route::get('/', [App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'create'])->name('home');
+
+// Public video streaming route (no authentication required)
+Route::get('stream-video/{filename}', [VideoStreamingController::class, 'streamVideoByFilename'])
+    ->name('stream.video')
+    ->where('filename', '.*');
+
+
 
 Route::middleware(['auth', 'verified', 'role:user|public_user'])->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('homepage')->middleware('role:user');
@@ -131,6 +139,30 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 
     Route::get('profile-photos', [ProfileController::class, 'indexPhotos'])->name('profile-photos');
     Route::get('profile-covers', [ProfileController::class, 'indexCovers'])->name('profile-covers');
+
+    // Video streaming debugging routes (admin only)
+    Route::name('video-streaming.')->prefix('video-streaming')->group(function () {
+        Route::get('info', [VideoStreamingController::class, 'getVideoInfo'])->name('info');
+        Route::get('list', [VideoStreamingController::class, 'listVideos'])->name('list');
+        Route::get('test', [VideoStreamingController::class, 'testStream'])->name('test');
+    });
+
+    // Direct video streaming route (for testing)
+    Route::get('media/{media}/stream', function ($mediaId) {
+        $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::find($mediaId);
+        if (!$media) {
+            abort(404);
+        }
+        
+        $videoService = app(\App\Services\VideoStreamingService::class);
+        if (!$videoService->isVideo($media)) {
+            abort(400, 'Not a video file');
+        }
+        
+        return $videoService->streamVideo($media, request());
+    })->name('media.stream');
+
+
 
     Route::name('setting.')->prefix('setting')->group(function () {
         Route::get('/', [SettingController::class, 'index'])->name('index');

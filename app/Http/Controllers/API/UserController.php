@@ -146,6 +146,16 @@ class UserController extends Controller
             return response()->json([
                 'error' => 0,
                 'data' => $groupedMedias,
+                'streaming_info' => [
+                    'enabled' => true,
+                    'endpoint' => url('/stream-video'),
+                    'features' => [
+                        'range_requests' => true,
+                        'seek_support' => true,
+                        'ios_avplayer_compatible' => true,
+                        'chunked_streaming' => true
+                    ]
+                ],
                 'pagination' => [
                     'current_page' => $medias->currentPage(),
                     'last_page' => $medias->lastPage(),
@@ -189,19 +199,25 @@ class UserController extends Controller
             // Extract extension from filename
             $extension = pathinfo($item->file_name, PATHINFO_EXTENSION);
             
+            // Check if this is a video file
+            $isVideo = str_starts_with($item->mime_type, 'video/');
+            
             // Build media item data
             $mediaItem = [
                 'id'            => $item->id,
                 'filename'      => $item->file_name,
                 'name'          => $item->name,
-                'preview_url'   => $item->getUrl() ?? null,
-                'original_url'  => $item->getUrl() ?? null,
+                'preview_url'   => $isVideo ? url("/stream-video/{$item->file_name}") : ($item->getUrl() ?? null),
+                'original_url'   => $isVideo ? url("/stream-video/{$item->file_name}") : ($item->getUrl() ?? null),
                 'extension'     => $extension,
                 'mime_type'     => $item->mime_type,
                 'size'          => $item->size,
                 'collection'    => $item->collection_name,
                 'disk'          => $item->disk,
                 'created_at'    => $item->created_at?->toISOString(),
+                'is_video'      => $isVideo,
+                'streaming_enabled' => $isVideo,
+                'streaming_url' => $isVideo ? url("/stream-video/{$item->file_name}") : null,
             ];
             
             // Group by type

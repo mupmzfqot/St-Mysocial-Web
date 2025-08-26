@@ -61,6 +61,39 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('clear-cache', [UserController::class, 'clearVideoCache']);
     });
 
+    // Video streaming routes for mobile app
+    Route::prefix('stream')->group(function () {
+        Route::get('video/{filename}', function ($filename) {
+            // Find media by filename
+            $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::where('file_name', $filename)->first();
+            
+            if (!$media) {
+                abort(404, 'Video not found');
+            }
+            
+            $videoService = app(\App\Services\VideoStreamingService::class);
+            if (!$videoService->isVideo($media)) {
+                abort(400, 'Not a video file');
+            }
+            
+            return $videoService->streamVideo($media, request());
+        })->name('api.stream.video')->where('filename', '.*');
+        
+        Route::get('media/{mediaId}', function ($mediaId) {
+            $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::find($mediaId);
+            if (!$media) {
+                abort(404, 'Media not found');
+            }
+            
+            $videoService = app(\App\Services\VideoStreamingService::class);
+            if (!$videoService->isVideo($media)) {
+                abort(400, 'Not a video file');
+            }
+            
+            return $videoService->streamVideo($media, request());
+        })->name('api.stream.media');
+    });
+
     Route::group(['prefix' => 'notification'], function () {
         Route::get('/get', [NotificationController::class, 'index']);
         Route::post('/markasread', [NotificationController::class, 'markAsRead']);
