@@ -30,7 +30,7 @@ class UserController extends Controller
         $searchTerm = $request->search;
         $users = User::query()
             ->when($searchTerm, function ($query, $searchTerm) {
-                $query->where('username', 'like', '%' . $searchTerm . '%');
+                $query->where('name', 'like', '%' . $searchTerm . '%');
             })
             ->exceptId($request->user()->id)
             ->isActive()
