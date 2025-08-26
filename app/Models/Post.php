@@ -25,7 +25,8 @@ class Post extends Model implements HasMedia
     protected $appends = ['is_liked', 'commented', 'created_at_for_humans'];
 
     protected $casts = [
-        'content' => CleanHtmlInput::class
+        'content' => CleanHtmlInput::class,
+        'created_at' => 'datetime:d F Y h:i A',
     ];
 
     public function registerMediaConversions(?Media $media = null): void
@@ -58,13 +59,6 @@ class Post extends Model implements HasMedia
     public function likes(): HasMany
     {
         return $this->hasMany(PostLiked::class, 'post_id');
-    }
-
-    protected function casts(): array
-    {
-        return [
-            'created_at' => 'datetime',
-        ];
     }
 
     public function getCreatedAtForHumansAttribute()
