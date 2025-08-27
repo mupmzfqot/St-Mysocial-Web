@@ -38,6 +38,9 @@ class PostController extends Controller
                     'repost.media',
                     'repost.tags'
                 )
+                ->whereHas('author.roles', function ($query) {
+                    $query->whereIn('name', ['admin', 'user']);
+                })
                 ->orderBy('created_at', 'desc')
                 ->published();
 
@@ -66,6 +69,9 @@ class PostController extends Controller
     {
         $post = Post::query()
             ->with('author', 'media', 'comments.user', 'comments.media', 'tags', 'repost.author', 'repost.media', 'repost.tags')
+            ->whereHas('author.roles', function ($query) {
+                $query->whereIn('name', ['admin', 'user']);
+            })
             ->orderBy('created_at', 'desc')
             ->published()
             ->where('id', $id)
@@ -82,7 +88,7 @@ class PostController extends Controller
                 $query->where('post', 'like', '%' . $search . '%');
             })
             ->whereHas('author.roles', function ($query) {
-                $query->where('name', 'admin');
+                $query->whereIn('name', ['admin', 'user']);
             })
             ->published()
             ->with(['author', 'media'])
@@ -206,6 +212,10 @@ class PostController extends Controller
         $post = Post::query()
             ->with('author', 'media', 'comments.user', 'comments.media', 'tags', 'repost.author', 'repost.media', 'repost.tags')
             ->where('id', $id)
+            ->whereHas('author.roles', function ($query) {
+                $query->whereIn('name', ['admin', 'user']);
+            })
+            ->published()
             ->first();
 
         if (!$post) {
@@ -239,6 +249,9 @@ class PostController extends Controller
         $posts = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($request) {
             $query = Post::query()
                 ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media', 'repost.tags')
+                ->whereHas('author.roles', function ($query) {
+                    $query->whereIn('name', ['admin', 'user']);
+                })
                 ->where('comment_count', '>', 0)
                 ->where('like_count', '>', 0)
                 ->orderBy(DB::raw('comment_count + like_count'), 'desc')
@@ -255,6 +268,9 @@ class PostController extends Controller
     {
         $posts = Post::query()
             ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media', 'repost.tags')
+            ->whereHas('author.roles', function ($query) {
+                $query->whereIn('name', ['admin', 'user']);
+            })
             ->orderBy('created_at', 'desc')
             ->whereHas('likes', function ($query) {
                 $query->where('user_id', auth()->id());
@@ -269,6 +285,9 @@ class PostController extends Controller
     {
         $posts = Post::query()
             ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media', 'repost.tags')
+            ->whereHas('author.roles', function ($query) {
+                $query->whereIn('name', ['admin', 'user']);
+            })
             ->orderBy('created_at', 'desc')
             ->where('user_id', auth()->id())
             ->simplePaginate(30);
@@ -280,6 +299,9 @@ class PostController extends Controller
     {
         $posts = Post::query()
             ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media', 'repost.tags')
+            ->whereHas('author.roles', function ($query) {
+                $query->whereIn('name', ['admin', 'user']);
+            })
             ->orderBy('created_at', 'desc')
             ->where('user_id', auth()->id())
             ->published()
@@ -293,6 +315,9 @@ class PostController extends Controller
         $user_id = $request->user_id;
         $posts = Post::query()
             ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media', 'repost.tags')
+            ->whereHas('author.roles', function ($query) {
+                $query->whereIn('name', ['admin', 'user']);
+            })
             ->orderBy('created_at', 'desc')
             ->where('user_id', $user_id)
             ->orWhereHas('tags', function ($query) use ($user_id) {

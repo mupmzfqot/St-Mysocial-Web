@@ -15,13 +15,17 @@ class PostModerationController extends Controller
             ->when($searchTerm, function ($query, $search) {
                 $query->where('post', 'like', '%' . $search . '%');
             })
+            ->whereHas('author.roles', function ($query) {
+                $query->whereIn('name', ['user']);
+            })
+            ->where('type', 'st')
             ->with(['author'])
             ->where('published', false)
             ->orderBy('created_at', 'desc')
             ->paginate(10)
             ->withQueryString();
 
-        return Inertia::render('PostModerations/Index', compact('posts', 'searchTerm'));
+        return Inertia::render('PostModerations/IndexST', compact('posts', 'searchTerm'));
     }
     public function indexST(Request $request)
     {
