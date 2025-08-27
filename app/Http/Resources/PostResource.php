@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Carbon\Carbon;
 
 class PostResource extends JsonResource
 {
@@ -22,8 +23,8 @@ class PostResource extends JsonResource
             'comment_count' => $this->comment_count ?? 0,
             'repost_count'  => $this->repost_count ?? 0,
             'post_type'     => $this->type,
-            'created_at'    => $this->created_at->diffForHumans(),
-            'updated_at'    => $this->updated_at->diffForHumans(),
+            'created_at'    => Carbon::parse($this->created_at)->format('d F Y H:i A'),
+            'updated_at'    => Carbon::parse($this->updated_at)->format('d F Y H:i A'),
             'location'      => $this->location,
             'feeling'       => $this->feeling,
             'author'        => [
