@@ -49,6 +49,15 @@ class PostController extends Controller
                 $perPage, 
                 $request->getQueryString()
             );
+            
+            // Additional authorization check for cached posts
+            $posts->getCollection()->transform(function ($post) use ($request) {
+                // Users can see their own posts or published posts from others
+                if ($post->user_id !== $request->user()->id && !$post->published) {
+                    return null;
+                }
+                return $post;
+            })->filter();
 
             return response()->json([
                 'error' => 0,
@@ -83,7 +92,7 @@ class PostController extends Controller
         }
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $post = Post::find($id);
         if (!$post) {
@@ -91,6 +100,15 @@ class PostController extends Controller
                 'error'     => 1,
                 'message'   => 'Post not found',
             ], 404);
+        }
+
+        // Authorization check - ensure user can view the post
+        // Users can view their own posts or published posts from other users
+        if ($post->user_id !== $request->user()->id && !$post->published) {
+            return response()->json([
+                'error'     => 1,
+                'message'   => 'You do not have permission to view this post',
+            ], 403);
         }
 
         return response()->json([
@@ -170,6 +188,11 @@ class PostController extends Controller
             ->orderBy(DB::raw('comment_count + like_count'), 'desc')
             ->where('comment_count', '>', 0)
             ->where('like_count', '>', 0)
+            ->where(function ($query) use ($request) {
+                // Users can see their own posts or published posts from others
+                $query->where('user_id', $request->user()->id)
+                      ->orWhere('published', true);
+            })
             ->paginate(10);
 
         return response()->json([
@@ -201,6 +224,15 @@ class PostController extends Controller
     public function storeComments(Request $request, CreateComment $createComment)
     {
         try {
+        // Authorization check - ensure user can comment on this post
+        $post = Post::find($request->post_id);
+        if (!$post || ($post->user_id !== $request->user()->id && !$post->published)) {
+                return response()->json([
+                    'error'     => 1,
+                    'message'   => 'You do not have permission to comment on this post',
+                ], 403);
+            }
+            
             $comment = $createComment->handle($request);
             
             // Invalidate cache for specific post (double safety with observer)
@@ -221,6 +253,16 @@ class PostController extends Controller
 
     public function getComments(Request $request, $postId)
     {
+        $post = Post::find($postId);
+        
+        // Authorization check - ensure user can view comments for this post
+        if (!$post || ($post->user_id !== $request->user()->id && !$post->published)) {
+            return response()->json([
+                'error'     => 1,
+                'message'   => 'You do not have permission to view comments for this post',
+            ], 403);
+        }
+        
         $comments = Comment::query()->where('post_id', $postId)
             ->with('media')
             ->orderBy('created_at', 'asc')
@@ -234,20 +276,38 @@ class PostController extends Controller
 
     public function likedBy(Request $request, $id)
     {
+        $post = Post::find($id);
+        
+        // Authorization check - ensure user can view likes for this post
+        if (!$post || ($post->user_id !== $request->user()->id && !$post->published)) {
+            return response()->json([
+                'error'     => 1,
+                'message'   => 'You do not have permission to view likes for this post',
+            ], 403);
+        }
+        
         $user = User::whereHas('likes', function ($query) use ($id) {
                     $query->where('post_id', $id);
                 })->get();
 
-        $code = !$user ? '404' : 200;
-
         return response()->json([
             'error' => 0,
             'data' => UserResource::collection($user)
-        ], $code);
+        ]);
     }
 
     public function storeLike(Request $request)
     {
+        $post = Post::find($request->post_id);
+        
+        // Authorization check - ensure user can like this post
+        if (!$post || ($post->user_id !== $request->user()->id && !$post->published)) {
+            return response()->json([
+                'error'     => 1,
+                'message'   => 'You do not have permission to like this post',
+            ], 403);
+        }
+        
         $liked = PostLiked::query()
             ->where('post_id', $request->post_id)
             ->where('user_id', $request->user()->id)
@@ -260,8 +320,8 @@ class PostController extends Controller
             ]);
 
             $post = Post::query()->find($request->post_id);
-            if($post->user_id != auth()->id()) {
-                Notification::send($post?->author, new NewLike($postLiked, User::find(auth()->id())));
+            if($post->user_id != $request->user()->id) {
+                Notification::send($post?->author, new NewLike($postLiked, User::find($request->user()->id)));
             }
 
             // Invalidate cache for specific post (double safety with observer)
@@ -276,9 +336,19 @@ class PostController extends Controller
 
     public function unlikePost(Request $request)
     {
+        $post = Post::find($request->post_id);
+        
+        // Authorization check - ensure user can unlike this post
+        if (!$post || ($post->user_id !== $request->user()->id && !$post->published)) {
+            return response()->json([
+                'error'     => 1,
+                'message'   => 'You do not have permission to unlike this post',
+            ], 403);
+        }
+        
         PostLiked::query()
             ->where('post_id', $request->post_id)
-            ->where('user_id', auth()->id())
+            ->where('user_id', $request->user()->id)
             ->delete();
 
         // Invalidate cache for specific post (double safety with observer)
@@ -292,17 +362,35 @@ class PostController extends Controller
 
     public function storeCommentLike(Request $request)
     {
-        $liked = CommentLiked::query()->where('comment_id', $request->comment_id)->where('user_id', auth()->id())->first();
+        $comment = Comment::find($request->comment_id);
+        
+        // Authorization check - ensure user can like this comment
+        if (!$comment) {
+            return response()->json([
+                'error'     => 1,
+                'message'   => 'Comment not found',
+            ], 404);
+        }
+        
+        $post = Post::find($comment->post_id);
+        if (!$post || ($post->user_id !== $request->user()->id && !$post->published)) {
+            return response()->json([
+                'error'     => 1,
+                'message'   => 'You do not have permission to like this comment',
+            ], 403);
+        }
+        
+        $liked = CommentLiked::query()->where('comment_id', $request->comment_id)->where('user_id', $request->user()->id)->first();
 
         if(!$liked) {
             $commentLiked = CommentLiked::query()->create([
                 'comment_id' => $request->comment_id,
-                'user_id' => auth()->id()
+                'user_id' => $request->user()->id
             ]);
 
             $comment = Comment::query()->find($request->comment_id);
-            if($comment->user_id != auth()->id()) {
-                Notification::send($comment?->user, new NewCommentLike($comment, User::find(auth()->id())));
+            if($comment->user_id != $request->user()->id) {
+                Notification::send($comment?->user, new NewCommentLike($comment, User::find($request->user()->id)));
             }
 
             // Invalidate cache for the post (double safety with observer)
@@ -317,14 +405,31 @@ class PostController extends Controller
 
     public function unlikeComment(Request $request)
     {
-        $comment = CommentLiked::query()->where('comment_id', $request->comment_id)->where('user_id', auth()->id())->first();
+        $comment = Comment::query()->find($request->comment_id);
         
-        if ($comment) {
-            $commentModel = Comment::query()->find($request->comment_id);
-            CommentLiked::query()->where('comment_id', $request->comment_id)->where('user_id', auth()->id())->delete();
+        // Authorization check - ensure user can unlike this comment
+        if (!$comment) {
+            return response()->json([
+                'error'     => 1,
+                'message'   => 'Comment not found',
+            ], 404);
+        }
+        
+        $post = Post::find($comment->post_id);
+        if (!$post || ($post->user_id !== $request->user()->id && !$post->published)) {
+            return response()->json([
+                'error'     => 1,
+                'message'   => 'You do not have permission to unlike this comment',
+            ], 403);
+        }
+        
+        $commentLiked = CommentLiked::query()->where('comment_id', $request->comment_id)->where('user_id', $request->user()->id)->first();
+        
+        if ($commentLiked) {
+            CommentLiked::query()->where('comment_id', $request->comment_id)->where('user_id', $request->user()->id)->delete();
 
             // Invalidate cache for the post (double safety with observer)
-            $this->postCacheService->invalidatePostCache($commentModel->post_id);
+            $this->postCacheService->invalidatePostCache($comment->post_id);
         }
 
         return response()->json([
@@ -336,6 +441,15 @@ class PostController extends Controller
     public function repost(Request $request, Repost $repost)
     {
         try {
+        // Authorization check - ensure user can repost this post
+        $post = Post::find($request->post_id);
+        if (!$post || ($post->user_id !== $request->user()->id && !$post->published)) {
+                return response()->json([
+                    'error'     => 1,
+                    'message'   => 'You do not have permission to repost this post',
+                ], 403);
+            }
+            
             $repostResult = $repost->handle($request->user()->id, $request);
             return response()->json([
                 'error'     => 0,
@@ -362,6 +476,11 @@ class PostController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->where('user_id', $request->user_id)
                 ->with(['author', 'media']);
+
+            // Authorization check - users can only see their own posts or published posts from other users
+            if ($request->user_id !== $request->user()->id) {
+                $query->where('published', true);
+            }
 
             if($request->user()->hasRole('public_user')) {
                 $query->where('type', 'public');
@@ -414,27 +533,28 @@ class PostController extends Controller
                     'message' => 'Comment not found',
                 ], 404);
             }
-            if($request->user()->id === $comment->user_id) {
-
-                $comment->getMedia()->each(function ($media) {
-                    $media->delete();
-                });
-                $comment->delete();
-                DB::commit();
-                
-                // Invalidate cache for specific post (double safety with observer)
-                $this->postCacheService->invalidatePostCache($comment->post_id);
-                
+            
+            // Authorization check - ensure user owns the comment
+            if($request->user()->id !== $comment->user_id) {
                 return response()->json([
-                    'error' => 0,
-                    'message' => 'Comment has been deleted'
-                ], 202);
+                    'error' => 1,
+                    'message' => 'You do not have permission to delete this comment',
+                ], 403);
             }
 
+            $comment->getMedia()->each(function ($media) {
+                $media->delete();
+            });
+            $comment->delete();
+            DB::commit();
+            
+            // Invalidate cache for specific post (double safety with observer)
+            $this->postCacheService->invalidatePostCache($comment->post_id);
+            
             return response()->json([
                 'error' => 0,
-                'message' => "You don't have permission to delete this comment"
-            ], 200);
+                'message' => 'Comment has been deleted'
+            ], 202);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
@@ -477,7 +597,14 @@ class PostController extends Controller
             }
 
             $post = Post::find($media->model_id);
-            Gate::authorize('modify', $post);
+            
+            // Authorization check - ensure user owns the post
+            if (!$post || $post->user_id !== $request->user()->id) {
+                return response()->json([
+                    'error' => 1,
+                    'message' => 'You do not have permission to delete media from this post',
+                ], 403);
+            }
 
             $media->delete();
 

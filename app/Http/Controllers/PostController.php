@@ -42,7 +42,11 @@ class PostController extends Controller
                     $query->whereIn('name', ['admin', 'user']);
                 })
                 ->orderBy('created_at', 'desc')
-                ->published();
+                ->where(function ($query) {
+                    // Users can see their own posts or published posts from others
+                    $query->where('user_id', auth()->id())
+                          ->orWhere('published', true);
+                });
 
 
             if ($request->has('type')) {
@@ -72,10 +76,15 @@ class PostController extends Controller
             ->whereHas('author.roles', function ($query) {
                 $query->whereIn('name', ['admin', 'user']);
             })
-            ->orderBy('created_at', 'desc')
-            ->published()
             ->where('id', $id)
             ->first();
+            
+        // Authorization check - ensure user can view this post
+        if (!$post || ($post->user_id !== auth()->id() && !$post->published)) {
+            return response()->json([
+                'error' => 'You do not have permission to view this post'
+            ], 403);
+        }
 
         return response()->json($post);
     }
@@ -90,7 +99,11 @@ class PostController extends Controller
             ->whereHas('author.roles', function ($query) {
                 $query->whereIn('name', ['admin', 'user']);
             })
-            ->published()
+            ->where(function ($query) {
+                // Users can see their own posts or published posts from others
+                $query->where('user_id', auth()->id())
+                      ->orWhere('published', true);
+            })
             ->with(['author', 'media'])
             ->orderBy('created_at', 'desc')
             ->paginate(10)
@@ -141,6 +154,12 @@ class PostController extends Controller
     {
         try {
             $post = Post::query()->find($id);
+            
+            // Authorization check - ensure user owns the post
+            if (!$post || $post->user_id !== auth()->id()) {
+                return redirect()->back()->withErrors(['error' => 'You do not have permission to update this post.']);
+            }
+            
             if ($request->post('files')) {
                 $requestMediaId = collect($request->post('files'))->map(function ($file) {
                     return $file['id'];
@@ -192,6 +211,14 @@ class PostController extends Controller
     public function share(Request $request, Repost $repost)
     {
         try {
+            // Authorization check - ensure user can repost this post
+            $post = Post::find($request->post_id);
+            if (!$post || ($post->user_id !== auth()->id() && !$post->published)) {
+                return response()->json([
+                    'error' => 'You do not have permission to repost this post'
+                ], 403);
+            }
+            
             $repostResult = $repost->handle(auth()->id(), $request);
             
             // Invalidate cache for the post type if repost is successful
@@ -215,11 +242,15 @@ class PostController extends Controller
             ->whereHas('author.roles', function ($query) {
                 $query->whereIn('name', ['admin', 'user']);
             })
-            ->published()
             ->first();
 
         if (!$post) {
             return redirect()->route('post.index')->with('error', 'Post not found.');
+        }
+        
+        // Authorization check - ensure user can view this post
+        if ($post->user_id !== auth()->id() && !$post->published) {
+            return redirect()->route('post.index')->with('error', 'You do not have permission to view this post.');
         }
 
         return Inertia::render('Posts/Show', compact('post'));
@@ -227,6 +258,16 @@ class PostController extends Controller
 
     public function edit($id)
     {
+        $post = Post::query()
+            ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media', 'repost.tags')
+            ->where('id', $id)
+            ->first();
+            
+        // Authorization check - ensure user owns the post
+        if (!$post || $post->user_id !== auth()->id()) {
+            return redirect()->route('post.index')->withErrors(['error' => 'You do not have permission to edit this post.']);
+        }
+        
         $defaultType = 'st';
         $title = 'Edit Post';
         $stUsers = User::query()->select('id', 'name')->whereHas('roles', function ($query) {
@@ -235,10 +276,6 @@ class PostController extends Controller
             ->where('is_active', true)
             ->whereNotNull('email_verified_at')
             ->get();
-        $post = Post::query()
-            ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media', 'repost.tags')
-            ->where('id', $id)
-            ->first();
 
         return Inertia::render('Posts/Form', compact('post', 'defaultType', 'stUsers', 'title'));
     }
@@ -255,7 +292,11 @@ class PostController extends Controller
                 ->where('comment_count', '>', 0)
                 ->where('like_count', '>', 0)
                 ->orderBy(DB::raw('comment_count + like_count'), 'desc')
-                ->published();
+                ->where(function ($query) {
+                    // Users can see their own posts or published posts from others
+                    $query->where('user_id', auth()->id())
+                          ->orWhere('published', true);
+                });
 
             return $query->simplePaginate(30)->withQueryString();
         });
@@ -275,7 +316,11 @@ class PostController extends Controller
             ->whereHas('likes', function ($query) {
                 $query->where('user_id', auth()->id());
             })
-            ->published()
+            ->where(function ($query) {
+                // Users can see their own posts or published posts from others
+                $query->where('user_id', auth()->id())
+                      ->orWhere('published', true);
+            })
             ->simplePaginate(30);
 
         return response()->json($posts);
@@ -289,7 +334,7 @@ class PostController extends Controller
                 $query->whereIn('name', ['admin', 'user']);
             })
             ->orderBy('created_at', 'desc')
-            ->where('user_id', auth()->id())
+            ->where('user_id', auth()->id()) // Only show user's own posts
             ->simplePaginate(30);
 
         return response()->json($posts);
@@ -303,8 +348,7 @@ class PostController extends Controller
                 $query->whereIn('name', ['admin', 'user']);
             })
             ->orderBy('created_at', 'desc')
-            ->where('user_id', auth()->id())
-            ->published()
+            ->where('user_id', auth()->id()) // Only show user's own posts
             ->simplePaginate(30);
 
         return response()->json($posts);
@@ -319,9 +363,16 @@ class PostController extends Controller
                 $query->whereIn('name', ['admin', 'user']);
             })
             ->orderBy('created_at', 'desc')
-            ->where('user_id', $user_id)
-            ->orWhereHas('tags', function ($query) use ($user_id) {
-                $query->where('user_id', $user_id);
+            ->where(function ($query) use ($user_id) {
+                $query->where('user_id', $user_id)
+                      ->orWhereHas('tags', function ($tagQuery) use ($user_id) {
+                          $tagQuery->where('user_id', $user_id);
+                      });
+            })
+            ->where(function ($query) use ($user_id) {
+                // Users can see their own posts or published posts from others
+                $query->where('user_id', $user_id)
+                      ->orWhere('published', true);
             })
             ->simplePaginate(30);
 
@@ -330,6 +381,15 @@ class PostController extends Controller
 
     public function getTaggedUser($postId)
     {
+        $post = Post::find($postId);
+        
+        // Authorization check - ensure user can view tagged users for this post
+        if (!$post || ($post->user_id !== auth()->id() && !$post->published)) {
+            return response()->json([
+                'error' => 'You do not have permission to view tagged users for this post'
+            ], 403);
+        }
+        
         $user = User::query()
             ->whereHas('tags', function ($query) use ($postId) {
                 $query->where('post_id', $postId);
@@ -342,7 +402,7 @@ class PostController extends Controller
                     'email' => $user->email,
                     'avatar' => $user->avatar
                 ];
-            });;
+            });
 
         return response()->json($user);
     }
@@ -350,17 +410,21 @@ class PostController extends Controller
     public function destroy($id)
     {
         $post = Post::query()->find($id);
-        if ($post) {
-            $postType = $post->type; // Store type before deletion
-            
-            $post->comments()?->delete();
-            $post->likes()?->delete();
-            $post->delete();
-            
-            // Invalidate cache for the post type
-            $this->postCacheService->clearCache($postType);
+        
+        // Authorization check - ensure user owns the post
+        if (!$post || $post->user_id !== auth()->id()) {
+            return redirect()->back()->withErrors(['error' => 'You do not have permission to delete this post.']);
         }
+        
+        $postType = $post->type; // Store type before deletion
+        
+        $post->comments()?->delete();
+        $post->likes()?->delete();
+        $post->delete();
+        
+        // Invalidate cache for the post type
+        $this->postCacheService->clearCache($postType);
 
-        redirect()->back();
+        return redirect()->back()->with('success', 'Post has been deleted successfully.');
     }
 }
