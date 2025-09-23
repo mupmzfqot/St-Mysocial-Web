@@ -411,8 +411,8 @@ class PostController extends Controller
     {
         $post = Post::query()->find($id);
         
-        // Authorization check - ensure user owns the post
-        if (!$post || $post->user_id !== auth()->id()) {
+        // Authorization check - ensure user owns the post OR is admin
+        if (!$post || ($post->user_id !== auth()->id() && !auth()->user()->hasRole('admin'))) {
             return redirect()->back()->withErrors(['error' => 'You do not have permission to delete this post.']);
         }
         

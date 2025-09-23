@@ -15,12 +15,17 @@ const props = defineProps({
 
 const search = ref(props.searchTerm);
 const confirmData = reactive({
-    confirmId: ''
+    id: '',
+    message: '',
+    url: ''
 })
 const deletePost = (id) => {
     confirmData.id = id;
     confirmData.message = `Do you want to remove this post?`;
     confirmData.url = route('post.delete', id);
+    
+    // Trigger the dialog to show
+    HSOverlay.open('#confirm-dialog');
 }
 
 watch(
@@ -202,7 +207,7 @@ const styledTag = (value) => {
                                                    </Link>
                                                </div>
                                                 <div class="first:pt-0 last:pb-0">
-                                                    <a href="#" @click="deletePost(post.id)" class="flex items-center gap-x-3 py-2 px-3 rounded-lg text-sm text-red-600 hover:bg-gray-100 focus:ring-2 focus:ring-blue-500 dark:text-red-500 dark:hover:bg-neutral-700 dark:hover:text-neutral-300" aria-haspopup="dialog" aria-expanded="false" aria-controls="hs-scale-animation-modal" data-hs-overlay="#confirm-dialog">
+                                                    <a href="#" @click.prevent="deletePost(post.id)" class="flex items-center gap-x-3 py-2 px-3 rounded-lg text-sm text-red-600 hover:bg-gray-100 focus:ring-2 focus:ring-blue-500 dark:text-red-500 dark:hover:bg-neutral-700 dark:hover:text-neutral-300" aria-haspopup="dialog" aria-expanded="false" aria-controls="hs-scale-animation-modal" data-hs-overlay="#confirm-dialog">
                                                         Remove
                                                     </a>
                                                 </div>
