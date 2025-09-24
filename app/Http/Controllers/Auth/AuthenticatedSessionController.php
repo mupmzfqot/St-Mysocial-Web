@@ -32,6 +32,7 @@ class AuthenticatedSessionController extends Controller
         return Inertia::render('Auth/Login', [
             'canResetPassword' => Route::has('password.request'),
             'status' => session('status'),
+            'message' => session('message'),
             'captchaSrc' => captcha_src(),
         ]);
     }
@@ -44,18 +45,52 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
         $request->session()->regenerate();
 
-        $verified_at = auth()->user()->email_verified_at;
+        $user = auth()->user();
+
+        // Check if there's pending email verification
+        if (session()->has('pending_email_verification')) {
+            $verificationData = session('pending_email_verification');
+            
+            // Verify the user matches the pending verification
+            if ($verificationData['user_id'] == $user->id) {
+                // Verify the hash matches the user's email
+                if (hash_equals($verificationData['hash'], sha1($user->email))) {
+                    // Mark email as verified and activate user
+                    if ($user->markEmailAsVerified()) {
+                        $user->update(['is_active' => true]);
+                        event(new \Illuminate\Auth\Events\Verified($user));
+                    }
+                    
+                    // Clear the pending verification from session
+                    session()->forget('pending_email_verification');
+                    
+                    // Check if this is first login (last_login is null)
+                    if (is_null($user->last_login)) {
+                        // Update login status but don't set last_login yet
+                        $user->update(['is_login' => 1]);
+                        return redirect()->route('change-password.index');
+                    }
+                    
+                    // Update login status
+                    $user->update(['is_login' => 1, 'last_login' => now()]);
+                    
+                    return redirect()->intended(route('homepage', absolute: false).'?verified=1');
+                }
+            }
+        }
+
+        $verified_at = $user->email_verified_at;
         $isSameDay = false;
         if ($verified_at && Carbon::parse($verified_at)->isSameDay(Carbon::now())) {
             $isSameDay = true;
         }
 
-        if (is_null(auth()->user()->last_login) && $isSameDay === false) {
+        if (is_null($user->last_login) && $isSameDay === false) {
             return redirect()->route('change-password.index');
         }
 
-        auth()->user()->update(['is_login' => 1, 'last_login' => now()]);
-        $role = auth()->user()->getRoleNames()->first();
+        $user->update(['is_login' => 1, 'last_login' => now()]);
+        $role = $user->getRoleNames()->first();
 
         $redirectRoutes = [
             'admin' => 'dashboard',

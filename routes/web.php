@@ -25,8 +25,8 @@ Route::get('stream-video/{filename}', [VideoStreamingController::class, 'streamV
 
 
 
-Route::middleware(['auth', 'verified', 'role:user|public_user'])->group(function () {
-    Route::get('/home', [HomeController::class, 'index'])->name('homepage')->middleware('role:user');
+Route::middleware(['auth', 'verified', 'role:user'])->group(function () {
+    Route::get('/home', [HomeController::class, 'index'])->name('homepage');
     Route::get('/public', [HomeController::class, 'publicPost'])->name('public');
     Route::get('/posts', [HomeController::class, 'createPost'])->name('create-post');
     Route::get('/my-posts', [HomeController::class, 'showMyPosts'])->name('my-posts');
