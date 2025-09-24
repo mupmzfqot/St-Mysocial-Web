@@ -159,9 +159,24 @@ class UserController extends Controller
     public function registrationSuccess()
     {
         if (auth()->user()) {
-            $message = (auth()->user()->hasRole('user'))
-                ? 'We have successfully received your registration. To complete your registration, please go to your email and confirm it by clicking the link in the message.'
-                : null;
+            $user = auth()->user();
+            $generatedPassword = session('generated_random_password');
+            
+            if ($user->hasRole('user')) {
+                if ($generatedPassword) {
+                    $message = 'We have successfully received your registration. A generated password and email verification link have been sent to your email. Please check your email and click the verification link to complete your registration.';
+                } else {
+                    $message = 'We have successfully received your registration. To complete your registration, please go to your email and confirm it by clicking the link in the message.';
+                }
+            } else {
+                $message = $generatedPassword 
+                    ? 'We have successfully received your registration. A generated password has been sent to your email. Please wait for administrator approval.'
+                    : 'We have successfully received your registration. Please wait for administrator approval.';
+            }
+            
+            // Clear the generated password from session
+            session()->forget('generated_random_password');
+            
             Auth::logout();
             return Inertia::render('Users/RegisterSuccess', compact('message'));
         }

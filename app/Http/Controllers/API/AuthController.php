@@ -79,6 +79,7 @@ class AuthController extends Controller
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'gender' => $request->gender,
+                'last_login' => now(),
             ]);
 
             if($request->hasFile('profile_image')) {

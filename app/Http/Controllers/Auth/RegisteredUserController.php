@@ -7,6 +7,7 @@ use App\Http\Requests\RegistrationRequest;
 use App\Mail\RegistrationSuccess;
 use App\Models\User;
 use App\Notifications\NewRegisteredUserNotification;
+use App\Notifications\VerifyEmailWithPassword;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -35,33 +36,56 @@ class RegisteredUserController extends Controller
     {
         DB::beginTransaction();
         try {
-            $random_password = $this->generateStrongPassword();
+            // Check if password is provided or null/empty
+            $password = $request->password;
+            $random_password = null;
+            
+            if (empty($password)) {
+                // Generate random password if no password provided
+                $random_password = $this->generateStrongPassword();
+                $password = $random_password;
+            }
+
             $user = User::query()->create([
                 'name' => $request->name,
                 'username' => $request->username,
                 'email' => $request->email,
-                'password' => Hash::make($random_password),
+                'password' => Hash::make($password),
             ]);
-
-            session(['generated_random_password' => $random_password]);
 
             $domain = substr(strrchr($request->email, "@"), 1);
             if($domain === config('mail.st_user_email_domain')) {
-                event(new Registered($user));
-                $user->update(['is_active' => true]);
+                // For ST users, send email verification with password if generated
+                if ($random_password) {
+                    $user->notify(new VerifyEmailWithPassword($random_password));
+                } else {
+                    event(new Registered($user));
+                }
+                $user->update(['is_active' => false]); // Set to false until email verified
                 $user->assignRole('user');
             } else {
                 $user->assignRole('public_user');
 
-                dispatch(function () use ($user) {
-                    Mail::to($user->email)->send(new RegistrationSuccess($user));
+                // For public users, send registration success email
+                dispatch(function () use ($user, $random_password) {
+                    if ($random_password) {
+                        // Send email with generated password
+                        Mail::to($user->email)->send(new RegistrationSuccess($user, $random_password));
+                    } else {
+                        Mail::to($user->email)->send(new RegistrationSuccess($user));
+                    }
                 });
             }
 
             $admins = getUserAdmin();
-
             Notification::send($admins, new NewRegisteredUserNotification($user));
 
+            // Store generated password in session for success page
+            if ($random_password) {
+                session(['generated_random_password' => $random_password]);
+            }
+
+            // Always login and redirect to registration success page
             Auth::login($user);
             DB::commit();
             return redirect()->route('registration-success');
@@ -71,7 +95,6 @@ class RegisteredUserController extends Controller
 
             return redirect()->back()->withErrors(['message' => 'Registration failed. Please contact support.']);
         }
-
     }
 
     private function generateStrongPassword($length = 16) {

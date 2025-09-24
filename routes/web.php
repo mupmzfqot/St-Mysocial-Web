@@ -46,12 +46,16 @@ Route::middleware(['auth', 'verified', 'role:user'])->group(function () {
     });
 
     Route::get('st-user', [UserController::class, 'stIndex'])->name('st-user');
-    Route::get('change-password', [ChangePasswordController::class, 'index'])->name('change-password.index');
-    Route::post('change-password', [ChangePasswordController::class, 'store'])->name('change-password.store');
 });
 
 Route::get('registration-success', [UserController::class, 'registrationSuccess'])
     ->middleware('auth')->name('registration-success');
+
+// Change password routes (only require auth, not verification)
+Route::middleware(['auth'])->group(function () {
+    Route::get('change-password', [ChangePasswordController::class, 'index'])->name('change-password.index');
+    Route::post('change-password', [ChangePasswordController::class, 'store'])->name('change-password.store');
+});
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
