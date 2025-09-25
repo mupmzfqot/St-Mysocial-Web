@@ -115,4 +115,17 @@ return [
 
     'st_user_email_domain' => env('ST_USER_EMAIL_DOMAIN'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Email Verification TTL
+    |--------------------------------------------------------------------------
+    |
+    | This value determines how long (in hours) the email verification link
+    | will remain valid. You can set this via the VERIFY_EMAIL_TTL environment
+    | variable. Default is 24 hours.
+    |
+    */
+
+    'verify_email_ttl_hours' => env('VERIFY_EMAIL_TTL', 24),
+
 ];

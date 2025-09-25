@@ -31,7 +31,9 @@ class AuthenticatedSessionController extends Controller
         }
         return Inertia::render('Auth/Login', [
             'canResetPassword' => Route::has('password.request'),
-            'status' => session('status'),
+            'status' => session('status') === 'verification-link-sent' 
+                ? 'A new verification link has been sent to your email address. Please check your email and click the verification link to complete your registration.'
+                : session('status'),
             'message' => session('message'),
             'captchaSrc' => captcha_src(),
         ]);

@@ -7,7 +7,6 @@ use App\Http\Requests\RegistrationRequest;
 use App\Mail\RegistrationSuccess;
 use App\Models\User;
 use App\Notifications\NewRegisteredUserNotification;
-use App\Notifications\VerifyEmailWithPassword;
 use App\Services\EmailService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
@@ -37,35 +36,21 @@ class RegisteredUserController extends Controller
     {
         DB::beginTransaction();
         try {
-            // Check if password is provided or null/empty
-            $password = $request->password;
-            $random_password = null;
-            
-            if (empty($password)) {
-                // Generate random password if no password provided
-                $random_password = $this->generateStrongPassword();
-                $password = $random_password;
-            }
-
             $user = User::query()->create([
                 'name' => $request->name,
                 'username' => $request->username,
                 'email' => $request->email,
-                'password' => Hash::make($password),
+                'password' => Hash::make($request->password),
             ]);
 
             $domain = substr(strrchr($request->email, "@"), 1);
             if($domain === config('mail.st_user_email_domain')) {
-                // For ST users, send email verification with password if generated
-                if ($random_password) {
-                    try {
-                        $user->notify(new VerifyEmailWithPassword($random_password));
-                    } catch (\App\Exceptions\EmailSendingException $e) {
-                        DB::rollBack();
-                        return redirect()->back()->withErrors(['email' => $e->getMessage()]);
-                    }
-                } else {
+                // For ST users, send email verification
+                try {
                     event(new Registered($user));
+                } catch (\App\Exceptions\EmailSendingException $e) {
+                    DB::rollBack();
+                    return redirect()->back()->withErrors(['email' => $e->getMessage()]);
                 }
                 $user->update(['is_active' => false]); // Set to false until email verified
                 $user->assignRole('user');
@@ -74,12 +59,7 @@ class RegisteredUserController extends Controller
 
                 // For public users, send registration success email
                 try {
-                    if ($random_password) {
-                        // Send email with generated password
-                        EmailService::send($user->email, new RegistrationSuccess($user, $random_password));
-                    } else {
-                        EmailService::send($user->email, new RegistrationSuccess($user));
-                    }
+                    EmailService::send($user->email, new RegistrationSuccess($user));
                 } catch (\App\Exceptions\EmailSendingException $e) {
                     DB::rollBack();
                     return redirect()->back()->withErrors(['email' => $e->getMessage()]);
@@ -88,11 +68,6 @@ class RegisteredUserController extends Controller
 
             $admins = getUserAdmin();
             Notification::send($admins, new NewRegisteredUserNotification($user));
-
-            // Store generated password in session for success page
-            if ($random_password) {
-                session(['generated_random_password' => $random_password]);
-            }
 
             // Always login and redirect to registration success page
             Auth::login($user);
@@ -106,24 +81,4 @@ class RegisteredUserController extends Controller
         }
     }
 
-    private function generateStrongPassword($length = 16) {
-        $upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        $lower = 'abcdefghijklmnopqrstuvwxyz';
-        $numbers = '0123456789';
-        $symbols = '!@#$%^&*()-_=+[]{}<>?';
-    
-        $all = $upper . $lower . $numbers . $symbols;
-    
-        $password = '';
-        $password .= $upper[random_int(0, strlen($upper) - 1)];
-        $password .= $lower[random_int(0, strlen($lower) - 1)];
-        $password .= $numbers[random_int(0, strlen($numbers) - 1)];
-        $password .= $symbols[random_int(0, strlen($symbols) - 1)];
-    
-        for ($i = 4; $i < $length; $i++) {
-            $password .= $all[random_int(0, strlen($all) - 1)];
-        }
-    
-        return str_shuffle($password);
-    }
 }

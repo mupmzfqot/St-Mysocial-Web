@@ -28,7 +28,8 @@ class VerifyEmailController extends Controller
 
         // Check if URL is valid and not expired
         if (!URL::hasValidSignature($request)) {
-            return redirect()->route('login')->withErrors(['email' => 'Verification link has expired.']);
+            $ttlHours = config('mail.verify_email_ttl_hours', 24);
+            return redirect()->route('login')->withErrors(['email' => "Verification link has expired. Links are valid for {$ttlHours} hours. Please request a new verification email."]);
         }
 
         // If user is already verified, redirect to homepage
@@ -37,6 +38,10 @@ class VerifyEmailController extends Controller
             if (!Auth::check()) {
                 Auth::login($user);
             }
+            
+            // Update last_login when user accesses verification link
+            $user->update(['last_login' => now()]);
+            
             return redirect()->intended(route('homepage', absolute: false).'?verified=1');
         }
 

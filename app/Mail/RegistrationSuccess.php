@@ -17,7 +17,7 @@ class RegistrationSuccess extends Mailable
     /**
      * Create a new message instance.
      */
-    public function __construct(protected User $user, protected ?string $generatedPassword = null)
+    public function __construct(protected User $user)
     {
         //
     }
@@ -42,7 +42,6 @@ class RegistrationSuccess extends Mailable
             markdown: 'mail.registersuccess',
             with: [
                 'user' => $this->user,
-                'generatedPassword' => $this->generatedPassword,
             ]
         );
     }
