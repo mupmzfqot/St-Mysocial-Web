@@ -5,6 +5,7 @@ namespace App\Notifications;
 use Illuminate\Notifications\Notification;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
+use App\Services\EmailService;
 
 class VerifyEmailWithPassword extends Notification
 {
@@ -36,5 +37,18 @@ class VerifyEmailWithPassword extends Notification
             ->line('After verification, you will be redirected to login with your email and the generated password.')
             ->line('For security reasons, we recommend changing your password after your first login.')
             ->line('If you did not create an account, no further action is required.');
+    }
+
+    /**
+     * Send the notification using EmailService for better error handling
+     */
+    public function send($notifiable)
+    {
+        try {
+            EmailService::send($notifiable->email, $this->toMail($notifiable));
+        } catch (\App\Exceptions\EmailSendingException $e) {
+            // Re-throw as notification exception
+            throw new \Illuminate\Notifications\NotificationFailedException($e->getMessage());
+        }
     }
 }

@@ -8,6 +8,7 @@ use App\Mail\RegistrationSuccess;
 use App\Models\User;
 use App\Notifications\NewRegisteredUserNotification;
 use App\Notifications\VerifyEmailWithPassword;
+use App\Services\EmailService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -57,7 +58,12 @@ class RegisteredUserController extends Controller
             if($domain === config('mail.st_user_email_domain')) {
                 // For ST users, send email verification with password if generated
                 if ($random_password) {
-                    $user->notify(new VerifyEmailWithPassword($random_password));
+                    try {
+                        $user->notify(new VerifyEmailWithPassword($random_password));
+                    } catch (\App\Exceptions\EmailSendingException $e) {
+                        DB::rollBack();
+                        return redirect()->back()->withErrors(['email' => $e->getMessage()]);
+                    }
                 } else {
                     event(new Registered($user));
                 }
@@ -67,14 +73,17 @@ class RegisteredUserController extends Controller
                 $user->assignRole('public_user');
 
                 // For public users, send registration success email
-                dispatch(function () use ($user, $random_password) {
+                try {
                     if ($random_password) {
                         // Send email with generated password
-                        Mail::to($user->email)->send(new RegistrationSuccess($user, $random_password));
+                        EmailService::send($user->email, new RegistrationSuccess($user, $random_password));
                     } else {
-                        Mail::to($user->email)->send(new RegistrationSuccess($user));
+                        EmailService::send($user->email, new RegistrationSuccess($user));
                     }
-                });
+                } catch (\App\Exceptions\EmailSendingException $e) {
+                    DB::rollBack();
+                    return redirect()->back()->withErrors(['email' => $e->getMessage()]);
+                }
             }
 
             $admins = getUserAdmin();

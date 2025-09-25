@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\APILoginRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Services\EmailService;
 use Carbon\Carbon;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
@@ -90,10 +91,18 @@ class AuthController extends Controller
 
             $domain = substr(strrchr($request->email, "@"), 1);
             if($domain === config('mail.st_user_email_domain')) {
-                $user->sendEmailVerificationNotification();
-                $user->update(['is_active' => false]);
-                $user->assignRole('user');
-                $message = 'Your account has been created. Please verify your email address.';
+                try {
+                    $user->sendEmailVerificationNotification();
+                    $user->update(['is_active' => false]);
+                    $user->assignRole('user');
+                    $message = 'Your account has been created. Please verify your email address.';
+                } catch (\App\Exceptions\EmailSendingException $e) {
+                    return response()->json([
+                        'error' => 1,
+                        'message' => $e->getMessage(),
+                        'email' => $e->getEmail(),
+                    ], 400);
+                }
             } else {
                 $user->assignRole('public_user');
                 $message = 'Your account has been created. Please contact the administrator for activation.';
