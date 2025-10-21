@@ -163,7 +163,9 @@ class PostController extends Controller
     public function destroy(Request $request, Post $post)
     {
         try {
-            Gate::authorize('modify', $post);
+            if(!$request->user()->hasRole('admin')) {
+                Gate::authorize('modify', $post);
+            }
             $postType = $post->type; // Store type before deletion
             $post->delete();
 
@@ -171,12 +173,13 @@ class PostController extends Controller
             $this->postCacheService->clearCache($postType);
 
             return response()->json([
+                'error' => 0,
                 'message' => 'Post has been deleted',
-                'data' => null
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => $e->getMessage(),
+                'error' => 1,
+                'message' => $e->getMessage()
             ], 403);
         }
     }
