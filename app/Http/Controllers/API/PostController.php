@@ -163,25 +163,34 @@ class PostController extends Controller
     public function destroy(Request $request, Post $post)
     {
         try {
-            if(!$request->user()->hasRole('admin')) {
-                Gate::authorize('modify', $post);
-            }
-            $postType = $post->type; // Store type before deletion
+            // This one line checks for Admins (via before()) AND
+            // post owners (via delete()) automatically.
+            Gate::authorize('delete', $post);
+    
+            $postType = $post->type; 
             $post->delete();
-
-            // Invalidate cache for the post type (double safety with observer)
+    
+            // Invalidate cache
             $this->postCacheService->clearCache($postType);
-
+    
             return response()->json([
                 'error' => 0,
                 'message' => 'Post has been deleted',
             ]);
+    
+        } catch (AuthorizationException $e) {
+            return response()->json([
+                'error' => 1,
+                'message' => $e->getMessage() 
+            ], 403);
+    
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 1,
-                'message' => $e->getMessage()
-            ], 403);
+                'message' => 'An unexpected server error occurred.'
+            ], 500); 
         }
+        
     }
 
     public function topPosts(Request $request)
