@@ -160,6 +160,48 @@ class PostController extends Controller
 
     }
 
+    public function deletePost(Request $request, $post_id) 
+    {
+        try {
+            $post = Post::find($post_id);
+            
+            // Check if post exists
+            if (!$post) {
+                return response()->json([
+                    'error' => 1,
+                    'message' => 'Post not found',
+                ], 404);
+            }
+            
+            // This one line checks for Admins (via before()) AND
+            // post owners (via delete()) automatically.
+            Gate::authorize('delete', $post);
+    
+            $postType = $post->type; 
+            $post->delete();
+    
+            // Invalidate cache
+            $this->postCacheService->clearCache($postType);
+    
+            return response()->json([
+                'error' => 0,
+                'message' => 'Post has been deleted',
+            ]);
+    
+        } catch (AuthorizationException $e) {
+            return response()->json([
+                'error' => 1,
+                'message' => $e->getMessage() 
+            ], 403);
+    
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 1,
+                'message' => 'An unexpected server error occurred.'
+            ], 500); 
+        }
+    }
+
     public function destroy(Request $request, Post $post)
     {
         try {
