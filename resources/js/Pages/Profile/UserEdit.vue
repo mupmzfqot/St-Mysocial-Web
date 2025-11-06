@@ -1,5 +1,6 @@
 <script setup>
 import DeleteUserForm from './Partials/DeleteUserForm.vue';
+import RequestAccountDeletionForm from './Partials/RequestAccountDeletionForm.vue';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm.vue';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm.vue';
 import {Head, usePage} from '@inertiajs/vue3';
@@ -19,6 +20,10 @@ defineProps({
     totalPosts: 0,
     totalLikes: 0,
     totalComments: 0,
+    deletionStatus: {
+        type: Object,
+        default: null
+    },
 });
 
 const { user: user } = usePage().props.auth;
@@ -142,6 +147,10 @@ const showCoverCropper = ref(false);
 
                 <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
                     <UpdatePasswordForm class="max-w-xl" />
+                </div>
+
+                <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
+                    <RequestAccountDeletionForm :deletion-status="deletionStatus" class="max-w-xl" />
                 </div>
 
             </div>

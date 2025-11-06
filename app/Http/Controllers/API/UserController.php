@@ -8,6 +8,8 @@ use App\Http\Resources\MediaResource;
 use App\Http\Resources\UserResource;
 use App\Models\Post;
 use App\Models\User;
+use App\Models\UserBlock;
+use App\Traits\HasBlockedUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +17,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class UserController extends Controller
 {
+    use HasBlockedUsers;
     /**
      * Display a listing of the resource.
      */
@@ -28,12 +31,17 @@ class UserController extends Controller
     public function searchUser(Request $request)
     {
         $searchTerm = $request->search;
+        $blockedUserIds = $this->getBlockedUserIds($request->user()->id);
+        
         $users = User::query()
             ->when($searchTerm, function ($query, $searchTerm) {
                 $query->where('name', 'like', '%' . $searchTerm . '%');
             })
             ->exceptId($request->user()->id)
             ->isActive()
+            ->when(!empty($blockedUserIds), function($query) use ($blockedUserIds) {
+                $query->whereNotIn('id', $blockedUserIds);
+            })
             ->orderBy('name', 'asc')
             ->paginate(20);
 
@@ -51,6 +59,8 @@ class UserController extends Controller
         $cacheDuration = now()->addMinutes(1);
 
         return \Cache::remember($cacheKey, $cacheDuration, function() use ($authId, $searchTerm) {
+            $blockedUserIds = $this->getBlockedUserIds($authId);
+            
             $query = User::query()
                 ->when($searchTerm, function ($query, $searchTerm) {
                     $query->where(function ($q) use ($searchTerm) {
@@ -65,6 +75,9 @@ class UserController extends Controller
                 ->whereNotNull('email_verified_at')
                 ->isActive()
                 ->where('id', '!=', $authId)
+                ->when(!empty($blockedUserIds), function($query) use ($blockedUserIds) {
+                    $query->whereNotIn('id', $blockedUserIds);
+                })
                 ->get();
 
             return response()->json([

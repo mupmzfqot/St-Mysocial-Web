@@ -2,11 +2,15 @@
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 use App\Events\NewMessage;
 use App\Events\MessageSent;
 use App\Models\Message;
 use App\Models\Conversation;
 use App\Models\User;
+
+// Schedule account deletion processing daily
+Schedule::command('accounts:process-deletions')->daily();
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());

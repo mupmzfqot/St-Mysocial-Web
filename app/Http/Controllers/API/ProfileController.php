@@ -7,6 +7,7 @@ use App\Http\Resources\PostResource;
 use App\Http\Resources\UserResource;
 use App\Models\Post;
 use App\Models\User;
+use App\Services\AccountDeletionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -16,6 +17,12 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class ProfileController extends Controller
 {
+    protected $deletionService;
+
+    public function __construct(AccountDeletionService $deletionService)
+    {
+        $this->deletionService = $deletionService;
+    }
     public function index(Request $request)
     {
         return response()->json([
@@ -198,6 +205,112 @@ class ProfileController extends Controller
                 'error' => 1,
                 'message' => $e->getMessage()
             ]);
+        }
+    }
+
+    public function requestDeletion(Request $request)
+    {
+        try {
+            $request->validate([
+                'password' => 'required',
+                'reason' => 'nullable|string|max:500'
+            ]);
+
+            $user = $request->user();
+            
+            // Verify password
+            if (!Hash::check($request->password, $user->password)) {
+                return response()->json([
+                    'error' => 1,
+                    'message' => 'Password tidak sesuai'
+                ], 400);
+            }
+
+            // Check if already requested
+            if ($user->isDeletionRequested()) {
+                return response()->json([
+                    'error' => 1,
+                    'message' => 'Account deletion sudah pernah diminta sebelumnya'
+                ], 400);
+            }
+
+            $success = $this->deletionService->requestDeletion($user, $request->reason);
+
+            if ($success) {
+                return response()->json([
+                    'error' => 0,
+                    'message' => 'Account deletion requested. You have 30 days to reactivate.',
+                    'scheduled_deletion_at' => $user->fresh()->scheduled_deletion_at?->toISOString()
+                ]);
+            }
+
+            return response()->json([
+                'error' => 1,
+                'message' => 'Failed to request account deletion'
+            ], 500);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 1,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function cancelDeletion(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            if (!$user->isDeletionRequested()) {
+                return response()->json([
+                    'error' => 1,
+                    'message' => 'No active deletion request found'
+                ], 400);
+            }
+
+            $success = $this->deletionService->reactivateAccount($user);
+
+            if ($success) {
+                return response()->json([
+                    'error' => 0,
+                    'message' => 'Account reactivated successfully. All your data has been restored.'
+                ]);
+            }
+
+            return response()->json([
+                'error' => 1,
+                'message' => 'Failed to reactivate account'
+            ], 500);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 1,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getDeletionStatus(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            return response()->json([
+                'error' => 0,
+                'data' => [
+                    'account_status' => $user->account_status,
+                    'deletion_requested_at' => $user->deletion_requested_at?->toISOString(),
+                    'scheduled_deletion_at' => $user->scheduled_deletion_at?->toISOString(),
+                    'days_remaining' => $user->scheduled_deletion_at ? now()->diffInDays($user->scheduled_deletion_at, false) : null,
+                    'can_reactivate' => $user->canReactivate(),
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 1,
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 }

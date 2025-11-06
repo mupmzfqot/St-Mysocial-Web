@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\APILoginRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Services\AccountDeletionService;
 use App\Services\EmailService;
 use Carbon\Carbon;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
@@ -18,6 +20,13 @@ use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
+    protected $deletionService;
+
+    public function __construct(AccountDeletionService $deletionService)
+    {
+        $this->deletionService = $deletionService;
+    }
+
     public function login(APILoginRequest $request)
     {
         $request->validated([
@@ -32,6 +41,20 @@ class AuthController extends Controller
                 'error'     => 1,
                 'message'   => 'The provided credentials are incorrect.',
             ], 401);
+        }
+
+        // Auto reactivate if deletion was requested
+        if ($user->isDeletionRequested() && $user->canReactivate()) {
+            try {
+                $this->deletionService->reactivateAccount($user);
+                $user->refresh();
+            } catch (\Exception $e) {
+                // Log error but continue with login
+                \Log::error('Failed to auto reactivate account during login', [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
         }
 
         if (is_null($user->email_verified_at) || !$user->is_active) {

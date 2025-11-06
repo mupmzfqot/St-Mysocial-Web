@@ -1,10 +1,12 @@
 <?php
 
 use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\BlockController;
 use App\Http\Controllers\API\MessageController;
 use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\PostController;
 use App\Http\Controllers\API\ProfileController;
+use App\Http\Controllers\API\ReportController;
 use App\Http\Controllers\API\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -27,6 +29,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('update-profile-cover', [ProfileController::class, 'updateProfileCover']);
     Route::get('my-posts', [ProfileController::class, 'getPosts']);
     Route::get('liked-posts', [ProfileController::class, 'likedPosts']);
+    
+    // Account deletion routes
+    Route::post('profile/request-deletion', [ProfileController::class, 'requestDeletion']);
+    Route::post('profile/cancel-deletion', [ProfileController::class, 'cancelDeletion']);
+    Route::get('profile/deletion-status', [ProfileController::class, 'getDeletionStatus']);
 
     Route::get('top-posts', [PostController::class, 'topPosts']);
     Route::post('posts/comment', [PostController::class, 'storeComments']);
@@ -99,6 +106,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/get', [NotificationController::class, 'index']);
         Route::post('/markasread', [NotificationController::class, 'markAsRead']);
     });
+
+    // Block user routes
+    Route::post('users/{user_id}/block', [BlockController::class, 'blockUser']);
+    Route::post('users/{user_id}/unblock', [BlockController::class, 'unblockUser']);
+    Route::get('users/blocked', [BlockController::class, 'getBlockedUsers']);
+
+    // Report routes
+    Route::post('reports/user/{user_id}', [ReportController::class, 'reportUser']);
+    Route::post('reports/post/{post_id}', [ReportController::class, 'reportPost']);
+    Route::get('reports/my-reports', [ReportController::class, 'myReports']);
 });
 
 // WebSocket test route

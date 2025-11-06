@@ -1,6 +1,6 @@
     <script setup>
 
-import {CheckCircle, Heart, MessageSquareText, MinusCircle, XCircle, Repeat2, EllipsisVertical, PencilLine} from "lucide-vue-next";
+import {CheckCircle, Heart, MessageSquareText, MinusCircle, XCircle, Repeat2, EllipsisVertical, PencilLine, AlertTriangle} from "lucide-vue-next";
 import PostMedia from "@/Components/PostMedia.vue";
 import {Link, router, usePage} from "@inertiajs/vue3";
 import {onMounted, ref} from "vue";
@@ -24,6 +24,17 @@ const props = defineProps({
 
 onMounted(() => {
     window.HSStaticMethods.autoInit();
+    
+    // Check if post is already reported (if content has is_reported property)
+    const postId = props.content?.id;
+    if (postId && props.content?.is_reported) {
+        reportedPosts.value.add(postId);
+    }
+    // Also check for repost
+    const repostId = props.content?.repost?.id;
+    if (repostId && props.content?.repost?.is_reported) {
+        reportedPosts.value.add(repostId);
+    }
 })
 
 const likedByUsers = ref([]);
@@ -104,6 +115,14 @@ const showShareModal = ref(false);
 const sharePostId = ref(null);
 const shareContent = ref('');
 
+const showReportModal = ref(false);
+const reportPostId = ref(null);
+const reportReason = ref('');
+const reportDescription = ref('');
+const reportError = ref('');
+const reportSuccess = ref(false);
+const reportedPosts = ref(new Set()); // Store reported post IDs
+
 const openShareModal = (postId) => {
     sharePostId.value = postId;
     showShareModal.value = true;
@@ -120,6 +139,93 @@ const submitShare = () => {
         emit('reload-posts');
     })
 };
+
+const openReportModal = (postId) => {
+    // Don't open modal if already reported
+    if (reportedPosts.value.has(postId)) {
+        return;
+    }
+    reportPostId.value = postId;
+    reportReason.value = '';
+    reportDescription.value = '';
+    reportError.value = '';
+    reportSuccess.value = false;
+    showReportModal.value = true;
+};
+
+const isPostReported = (postId) => {
+    if (!postId) return false;
+    // Check in reportedPosts Set
+    if (reportedPosts.value.has(postId)) {
+        return true;
+    }
+    // Also check from props if available
+    if (postId === props.content?.id && props.content?.is_reported) {
+        return true;
+    }
+    if (postId === props.content?.repost?.id && props.content?.repost?.is_reported) {
+        return true;
+    }
+    return false;
+};
+
+const submitReport = () => {
+    if (!reportReason.value) {
+        reportError.value = 'Please select a reason for reporting this post.';
+        return;
+    }
+
+    reportError.value = '';
+    reportSuccess.value = false;
+
+    router.post(route('user-management.report-post', reportPostId.value), {
+        reason: reportReason.value,
+        description: reportDescription.value || null
+    }, {
+        preserveScroll: true,
+        onSuccess: (page) => {
+            reportSuccess.value = true;
+            // Mark post as reported
+            if (reportPostId.value) {
+                reportedPosts.value.add(reportPostId.value);
+                // Force reactivity update
+                reportedPosts.value = new Set(reportedPosts.value);
+            }
+            setTimeout(() => {
+                closeReportModal();
+            }, 2000);
+        },
+        onError: (errors) => {
+            if (errors.error) {
+                reportError.value = errors.error;
+            } else if (errors.reason) {
+                reportError.value = errors.reason[0];
+            } else if (errors.description) {
+                reportError.value = errors.description[0];
+            } else {
+                reportError.value = 'Failed to submit report. Please try again.';
+            }
+        }
+    });
+};
+
+const closeReportModal = () => {
+    showReportModal.value = false;
+    reportPostId.value = null;
+    reportReason.value = '';
+    reportDescription.value = '';
+    reportError.value = '';
+    reportSuccess.value = false;
+};
+
+const reportReasons = [
+    { value: 'spam', label: 'Spam' },
+    { value: 'harassment', label: 'Harassment' },
+    { value: 'inappropriate_content', label: 'Inappropriate Content' },
+    { value: 'fake_account', label: 'Fake Account' },
+    { value: 'copyright_violation', label: 'Copyright Violation' },
+    { value: 'other', label: 'Other' }
+];
 
 const refreshComments = () => {
     if (postDetails.value) {
@@ -414,6 +520,19 @@ const handleLinkClick = (event) => {
         <a @click.prevent="openShareModal(content.repost ? content.repost.id : content.id)" class="inline-flex items-center gap-x-2 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600" href="#">
             <Repeat2 class="shrink-0 size-5 text-gray-800" />
             Share
+        </a>
+
+        <a v-if="$page.props.auth.user.id !== content.user_id" 
+           @click.prevent="isPostReported(content.repost ? content.repost.id : content.id) ? null : openReportModal(content.repost ? content.repost.id : content.id)" 
+           :class="[
+               'inline-flex items-center gap-x-2 text-sm rounded-lg border border-transparent',
+               isPostReported(content.repost ? content.repost.id : content.id) 
+                   ? 'text-gray-500 cursor-default dark:text-gray-400' 
+                   : 'text-neutral-600 hover:text-red-700 focus:outline-none focus:text-red-700 disabled:opacity-50 disabled:pointer-events-none dark:text-red-500 dark:hover:text-red-600 dark:focus:text-red-600'
+           ]" 
+           href="#">
+            <AlertTriangle class="shrink-0 size-5" :class="isPostReported(content.repost ? content.repost.id : content.id) ? 'text-gray-500 dark:text-gray-400' : 'text-gray-800'" />
+            {{ isPostReported(content.repost ? content.repost.id : content.id) ? 'Reported' : 'Report' }}
         </a>
     </div>
 
@@ -714,6 +833,115 @@ const handleLinkClick = (event) => {
         </Dialog>
     </TransitionRoot>
 
+    <!-- Report Post Modal -->
+    <TransitionRoot appear :show="showReportModal" as="template" style="position: absolute; z-index: 9999">
+        <Dialog as="div" @close="closeReportModal" class="relative">
+            <TransitionChild
+                as="template"
+                enter="duration-300 ease-out"
+                enter-from="opacity-0"
+                enter-to="opacity-100"
+                leave="duration-200 ease-in"
+                leave-from="opacity-100"
+                leave-to="opacity-0"
+            >
+                <div class="fixed inset-0 bg-black/25" />
+            </TransitionChild>
+
+            <div class="fixed inset-0 overflow-y-auto">
+                <div class="flex min-h-full items-center justify-center p-4 text-center">
+                    <TransitionChild
+                        as="template"
+                        enter="duration-300 ease-out"
+                        enter-from="opacity-0 scale-95"
+                        enter-to="opacity-100 scale-100"
+                        leave="duration-200 ease-in"
+                        leave-from="opacity-100 scale-100"
+                        leave-to="opacity-0 scale-95"
+                    >
+                        <DialogPanel class="w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-neutral-800 p-6 text-left align-middle shadow-xl transition-all">
+                            <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">
+                                Report Post
+                            </DialogTitle>
+
+                            <!-- Success Message -->
+                            <div v-if="reportSuccess" class="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                                <p class="text-sm text-green-800 dark:text-green-200">
+                                    Report submitted successfully. Our team will review it.
+                                </p>
+                            </div>
+
+                            <!-- Error Message -->
+                            <div v-if="reportError" class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                                <p class="text-sm text-red-800 dark:text-red-200">
+                                    {{ reportError }}
+                                </p>
+                            </div>
+
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                    Please select a reason for reporting this post. This helps us understand the issue better.
+                                </p>
+
+                                <!-- Reason Selection -->
+                                <div class="mb-4">
+                                    <label for="report-reason" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Reason <span class="text-red-500">*</span>
+                                    </label>
+                                    <select
+                                        id="report-reason"
+                                        v-model="reportReason"
+                                        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 shadow-sm"
+                                    >
+                                        <option value="">Select a reason...</option>
+                                        <option v-for="reason in reportReasons" :key="reason.value" :value="reason.value">
+                                            {{ reason.label }}
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <!-- Description -->
+                                <div class="mb-4">
+                                    <label for="report-description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Additional Details (Optional)
+                                    </label>
+                                    <textarea
+                                        id="report-description"
+                                        v-model="reportDescription"
+                                        rows="4"
+                                        maxlength="1000"
+                                        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 shadow-sm"
+                                        placeholder="Provide additional details about why you're reporting this post..."
+                                    ></textarea>
+                                    <p class="mt-1 text-xs text-gray-500">
+                                        {{ reportDescription?.length || 0 }}/1000 characters
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 flex justify-end space-x-2">
+                                <button
+                                    type="button"
+                                    class="inline-flex justify-center rounded-md border border-transparent bg-gray-100 dark:bg-gray-700 px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"
+                                    @click="closeReportModal"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    class="inline-flex justify-center rounded-md border border-transparent bg-red-100 dark:bg-red-900/20 px-4 py-2 text-sm font-medium text-red-900 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-900/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
+                                    @click="submitReport"
+                                >
+                                    Submit Report
+                                </button>
+                            </div>
+                        </DialogPanel>
+                    </TransitionChild>
+                </div>
+            </div>
+        </Dialog>
+    </TransitionRoot>
+
     <!-- Post Details Modal -->
     <TransitionRoot appear :show="showPostModal" as="template" :persistent="true" :close-on-click-modal="false">
         <Dialog as="div" class="relative z-[100]">
@@ -850,6 +1078,19 @@ const handleLinkClick = (event) => {
                                         <a @click.prevent="openShareModal(content.id)" class="inline-flex items-center gap-x-2 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-blue-700 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600" href="#">
                                             <Repeat2 class="shrink-0 size-5 text-gray-800" />
                                             Share
+                                        </a>
+
+                                        <a v-if="$page.props.auth.user.id !== content.user_id" 
+                                           @click.prevent="isPostReported(content.id) ? null : openReportModal(content.id)" 
+                                           :class="[
+                                               'inline-flex items-center gap-x-2 text-sm rounded-lg border border-transparent',
+                                               isPostReported(content.id) 
+                                                   ? 'text-gray-500 cursor-default dark:text-gray-400' 
+                                                   : 'text-neutral-600 hover:text-red-700 focus:outline-none focus:text-red-700 disabled:opacity-50 disabled:pointer-events-none dark:text-red-500 dark:hover:text-red-600 dark:focus:text-red-600'
+                                           ]" 
+                                           href="#">
+                                            <AlertTriangle class="shrink-0 size-5" :class="isPostReported(content.id) ? 'text-gray-500 dark:text-gray-400' : 'text-gray-800'" />
+                                            {{ isPostReported(content.id) ? 'Reported' : 'Report' }}
                                         </a>
 
                                         <a href="#" @click.prevent="openDeleteConfirm(content.id)" v-if="$page.props.auth.user.id === content.user_id" class="inline-flex items-center gap-x-2 text-sm rounded-lg border border-transparent text-neutral-600 decoration-2 hover:text-red-900 focus:outline-none focus:text-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-600 dark:focus:text-blue-600">

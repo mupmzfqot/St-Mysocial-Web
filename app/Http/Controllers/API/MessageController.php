@@ -8,17 +8,22 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
 use App\Models\Conversation;
 use App\Models\User;
+use App\Models\UserBlock;
+use App\Traits\HasBlockedUsers;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;    
+use Illuminate\Support\Facades\Gate;
 
 class MessageController extends Controller
 {
+    use HasBlockedUsers;
     public function conversationList(Request $request)
     {
         $currentUserId = $request->user()->id;
+        $blockedUserIds = $this->getBlockedUserIds($currentUserId);
 
         $results = Conversation::query()
             ->where('type', 'private')
+            ->whereNull('deleted_at') // Exclude soft deleted conversations
             ->whereHas('users', function ($query) use ($currentUserId) {
                 $query->where('user_id', $currentUserId);
             })
@@ -26,8 +31,11 @@ class MessageController extends Controller
             ->withCount('users')
             ->having('users_count', 2)
             ->with([
-                'users' => function ($query) use ($currentUserId) {
+                'users' => function ($query) use ($currentUserId, $blockedUserIds) {
                     $query->where('user_id', '!=', $currentUserId)
+                        ->when(!empty($blockedUserIds), function($q) use ($blockedUserIds) {
+                            $q->whereNotIn('user_id', $blockedUserIds);
+                        })
                         ->select('users.id', 'name');
                 },
                 'messages' => function ($query) {
@@ -35,6 +43,12 @@ class MessageController extends Controller
                 }
             ])
             ->get();
+
+        // Filter out conversations with blocked users
+        $results = $results->filter(function ($conversation) use ($blockedUserIds) {
+            $otherUser = $conversation->users->first();
+            return $otherUser && !in_array($otherUser->id, $blockedUserIds);
+        });
 
         $conversation = $results->map(function ($conversation) use ($request) {
             return [
@@ -67,6 +81,15 @@ class MessageController extends Controller
 
             $authUserId = $request->user()->id;
             $recipientId = $request->recipient_id;
+
+            // Check if recipient is blocked
+            $blockedUserIds = $this->getBlockedUserIds($authUserId);
+            if (in_array($recipientId, $blockedUserIds)) {
+                return response()->json([
+                    'error' => 1,
+                    'message' => 'User not found'
+                ], 404);
+            }
 
             $results = $openConversation->handle($recipientId, $authUserId);
 

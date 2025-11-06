@@ -14,8 +14,10 @@ use App\Models\CommentLiked;
 use App\Models\Post;
 use App\Models\PostLiked;
 use App\Models\User;
+use App\Models\UserBlock;
 use App\Notifications\NewCommentLike;
 use App\Notifications\NewLike;
+use App\Traits\HasBlockedUsers;
 use Gate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -26,11 +28,36 @@ use App\Services\PostCacheService;
 
 class PostController extends Controller
 {
+    use HasBlockedUsers;
+    
     protected $postCacheService;
     
     public function __construct(PostCacheService $postCacheService)
     {
         $this->postCacheService = $postCacheService;
+    }
+
+    /**
+     * Filter posts to exclude blocked users
+     */
+    protected function filterBlockedUsers($query, $userId)
+    {
+        $blockedUserIds = $this->getBlockedUserIds($userId);
+        if (!empty($blockedUserIds)) {
+            $query->whereNotIn('user_id', $blockedUserIds);
+        }
+        return $query;
+    }
+
+    /**
+     * Check if post is from blocked user and throw exception if so
+     */
+    protected function checkBlockedUser($post, $userId)
+    {
+        $blockedUserIds = $this->getBlockedUserIds($userId);
+        if (in_array($post->user_id, $blockedUserIds)) {
+            throw new \Exception('Post not found', 404);
+        }
     }
 
     public function index(Request $request)
@@ -51,17 +78,81 @@ class PostController extends Controller
             );
             
             // Additional authorization check for cached posts
-            $posts->getCollection()->transform(function ($post) use ($request) {
+            $blockedUserIds = $this->getBlockedUserIds($request->user()->id);
+            
+            // Load repost with filtering before transform
+            // Ensure author is always loaded
+            $posts->load([
+                'author',
+                'media',
+                'repost' => function($query) use ($blockedUserIds) {
+                    // Filter repost if it's from blocked user
+                    if (!empty($blockedUserIds)) {
+                        $query->whereNotIn('user_id', $blockedUserIds);
+                    }
+                }
+            ]);
+            
+            $posts->getCollection()->transform(function ($post) use ($request, $blockedUserIds) {
+                // Skip if post is null
+                if (!$post || !$post->exists) {
+                    return null;
+                }
+                
                 // Users can see their own posts or published posts from others
                 if ($post->user_id !== $request->user()->id && !$post->published) {
                     return null;
                 }
+                // Exclude posts from blocked users
+                if (in_array($post->user_id, $blockedUserIds)) {
+                    return null;
+                }
+                
+                // Ensure author is loaded
+                if (!$post->relationLoaded('author')) {
+                    try {
+                        $post->load('author');
+                    } catch (\Exception $e) {
+                        // If author can't be loaded, skip this post
+                        return null;
+                    }
+                }
+                
+                // Ensure author exists
+                if (!$post->author) {
+                    return null;
+                }
+                
+                // Filter comments if loaded
+                if ($post->relationLoaded('comments') && $post->comments) {
+                    $filteredComments = $post->comments->filter(function($comment) use ($blockedUserIds) {
+                        if (!$comment || !$comment->exists) return false;
+                        return !in_array($comment->user_id, $blockedUserIds) && is_null($comment->deleted_at);
+                    })->values();
+                    $post->setRelation('comments', $filteredComments);
+                }
+                
+                // Filter repost if loaded and from blocked user
+                if ($post->relationLoaded('repost')) {
+                    if ($post->repost && in_array($post->repost->user_id, $blockedUserIds)) {
+                        $post->setRelation('repost', null);
+                    }
+                }
+                
                 return $post;
             })->filter();
+            
+            // Get filtered collection
+            $filteredCollection = $posts->getCollection()->filter(function($post) {
+                return $post !== null && $post->exists;
+            })->values();
+            
+            // Update pagination with filtered collection
+            $posts->setCollection($filteredCollection);
 
             return response()->json([
                 'error' => 0,
-                'data' => PostResource::collection($posts->load('repost')),
+                'data' => PostResource::collection($filteredCollection),
                 'pagination' => [
                     'current_page' => $posts->currentPage(),
                     'last_page' => $posts->lastPage(),
@@ -102,6 +193,16 @@ class PostController extends Controller
             ], 404);
         }
 
+        // Check if post is from blocked user
+        try {
+            $this->checkBlockedUser($post, $request->user()->id);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error'     => 1,
+                'message'   => 'Post not found',
+            ], 404);
+        }
+
         // Authorization check - ensure user can view the post
         // Users can view their own posts or published posts from other users
         if ($post->user_id !== $request->user()->id && !$post->published) {
@@ -111,9 +212,27 @@ class PostController extends Controller
             ], 403);
         }
 
+        // Load comments with filtering for blocked users
+        $blockedUserIds = $this->getBlockedUserIds($request->user()->id);
+        $post->load([
+            'comments' => function($query) use ($blockedUserIds) {
+                $query->whereNull('deleted_at')
+                    ->when(!empty($blockedUserIds), function($q) use ($blockedUserIds) {
+                        $q->whereNotIn('user_id', $blockedUserIds);
+                    })
+                    ->orderBy('created_at', 'asc');
+            },
+            'repost' => function($query) use ($blockedUserIds) {
+                // Also filter repost if it's from blocked user
+                if (!empty($blockedUserIds)) {
+                    $query->whereNotIn('user_id', $blockedUserIds);
+                }
+            }
+        ]);
+
         return response()->json([
             'error' => 0,
-            'data' => new PostResource($post->load('comments', 'repost'))
+            'data' => new PostResource($post)
         ]);
     }
 
@@ -237,8 +356,22 @@ class PostController extends Controller
 
     public function topPosts(Request $request)
     {
+        $blockedUserIds = $this->getBlockedUserIds($request->user()->id);
+        
         $posts = Post::query()
-            ->with('author', 'media', 'comments.user')
+            ->excludeBlocked($request->user()->id)
+            ->with([
+                'author', 
+                'media', 
+                'comments' => function($query) use ($blockedUserIds) {
+                    $query->whereNull('deleted_at')
+                        ->when(!empty($blockedUserIds), function($q) use ($blockedUserIds) {
+                            $q->whereNotIn('user_id', $blockedUserIds);
+                        })
+                        ->with('user')
+                        ->orderBy('created_at', 'asc');
+                }
+            ])
             ->orderBy(DB::raw('comment_count + like_count'), 'desc')
             ->where('comment_count', '>', 0)
             ->where('like_count', '>', 0)
@@ -251,7 +384,14 @@ class PostController extends Controller
 
         return response()->json([
             'error' => 0,
-            'data' => PostResource::collection($posts->load('repost')),
+            'data' => PostResource::collection($posts->load([
+                'repost' => function($query) use ($blockedUserIds) {
+                    // Filter repost if it's from blocked user
+                    if (!empty($blockedUserIds)) {
+                        $query->whereNotIn('user_id', $blockedUserIds);
+                    }
+                }
+            ])),
             'pagination' => [
                 'current_page' => $posts->currentPage(),
                 'last_page' => $posts->lastPage(),
@@ -287,6 +427,16 @@ class PostController extends Controller
                 ], 403);
             }
             
+            // Check if post is from blocked user
+            try {
+                $this->checkBlockedUser($post, $request->user()->id);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'error'     => 1,
+                    'message'   => 'You cannot comment on this post',
+                ], 403);
+            }
+            
             $comment = $createComment->handle($request);
             
             // Invalidate cache for specific post (double safety with observer)
@@ -317,7 +467,20 @@ class PostController extends Controller
             ], 403);
         }
         
+        // Check if post is from blocked user
+        try {
+            $this->checkBlockedUser($post, $request->user()->id);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error'     => 1,
+                'message'   => 'Post not found',
+            ], 404);
+        }
+        
+        $blockedUserIds = $this->getBlockedUserIds($request->user()->id);
         $comments = Comment::query()->where('post_id', $postId)
+            ->whereNull('deleted_at') // Exclude soft deleted comments
+            ->excludeBlocked($request->user()->id)
             ->with('media')
             ->orderBy('created_at', 'asc')
             ->get();
@@ -340,6 +503,16 @@ class PostController extends Controller
             ], 403);
         }
         
+        // Check if post is from blocked user
+        try {
+            $this->checkBlockedUser($post, $request->user()->id);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error'     => 1,
+                'message'   => 'Post not found',
+            ], 404);
+        }
+        
         $user = User::whereHas('likes', function ($query) use ($id) {
                     $query->where('post_id', $id);
                 })->get();
@@ -359,6 +532,16 @@ class PostController extends Controller
             return response()->json([
                 'error'     => 1,
                 'message'   => 'You do not have permission to like this post',
+            ], 403);
+        }
+        
+        // Check if post is from blocked user
+        try {
+            $this->checkBlockedUser($post, $request->user()->id);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error'     => 1,
+                'message'   => 'You cannot like this post',
             ], 403);
         }
         
@@ -426,6 +609,25 @@ class PostController extends Controller
             ], 404);
         }
         
+        // Check if comment is from blocked user
+        try {
+            $this->checkBlockedUser($comment->post, $request->user()->id);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error'     => 1,
+                'message'   => 'Comment not found',
+            ], 404);
+        }
+        
+        // Check if comment author is blocked
+        $blockedUserIds = $this->getBlockedUserIds($request->user()->id);
+        if (in_array($comment->user_id, $blockedUserIds)) {
+            return response()->json([
+                'error'     => 1,
+                'message'   => 'Comment not found',
+            ], 404);
+        }
+        
         $post = Post::find($comment->post_id);
         if (!$post || ($post->user_id !== $request->user()->id && !$post->published)) {
             return response()->json([
@@ -469,6 +671,25 @@ class PostController extends Controller
             ], 404);
         }
         
+        // Check if comment is from blocked user
+        try {
+            $this->checkBlockedUser($comment->post, $request->user()->id);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error'     => 1,
+                'message'   => 'Comment not found',
+            ], 404);
+        }
+        
+        // Check if comment author is blocked
+        $blockedUserIds = $this->getBlockedUserIds($request->user()->id);
+        if (in_array($comment->user_id, $blockedUserIds)) {
+            return response()->json([
+                'error'     => 1,
+                'message'   => 'Comment not found',
+            ], 404);
+        }
+        
         $post = Post::find($comment->post_id);
         if (!$post || ($post->user_id !== $request->user()->id && !$post->published)) {
             return response()->json([
@@ -504,6 +725,16 @@ class PostController extends Controller
                 ], 403);
             }
             
+            // Check if post is from blocked user
+            try {
+                $this->checkBlockedUser($post, $request->user()->id);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'error'     => 1,
+                    'message'   => 'You cannot repost this post',
+                ], 403);
+            }
+            
             $repostResult = $repost->handle($request->user()->id, $request);
             return response()->json([
                 'error'     => 0,
@@ -526,14 +757,25 @@ class PostController extends Controller
             ]);
 
             $perPage = $request->query('per_page', 20);
+            $blockedUserIds = $this->getBlockedUserIds($request->user()->id);
+            
             $query = Post::query()
                 ->orderBy('created_at', 'desc')
                 ->where('user_id', $request->user_id)
+                ->whereNull('deleted_at') // Exclude soft deleted posts
                 ->with(['author', 'media']);
 
             // Authorization check - users can only see their own posts or published posts from other users
             if ($request->user_id !== $request->user()->id) {
                 $query->where('published', true);
+            }
+            
+            // Exclude blocked users
+            if (!empty($blockedUserIds) && in_array($request->user_id, $blockedUserIds)) {
+                return response()->json([
+                    'error' => 1,
+                    'message' => 'User not found',
+                ], 404);
             }
 
             if($request->user()->hasRole('public_user')) {
@@ -545,7 +787,14 @@ class PostController extends Controller
 
             return response()->json([
                 'error' => 0,
-                'data'  => PostResource::collection($posts->load('repost')),
+                'data'  => PostResource::collection($posts->load([
+                    'repost' => function($query) use ($blockedUserIds) {
+                        // Filter repost if it's from blocked user
+                        if (!empty($blockedUserIds)) {
+                            $query->whereNotIn('user_id', $blockedUserIds);
+                        }
+                    }
+                ])),
                 'pagination' => [
                     'current_page' => $posts->currentPage(),
                     'last_page' => $posts->lastPage(),

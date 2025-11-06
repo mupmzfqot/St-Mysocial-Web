@@ -9,10 +9,12 @@ class TeamController extends Controller
 {
     public function get()
     {
-        $cacheKey = 'team_users_' . (auth()->user() ? auth()->user()->id : 'guest');
+        $authId = auth()->user()->id;
+        $cacheKey = 'team_users_' . $authId;
         $cacheDuration = now()->addMinutes(5);
 
-        return \Cache::remember($cacheKey, $cacheDuration, function () {
+
+        return \Cache::remember($cacheKey, $cacheDuration, function () use ($authId) {
                 $query = User::query()->isActive()
                     ->whereHas('roles', function ($query) {
                         $query->whereIn('name', ['user']);
@@ -21,7 +23,7 @@ class TeamController extends Controller
                         $query->where('published', 1);
                     }])
                     ->whereNotNull('email_verified_at')
-                    ->where('id', '!=', auth()->user()->id)
+                    ->where('id', '!=', $authId)
                     ->orderBy('posts_count', 'desc');
 
                 return $query->get();

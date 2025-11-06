@@ -6,8 +6,10 @@ use App\Actions\Posts\CreatePost;
 use App\Actions\Posts\Repost;
 use App\Models\Post;
 use App\Models\PostTag;
+use App\Models\Report;
 use App\Models\User;
 use App\Services\PostCacheService;
+use App\Traits\HasBlockedUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +18,8 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class PostController extends Controller
 {
+    use HasBlockedUsers;
+    
     protected $postCacheService;
     
     public function __construct(PostCacheService $postCacheService)
@@ -23,21 +27,111 @@ class PostController extends Controller
         $this->postCacheService = $postCacheService;
     }
 
+    /**
+     * Add is_reported property to post(s)
+     */
+    protected function addIsReportedToPosts($posts, $userId = null)
+    {
+        if (!$userId) {
+            $userId = auth()->id();
+        }
+
+        if (!$userId) {
+            return $posts;
+        }
+
+        // If it's a paginated collection
+        if (method_exists($posts, 'getCollection')) {
+            $collection = $posts->getCollection();
+            $postIds = $collection->pluck('id')->toArray();
+            
+            // Get all reported post IDs by current user
+            $reportedPostIds = Report::where('reporter_id', $userId)
+                ->where('reportable_type', Post::class)
+                ->whereIn('reportable_id', $postIds)
+                ->pluck('reportable_id')
+                ->toArray();
+            
+            // Add is_reported to each post
+            $collection->transform(function ($post) use ($reportedPostIds) {
+                $post->is_reported = in_array($post->id, $reportedPostIds);
+                
+                // Also check repost if exists
+                if ($post->repost) {
+                    $post->repost->is_reported = in_array($post->repost->id, $reportedPostIds);
+                }
+                
+                return $post;
+            });
+            
+            $posts->setCollection($collection);
+        } 
+        // If it's a single post
+        elseif ($posts instanceof Post) {
+            $isReported = Report::where('reporter_id', $userId)
+                ->where('reportable_type', Post::class)
+                ->where('reportable_id', $posts->id)
+                ->exists();
+            
+            $posts->is_reported = $isReported;
+            
+            // Also check repost if exists
+            if ($posts->repost) {
+                $isRepostReported = Report::where('reporter_id', $userId)
+                    ->where('reportable_type', Post::class)
+                    ->where('reportable_id', $posts->repost->id)
+                    ->exists();
+                
+                $posts->repost->is_reported = $isRepostReported;
+            }
+        }
+        // If it's a collection
+        elseif (is_iterable($posts)) {
+            $postIds = collect($posts)->pluck('id')->toArray();
+            
+            $reportedPostIds = Report::where('reporter_id', $userId)
+                ->where('reportable_type', Post::class)
+                ->whereIn('reportable_id', $postIds)
+                ->pluck('reportable_id')
+                ->toArray();
+            
+            foreach ($posts as $post) {
+                $post->is_reported = in_array($post->id, $reportedPostIds);
+                
+                if ($post->repost) {
+                    $post->repost->is_reported = in_array($post->repost->id, $reportedPostIds);
+                }
+            }
+        }
+
+        return $posts;
+    }
+
     public function get(Request $request)
     {
         try {
+            $blockedUserIds = $this->getBlockedUserIds(auth()->id());
 
             $query = Post::query()
-                ->with(
+                ->excludeBlocked(auth()->id())
+                ->with([
                     'author',
                     'media',
-                    'comments.user',
-                    'comments.media',
+                    'comments' => function($query) use ($blockedUserIds) {
+                        $query->whereNull('deleted_at')
+                            ->excludeBlocked(auth()->id())
+                            ->with('user', 'media');
+                    },
                     'tags',
+                    'repost' => function($query) use ($blockedUserIds) {
+                        if (!empty($blockedUserIds)) {
+                            $query->whereNotIn('user_id', $blockedUserIds);
+                        }
+                    },
                     'repost.author',
                     'repost.media',
                     'repost.tags'
-                )
+                ])
                 ->whereHas('author.roles', function ($query) {
                     $query->whereIn('name', ['admin', 'user']);
                 })
@@ -58,6 +152,8 @@ class PostController extends Controller
             $posts = $query->simplePaginate(30)
                 ->withQueryString();
 
+            $posts = $this->addIsReportedToPosts($posts);
+
             return response()->json($posts);
         } catch (\Exception $e) {
             return response()->json([
@@ -71,8 +167,28 @@ class PostController extends Controller
 
     public function postById($id)
     {
+        $blockedUserIds = $this->getBlockedUserIds(auth()->id());
+        
         $post = Post::query()
-            ->with('author', 'media', 'comments.user', 'comments.media', 'tags', 'repost.author', 'repost.media', 'repost.tags')
+            ->excludeBlocked(auth()->id())
+            ->with([
+                'author', 
+                'media', 
+                'comments' => function($query) use ($blockedUserIds) {
+                    $query->whereNull('deleted_at')
+                        ->excludeBlocked(auth()->id())
+                        ->with('user', 'media');
+                }, 
+                'tags', 
+                'repost' => function($query) use ($blockedUserIds) {
+                    if (!empty($blockedUserIds)) {
+                        $query->whereNotIn('user_id', $blockedUserIds);
+                    }
+                },
+                'repost.author', 
+                'repost.media', 
+                'repost.tags'
+            ])
             ->whereHas('author.roles', function ($query) {
                 $query->whereIn('name', ['admin', 'user']);
             })
@@ -85,6 +201,15 @@ class PostController extends Controller
                 'error' => 'You do not have permission to view this post'
             ], 403);
         }
+        
+        // Check if post is from blocked user
+        if (in_array($post->user_id, $blockedUserIds)) {
+            return response()->json([
+                'error' => 'Post not found'
+            ], 404);
+        }
+
+        $post = $this->addIsReportedToPosts($post);
 
         return response()->json($post);
     }
@@ -92,7 +217,10 @@ class PostController extends Controller
     public function index(Request $request)
     {
         $searchTerm = $request->query('search');
+        $blockedUserIds = $this->getBlockedUserIds(auth()->id());
+        
         $posts = Post::query()
+            ->excludeBlocked(auth()->id())
             ->when($searchTerm, function ($query, $search) {
                 $query->where('post', 'like', '%' . $search . '%');
             })
@@ -211,11 +339,20 @@ class PostController extends Controller
     public function share(Request $request, Repost $repost)
     {
         try {
+            $blockedUserIds = $this->getBlockedUserIds(auth()->id());
+            
             // Authorization check - ensure user can repost this post
             $post = Post::find($request->post_id);
             if (!$post || ($post->user_id !== auth()->id() && !$post->published)) {
                 return response()->json([
                     'error' => 'You do not have permission to repost this post'
+                ], 403);
+            }
+            
+            // Check if post is from blocked user
+            if (in_array($post->user_id, $blockedUserIds)) {
+                return response()->json([
+                    'error' => 'You cannot repost this post'
                 ], 403);
             }
             
@@ -236,8 +373,28 @@ class PostController extends Controller
 
     public function show($id)
     {
+        $blockedUserIds = $this->getBlockedUserIds(auth()->id());
+        
         $post = Post::query()
-            ->with('author', 'media', 'comments.user', 'comments.media', 'tags', 'repost.author', 'repost.media', 'repost.tags')
+            ->excludeBlocked(auth()->id())
+            ->with([
+                'author', 
+                'media', 
+                'comments' => function($query) use ($blockedUserIds) {
+                    $query->whereNull('deleted_at')
+                        ->excludeBlocked(auth()->id())
+                        ->with('user', 'media');
+                }, 
+                'tags', 
+                'repost' => function($query) use ($blockedUserIds) {
+                    if (!empty($blockedUserIds)) {
+                        $query->whereNotIn('user_id', $blockedUserIds);
+                    }
+                },
+                'repost.author', 
+                'repost.media', 
+                'repost.tags'
+            ])
             ->where('id', $id)
             ->whereHas('author.roles', function ($query) {
                 $query->whereIn('name', ['admin', 'user']);
@@ -248,10 +405,17 @@ class PostController extends Controller
             return redirect()->route('post.index')->with('error', 'Post not found.');
         }
         
+        // Check if post is from blocked user
+        if (in_array($post->user_id, $blockedUserIds)) {
+            return redirect()->route('post.index')->with('error', 'Post not found.');
+        }
+        
         // Authorization check - ensure user can view this post
         if ($post->user_id !== auth()->id() && !$post->published) {
             return redirect()->route('post.index')->with('error', 'You do not have permission to view this post.');
         }
+
+        $post = $this->addIsReportedToPosts($post);
 
         return Inertia::render('Posts/Show', compact('post'));
     }
@@ -277,15 +441,37 @@ class PostController extends Controller
             ->whereNotNull('email_verified_at')
             ->get();
 
+        $post = $this->addIsReportedToPosts($post);
+
         return Inertia::render('Posts/Form', compact('post', 'defaultType', 'stUsers', 'title'));
     }
 
     public function getTopPost(Request $request)
     {
+        $blockedUserIds = $this->getBlockedUserIds(auth()->id());
+        
         $cacheKey = 'top_posts_' . md5(json_encode($request->all()));
-        $posts = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($request) {
+        $posts = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($request, $blockedUserIds) {
             $query = Post::query()
-                ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media', 'repost.tags')
+                ->excludeBlocked(auth()->id())
+                ->with([
+                    'author', 
+                    'media', 
+                    'comments' => function($query) use ($blockedUserIds) {
+                        $query->whereNull('deleted_at')
+                            ->excludeBlocked(auth()->id())
+                            ->with('user');
+                    }, 
+                    'tags', 
+                    'repost' => function($query) use ($blockedUserIds) {
+                        if (!empty($blockedUserIds)) {
+                            $query->whereNotIn('user_id', $blockedUserIds);
+                        }
+                    },
+                    'repost.author', 
+                    'repost.media', 
+                    'repost.tags'
+                ])
                 ->whereHas('author.roles', function ($query) {
                     $query->whereIn('name', ['admin', 'user']);
                 })
@@ -301,14 +487,36 @@ class PostController extends Controller
             return $query->simplePaginate(30)->withQueryString();
         });
 
+        $posts = $this->addIsReportedToPosts($posts);
+
         return response()->json($posts);
     }
 
 
     public function getLikedPost(Request $request)
     {
+        $blockedUserIds = $this->getBlockedUserIds(auth()->id());
+        
         $posts = Post::query()
-            ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media', 'repost.tags')
+            ->excludeBlocked(auth()->id())
+            ->with([
+                'author', 
+                'media', 
+                'comments' => function($query) use ($blockedUserIds) {
+                    $query->whereNull('deleted_at')
+                        ->excludeBlocked(auth()->id())
+                        ->with('user');
+                }, 
+                'tags', 
+                'repost' => function($query) use ($blockedUserIds) {
+                    if (!empty($blockedUserIds)) {
+                        $query->whereNotIn('user_id', $blockedUserIds);
+                    }
+                },
+                'repost.author', 
+                'repost.media', 
+                'repost.tags'
+            ])
             ->whereHas('author.roles', function ($query) {
                 $query->whereIn('name', ['admin', 'user']);
             })
@@ -322,6 +530,8 @@ class PostController extends Controller
                       ->orWhere('published', true);
             })
             ->simplePaginate(30);
+
+        $posts = $this->addIsReportedToPosts($posts);
 
         return response()->json($posts);
     }
@@ -337,6 +547,8 @@ class PostController extends Controller
             ->where('user_id', auth()->id()) // Only show user's own posts
             ->simplePaginate(30);
 
+        $posts = $this->addIsReportedToPosts($posts);
+
         return response()->json($posts);
     }
 
@@ -351,14 +563,46 @@ class PostController extends Controller
             ->where('user_id', auth()->id()) // Only show user's own posts
             ->simplePaginate(30);
 
+        $posts = $this->addIsReportedToPosts($posts);
+
         return response()->json($posts);
     }
 
     public function getTagPost(Request $request)
     {
         $user_id = $request->user_id;
+        $blockedUserIds = $this->getBlockedUserIds(auth()->id());
+        
+        // Exclude blocked users from tag post results
+        if (in_array($user_id, $blockedUserIds)) {
+            return response()->json([
+                'data' => [],
+                'current_page' => 1,
+                'per_page' => 30,
+                'total' => 0
+            ]);
+        }
+        
         $posts = Post::query()
-            ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media', 'repost.tags')
+            ->excludeBlocked(auth()->id())
+            ->with([
+                'author', 
+                'media', 
+                'comments' => function($query) use ($blockedUserIds) {
+                    $query->whereNull('deleted_at')
+                        ->excludeBlocked(auth()->id())
+                        ->with('user');
+                }, 
+                'tags', 
+                'repost' => function($query) use ($blockedUserIds) {
+                    if (!empty($blockedUserIds)) {
+                        $query->whereNotIn('user_id', $blockedUserIds);
+                    }
+                },
+                'repost.author', 
+                'repost.media', 
+                'repost.tags'
+            ])
             ->whereHas('author.roles', function ($query) {
                 $query->whereIn('name', ['admin', 'user']);
             })
@@ -375,6 +619,8 @@ class PostController extends Controller
                       ->orWhere('published', true);
             })
             ->simplePaginate(30);
+
+        $posts = $this->addIsReportedToPosts($posts);
 
         return response()->json($posts);
     }

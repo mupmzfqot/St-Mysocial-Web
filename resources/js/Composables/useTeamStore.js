@@ -10,7 +10,7 @@ export const TeamStore = {
 
         // Check if cached teams exist and are less than 1 hour old
         if (cachedTeams && cachedTimestamp && 
-            (currentTime - parseInt(cachedTimestamp) < 3600000)) {
+            (currentTime - parseInt(cachedTimestamp) < 300)) {
             this.state.value = JSON.parse(cachedTeams);
             return this.state.value;
         }

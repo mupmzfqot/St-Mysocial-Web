@@ -1,6 +1,6 @@
 <script setup>
 import {Link, usePage} from "@inertiajs/vue3";
-import { LucideHome, Users, IdCard, MessageSquareMore, SlidersHorizontal } from "lucide-vue-next";
+import { LucideHome, Users, IdCard, MessageSquareMore, SlidersHorizontal, AlertTriangle } from "lucide-vue-next";
 import {computed, onMounted, ref, watch} from "vue";
 import { usePendingApprovals } from "@/Composables/usePendingApprovals.js";
 
@@ -116,6 +116,12 @@ watch(() => page.props.pendingApprovals, (newApprovals) => {}, { immediate: true
                                 <span class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full ms-auto text-xs font-medium bg-gray-100 text-red-800 dark:bg-white/10 dark:text-white">
                                     {{ pendingApprovals.pendingUsers }}
                                 </span>
+                            </Link>
+                        </li>
+
+                        <li>
+                            <Link :href="route('admin.reports.index')" :class="['flex items-center gap-x-3.5 py-2 px-2.5 text-sm font-medium rounded-lg hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:bg-gray-100', isActiveNav('/admin/reports') ? 'bg-blue-100 text-gray-800': 'text-white']">
+                                <AlertTriangle class="shrink-0 size-4" /> Reports
                             </Link>
                         </li>
 

@@ -19,7 +19,14 @@ class AuthenticatedSessionController extends Controller
     public function create()
     {
         if(auth()->check()) {
-            $role = auth()->user()->getRoleNames()->first();
+            $user = auth()->user();
+            
+            // If user has deletion_requested status, redirect to reactivate page
+            if ($user->isDeletionRequested()) {
+                return redirect()->route('account.reactivate');
+            }
+            
+            $role = $user->getRoleNames()->first();
 
             $redirectRoutes = [
                 'admin' => 'dashboard',
@@ -92,6 +99,12 @@ class AuthenticatedSessionController extends Controller
         }
 
         $user->update(['is_login' => 1, 'last_login' => now()]);
+        
+        // Check if user has deletion_requested status - redirect to reactivate page
+        if ($user->isDeletionRequested()) {
+            return redirect()->route('account.reactivate');
+        }
+        
         $role = $user->getRoleNames()->first();
 
         $redirectRoutes = [

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\Post;
+use App\Models\Report;
 use App\Models\User;
 use App\Notifications\ChangeProfileImageStatus;
 use App\Notifications\NewProfileImage;
@@ -37,9 +38,25 @@ class ProfileController extends Controller
         $totalLikes = $user->likes()->count();
         $totalComments = $user->comments()->count();
         $requestUrl = route('user-post.tag-post', ['user_id' => $id]);
+        
+        // Check if current user has blocked this user or vice versa
+        $isBlocked = false;
+        $isBlockedBy = false;
+        $isReported = false;
+        if (Auth::check()) {
+            $currentUser = Auth::user();
+            $isBlocked = $currentUser->hasBlocked($user->id);
+            $isBlockedBy = $currentUser->isBlockedBy($user->id);
+            
+            // Check if current user has reported this user
+            $isReported = Report::where('reporter_id', $currentUser->id)
+                ->where('reportable_type', User::class)
+                ->where('reportable_id', $user->id)
+                ->exists();
+        }
 
         return Inertia::render('Homepage/UserProfile',
-            compact('user', 'totalPosts', 'totalLikes', 'totalComments', 'requestUrl')
+            compact('user', 'totalPosts', 'totalLikes', 'totalComments', 'requestUrl', 'isBlocked', 'isBlockedBy', 'isReported')
         );
     }
 
@@ -62,6 +79,21 @@ class ProfileController extends Controller
         $totalPosts = auth()->user()?->posts()->count();
         $totalLikes = auth()->user()?->likes()->count();
         $totalComments = auth()->user()?->comments()->count();
+        
+        // Get deletion status
+        $user = auth()->user();
+        $daysRemaining = null;
+        if ($user->scheduled_deletion_at) {
+            $daysRemaining = (int) now()->diffInDays($user->scheduled_deletion_at, false);
+        }
+        
+        $deletionStatus = [
+            'account_status' => $user->account_status,
+            'deletion_requested_at' => $user->deletion_requested_at?->toISOString(),
+            'scheduled_deletion_at' => $user->scheduled_deletion_at?->toISOString(),
+            'days_remaining' => $daysRemaining,
+            'can_reactivate' => $user->canReactivate(),
+        ];
 
         return  Inertia::render('Profile/UserEdit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
@@ -69,6 +101,7 @@ class ProfileController extends Controller
             'totalPosts' => $totalPosts,
             'totalLikes' => $totalLikes,
             'totalComments' => $totalComments,
+            'deletionStatus' => $deletionStatus,
             'media' => [
                 'avatar' => $request->user()->getMedia('avatar')->first(),
                 'cover-image' => $request->user()->getMedia('cover-image')->first(),

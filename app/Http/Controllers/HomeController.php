@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Notifications\NewCommentLike;
 use App\Notifications\NewLike;
 use App\Services\PostCacheService;
+use App\Traits\HasBlockedUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -19,6 +20,8 @@ use Inertia\Inertia;
 
 class HomeController extends Controller
 {
+    use HasBlockedUsers;
+    
     protected $postCacheService;
     
     public function __construct(PostCacheService $postCacheService)
@@ -74,8 +77,27 @@ class HomeController extends Controller
             return redirect()->route('post.show', $id);
         }
 
+        $blockedUserIds = $this->getBlockedUserIds(auth()->id());
+        
         $post = Post::query()
-            ->with('author', 'media', 'tags', 'comments.user', 'comments.media', 'repost.author', 'repost.media')
+            ->excludeBlocked(auth()->id())
+            ->with([
+                'author', 
+                'media', 
+                'tags', 
+                'comments' => function($query) use ($blockedUserIds) {
+                    $query->whereNull('deleted_at')
+                        ->excludeBlocked(auth()->id())
+                        ->with('user', 'media');
+                }, 
+                'repost' => function($query) use ($blockedUserIds) {
+                    if (!empty($blockedUserIds)) {
+                        $query->whereNotIn('user_id', $blockedUserIds);
+                    }
+                },
+                'repost.author', 
+                'repost.media'
+            ])
             ->orderBy('created_at', 'desc')
             ->published()
             ->where('id', $id)
@@ -83,6 +105,11 @@ class HomeController extends Controller
 
         if (!$post) {
             return redirect()->route('homepage')->with('error', 'Post not found or not published.');
+        }
+        
+        // Check if post is from blocked user
+        if (in_array($post->user_id, $blockedUserIds)) {
+            return redirect()->route('homepage')->with('error', 'Post not found.');
         }
 
         return Inertia::render('Homepage/PostDetail', compact('post'));
@@ -118,12 +145,37 @@ class HomeController extends Controller
             ->whereNotNull('email_verified_at')
             ->get();
 
+        $blockedUserIds = $this->getBlockedUserIds(auth()->id());
+        
         $post = Post::query()
-            ->with('author', 'media', 'comments.user', 'tags', 'repost.author', 'repost.media', 'repost.tags')
+            ->excludeBlocked(auth()->id())
+            ->with([
+                'author', 
+                'media', 
+                'comments' => function($query) use ($blockedUserIds) {
+                    $query->whereNull('deleted_at')
+                        ->excludeBlocked(auth()->id())
+                        ->with('user');
+                }, 
+                'tags', 
+                'repost' => function($query) use ($blockedUserIds) {
+                    if (!empty($blockedUserIds)) {
+                        $query->whereNotIn('user_id', $blockedUserIds);
+                    }
+                },
+                'repost.author', 
+                'repost.media', 
+                'repost.tags'
+            ])
             ->where('id', $id)
             ->first();
 
         if (!$post) {
+            return redirect()->route('homepage')->with('error', 'Post not found.');
+        }
+        
+        // Check if post is from blocked user
+        if (in_array($post->user_id, $blockedUserIds)) {
             return redirect()->route('homepage')->with('error', 'Post not found.');
         }
 
@@ -169,19 +221,29 @@ class HomeController extends Controller
 
     public function storeLike(Request $request)
     {
+        $blockedUserIds = $this->getBlockedUserIds(auth()->id());
+        
         $liked = PostLiked::query()
             ->where('post_id', $request->post_id)
             ->where('user_id', auth()->id())
             ->first();
 
         if(!$liked) {
+            $post = Post::query()->find($request->post_id);
+            
+            // Check if post is from blocked user
+            if ($post && in_array($post->user_id, $blockedUserIds)) {
+                return response()->json([
+                    'error' => 'You cannot like this post'
+                ], 403);
+            }
+            
             $postLiked = PostLiked::query()->create([
                 'post_id' => $request->post_id,
                 'user_id' => auth()->id()
             ]);
 
-            $post = Post::query()->find($request->post_id);
-            if($post->user_id != auth()->id()) {
+            if($post && $post->user_id != auth()->id()) {
                 Notification::send($post?->author, new NewLike($postLiked, User::find(auth()->id())));
             }
             
@@ -192,19 +254,29 @@ class HomeController extends Controller
 
     public function storeCommentLike(Request $request)
     {
+        $blockedUserIds = $this->getBlockedUserIds(auth()->id());
+        
         $liked = CommentLiked::query()
             ->where('comment_id', $request->comment_id)
             ->where('user_id', auth()->id())
             ->first();
 
         if(!$liked) {
+            $comment = Comment::query()->find($request->comment_id);
+            
+            // Check if comment is from blocked user
+            if ($comment && in_array($comment->user_id, $blockedUserIds)) {
+                return response()->json([
+                    'error' => 'You cannot like this comment'
+                ], 403);
+            }
+            
             $commentLiked = CommentLiked::query()->create([
                 'comment_id' => $request->comment_id,
                 'user_id' => auth()->id()
             ]);
 
-            $comment = Comment::query()->find($request->comment_id);
-            if($comment->user_id != auth()->id()) {
+            if($comment && $comment->user_id != auth()->id()) {
                 Notification::send($comment?->user, new NewCommentLike($comment, User::find(auth()->id())));
             }
             

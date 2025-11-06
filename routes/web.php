@@ -12,11 +12,16 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\VideoStreamingController;
+use App\Http\Controllers\AdminReportController;
 use Illuminate\Support\Facades\Route;
 
 
 Route::get('/', [App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'create'])->name('home');
+
+// Account reactivate page (accessible without auth, but middleware will handle logged-in users)
+Route::get('/account/reactivate', [UserManagementController::class, 'showReactivatePage'])->name('account.reactivate');
 
 // Public video streaming route (no authentication required)
 Route::get('stream-video/{filename}', [VideoStreamingController::class, 'streamVideoByFilename'])
@@ -25,7 +30,7 @@ Route::get('stream-video/{filename}', [VideoStreamingController::class, 'streamV
 
 
 
-Route::middleware(['auth', 'verified', 'role:user'])->group(function () {
+Route::middleware(['auth', 'verified', 'role:user', \App\Http\Middleware\CheckAccountDeletionStatus::class])->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('homepage');
     Route::get('/public', [HomeController::class, 'publicPost'])->name('public');
     Route::get('/posts', [HomeController::class, 'createPost'])->name('create-post');
@@ -57,7 +62,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('change-password', [ChangePasswordController::class, 'store'])->name('change-password.store');
 });
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', \App\Http\Middleware\CheckAccountDeletionStatus::class])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::get('/profile/show/{id?}', [ProfileController::class, 'show'])->name('profile.show');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -93,6 +98,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('search', [UserController::class, 'search'])->name('user.search');
     Route::get('notifications', [HomeController::class, 'notifications'])->name('notifications');
     Route::post('read-notification/{id?}', [NotificationController::class, 'readNotification'])->name('read-notification');
+    
+    // User Management routes (Delete Account, Block User, Report)
+    Route::prefix('user-management')->name('user-management.')->group(function () {
+        // Account deletion
+        Route::post('request-deletion', [UserManagementController::class, 'requestDeletion'])->name('request-deletion');
+        Route::post('cancel-deletion', [UserManagementController::class, 'cancelDeletion'])->name('cancel-deletion')->withoutMiddleware([\App\Http\Middleware\CheckAccountDeletionStatus::class]);
+        Route::get('deletion-status', [UserManagementController::class, 'deletionStatus'])->name('deletion-status');
+        
+        // Block user
+        Route::post('block/{userId}', [UserManagementController::class, 'blockUser'])->name('block');
+        Route::post('unblock/{userId}', [UserManagementController::class, 'unblockUser'])->name('unblock');
+        Route::get('blocked-users', [UserManagementController::class, 'blockedUsers'])->name('blocked-users');
+        
+        // Report
+        Route::post('report-user/{userId}', [UserManagementController::class, 'reportUser'])->name('report-user');
+        Route::post('report-post/{postId}', [UserManagementController::class, 'reportPost'])->name('report-post');
+        Route::get('my-reports', [UserManagementController::class, 'myReports'])->name('my-reports');
+    });
 });
 
 Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
@@ -139,6 +162,12 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         Route::get('/', [PostModerationController::class, 'index'])->name('index');
         Route::get('/st', [PostModerationController::class, 'indexST'])->name('index-st');
         Route::post('update-status/{id}', [PostModerationController::class, 'updateStatus'])->name('update-status');
+    });
+
+    Route::name('admin.reports.')->prefix('admin/reports')->group(function () {
+        Route::get('/', [AdminReportController::class, 'index'])->name('index');
+        Route::get('/{id}', [AdminReportController::class, 'show'])->name('show');
+        Route::post('/{id}/update', [AdminReportController::class, 'update'])->name('update');
     });
 
     Route::get('profile-photos', [ProfileController::class, 'indexPhotos'])->name('profile-photos');
