@@ -15,6 +15,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\VideoStreamingController;
 use App\Http\Controllers\AdminReportController;
+use App\Http\Controllers\AdminAccountRemovalController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -168,6 +169,12 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         Route::get('/', [AdminReportController::class, 'index'])->name('index');
         Route::get('/{id}', [AdminReportController::class, 'show'])->name('show');
         Route::post('/{id}/update', [AdminReportController::class, 'update'])->name('update');
+    });
+
+    Route::name('admin.account-removal.')->prefix('admin/account-removal')->group(function () {
+        Route::get('/', [AdminAccountRemovalController::class, 'index'])->name('index');
+        Route::post('/{userId}/reactivate', [AdminAccountRemovalController::class, 'reactivate'])->name('reactivate');
+        Route::delete('/{userId}', [AdminAccountRemovalController::class, 'permanentDelete'])->name('permanent-delete');
     });
 
     Route::get('profile-photos', [ProfileController::class, 'indexPhotos'])->name('profile-photos');
