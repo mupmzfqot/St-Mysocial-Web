@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Actions\Auth\RegisterUser;
+use App\Exceptions\EmailSendingException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\APILoginRequest;
+use App\Http\Requests\RegistrationRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Services\AccountDeletionService;
-use App\Services\EmailService;
 use Carbon\Carbon;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
@@ -20,12 +21,10 @@ use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
-    protected $deletionService;
-
-    public function __construct(AccountDeletionService $deletionService)
-    {
-        $this->deletionService = $deletionService;
-    }
+    public function __construct(
+        protected AccountDeletionService $deletionService,
+        protected RegisterUser $registerUser,
+    ) {}
 
     public function login(APILoginRequest $request)
     {
@@ -84,66 +83,39 @@ class AuthController extends Controller
 
     }
 
-    public function register(Request $request)
+    public function register(RegistrationRequest $request)
     {
         try {
-            $request->validate([
-                'name'  => 'required|string',
-                'email' => 'required|string|email|unique:users,email',
-                'username' => 'required|string|unique:users,username',
-                'password' => [
-                    'required', Password::min(8)->mixedCase()->numbers()->symbols()->letters(),
-                    'confirmed'
-                ],
-            ]);
-
-            $user = User::query()->create([
-                'name' => $request->name,
-                'username' => $request->username,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'gender' => $request->gender,
-                'last_login' => now(),
-            ]);
-
-            if($request->hasFile('profile_image')) {
-                $user->addMediaFromRequest('profile_image')
-                    ->toMediaCollection('avatar')
-                    ->update(['is_verified' => true]);
-            }
-
-            $domain = substr(strrchr($request->email, "@"), 1);
-            if($domain === config('mail.st_user_email_domain')) {
-                try {
-                    $user->sendEmailVerificationNotification();
-                    $user->update(['is_active' => false]);
-                    $user->assignRole('user');
-                    $message = 'Your account has been created. Please verify your email address.';
-                } catch (\App\Exceptions\EmailSendingException $e) {
-                    return response()->json([
-                        'error' => 1,
-                        'message' => $e->getMessage(),
-                        'email' => $e->getEmail(),
-                    ], 400);
-                }
-            } else {
-                $user->assignRole('public_user');
-                $message = 'Your account has been created. Please contact the administrator for activation.';
-            }
+            $result = $this->registerUser->handle(
+                $request->validated(),
+                $request->file('profile_image'),
+            );
 
             return response()->json([
-                'error' => 0,
-                'user' => new UserResource($user),
-                'token' => null,
-                'message' => $message,
+                'error'   => 0,
+                'user'    => new UserResource($result->user),
+                'token'   => null,
+                'message' => $result->message,
             ], 200);
-
+        } catch (EmailSendingException $e) {
+            return response()->json([
+                'error'   => 1,
+                'message' => $e->getMessage(),
+                'email'   => $e->getEmail(),
+            ], 400);
         } catch (ValidationException $e) {
             return response()->json([
-                'error'     => 1,
-                'message'   => 'Registration failed.',
-                'errors'    => $e->errors(),
+                'error'   => 1,
+                'message' => 'Registration failed.',
+                'errors'  => $e->errors(),
             ], 422);
+        } catch (\Exception $e) {
+            logger()->error($e->getMessage());
+
+            return response()->json([
+                'error'   => 1,
+                'message' => 'Registration failed. Please contact support.',
+            ], 500);
         }
     }
 
