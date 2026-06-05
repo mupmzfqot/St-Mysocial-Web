@@ -24,8 +24,8 @@ class FCMChannel
 
         $this->fcm->sendNotificationToDevice(
             $fcmToken,
-            $data['title'],
-            $data['body'],
+            (string) ($data['title'] ?? ''),
+            (string) ($data['body'] ?? ''),
             $data['data'] ?? [],
             $notifiable->id
         );
