@@ -282,9 +282,9 @@ class PostController extends Controller
     {
         try {
             $post = Post::query()->find($id);
-            
-            // Authorization check - ensure user owns the post
-            if (!$post || $post->user_id !== auth()->id()) {
+
+            // Authorization check - ensure user owns the post OR is admin
+            if (!$post || ($post->user_id !== auth()->id() && !auth()->user()->hasRole('admin'))) {
                 return redirect()->back()->withErrors(['error' => 'You do not have permission to update this post.']);
             }
             
@@ -427,8 +427,8 @@ class PostController extends Controller
             ->where('id', $id)
             ->first();
             
-        // Authorization check - ensure user owns the post
-        if (!$post || $post->user_id !== auth()->id()) {
+        // Authorization check - ensure user owns the post OR is admin
+        if (!$post || ($post->user_id !== auth()->id() && !auth()->user()->hasRole('admin'))) {
             return redirect()->route('post.index')->withErrors(['error' => 'You do not have permission to edit this post.']);
         }
         
