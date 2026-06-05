@@ -119,7 +119,7 @@ class BlockController extends Controller
             $user = $request->user();
             
             $blockedUsers = UserBlock::where('blocker_id', $user->id)
-                ->with('blocked')
+                ->with(['blocked' => fn ($query) => $query->withCount('blockedUsers')])
                 ->get()
                 ->pluck('blocked');
 

@@ -34,6 +34,7 @@ class UserController extends Controller
         $blockedUserIds = $this->getBlockedUserIds($request->user()->id);
         
         $users = User::query()
+            ->withCount('blockedUsers')
             ->when($searchTerm, function ($query, $searchTerm) {
                 $query->where('name', 'like', '%' . $searchTerm . '%');
             })
@@ -62,6 +63,7 @@ class UserController extends Controller
             $blockedUserIds = $this->getBlockedUserIds($authId);
             
             $query = User::query()
+                ->withCount('blockedUsers')
                 ->when($searchTerm, function ($query, $searchTerm) {
                     $query->where(function ($q) use ($searchTerm) {
                         $q->where('name', 'like', "%$searchTerm%")

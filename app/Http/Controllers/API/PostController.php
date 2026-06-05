@@ -513,7 +513,8 @@ class PostController extends Controller
             ], 404);
         }
         
-        $user = User::whereHas('likes', function ($query) use ($id) {
+        $user = User::withCount('blockedUsers')
+                ->whereHas('likes', function ($query) use ($id) {
                     $query->where('post_id', $id);
                 })->get();
 
