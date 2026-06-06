@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ReportReason;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -10,18 +11,26 @@ class Report extends Model
 {
     protected $guarded = [];
 
-    // Report reasons constants
+    // Report reasons constants (kept for backward compatibility — source of truth is App\Enums\ReportReason)
     public const REASON_SPAM = 'spam';
+
     public const REASON_HARASSMENT = 'harassment';
+
     public const REASON_INAPPROPRIATE_CONTENT = 'inappropriate_content';
+
     public const REASON_FAKE_ACCOUNT = 'fake_account';
+
     public const REASON_COPYRIGHT_VIOLATION = 'copyright_violation';
+
     public const REASON_OTHER = 'other';
 
     // Status constants
     public const STATUS_PENDING = 'pending';
+
     public const STATUS_REVIEWED = 'reviewed';
+
     public const STATUS_RESOLVED = 'resolved';
+
     public const STATUS_DISMISSED = 'dismissed';
 
     protected $casts = [
@@ -33,14 +42,7 @@ class Report extends Model
      */
     public static function getReasons(): array
     {
-        return [
-            self::REASON_SPAM,
-            self::REASON_HARASSMENT,
-            self::REASON_INAPPROPRIATE_CONTENT,
-            self::REASON_FAKE_ACCOUNT,
-            self::REASON_COPYRIGHT_VIOLATION,
-            self::REASON_OTHER,
-        ];
+        return ReportReason::values();
     }
 
     /**
